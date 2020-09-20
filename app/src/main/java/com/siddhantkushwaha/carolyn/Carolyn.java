@@ -1,0 +1,19 @@
+package com.siddhantkushwaha.carolyn;
+
+import android.app.Application;
+
+import io.realm.Realm;
+
+public class Carolyn extends Application {
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        Realm.init(this);
+    }
+
+    static {
+        System.loadLibrary("native-lib");
+    }
+}
