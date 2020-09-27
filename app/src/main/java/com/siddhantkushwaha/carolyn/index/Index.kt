@@ -151,7 +151,7 @@ class Index(private val activity: ActivityBase) {
                 realmThread.user2DisplayName = user2DisplayName
 
                 if (realmMessage.timestamp!! > realmThread.lastMessage?.timestamp ?: 0) {
-                    realmThread.lastMessage = realmMessage
+                    realmThread.lastMessage = realmT.copyToRealm(realmMessage)
                 }
 
                 realmMessage.messageThread = realmThread

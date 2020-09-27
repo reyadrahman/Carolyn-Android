@@ -35,6 +35,13 @@ class ActivityLogin : ActivityBase() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        if (mAuth.currentUser != null) {
+            moveToHomeActivity()
+        }
+    }
+
     private fun startLogin() {
         val signInIntent = mGoogleSignInClient.signInIntent
         startActivityForResult(signInIntent, RC_SIGN_IN)

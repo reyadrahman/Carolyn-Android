@@ -33,10 +33,11 @@ class ActivityHome : ActivityBase() {
                 .sort("lastMessage.timestamp", Sort.DESCENDING)
                 .findAllAsync()
 
+        threadsAdapter = ThreadAdapter(threads, true)
+
         threadsChangeListener = OrderedRealmCollectionChangeListener { _, _ ->
             threadsAdapter.notifyDataSetChanged()
         }
-        threadsAdapter = ThreadAdapter(threads, true)
 
         val layoutManager = LinearLayoutManager(this)
         layoutManager.stackFromEnd = false

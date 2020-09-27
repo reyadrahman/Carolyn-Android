@@ -16,19 +16,18 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <!--    This base activity will be inherited by all other activities    -->
-        <activity android:name="com.siddhantkushwaha.carolyn.activity.ActivityBase" />
-
-        <activity android:name="com.siddhantkushwaha.carolyn.activity.ActivityLogin"
+        <!-- This base activity will be inherited by all other activities -->
+        <activity android:name=".activity.ActivityBase" />
+        <activity
+            android:name=".activity.ActivityLogin"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name="com.siddhantkushwaha.carolyn.activity.ActivityHome" />
-
+        <activity android:name=".activity.ActivityHome" />
+        <activity android:name=".activity.ActivityMessage" />
     </application>
 
 </manifest>

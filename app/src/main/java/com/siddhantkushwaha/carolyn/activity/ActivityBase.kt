@@ -27,11 +27,7 @@ open class ActivityBase : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-
-        // check if logged in or not
-        if (mAuth.currentUser != null) {
-            moveToHomeActivity()
-        } else {
+        if (mAuth.currentUser == null) {
             moveToLoginActivity()
         }
     }
@@ -66,6 +62,16 @@ open class ActivityBase : AppCompatActivity() {
             return
 
         val intent = Intent(this, ActivityHome::class.java)
+        startActivity(intent)
+        finish()
+    }
+
+    fun moveToMessageActivity() {
+
+        if (this::class.java == ActivityMessage::class.java)
+            return
+
+        val intent = Intent(this, ActivityMessage::class.java)
         startActivity(intent)
         finish()
     }
