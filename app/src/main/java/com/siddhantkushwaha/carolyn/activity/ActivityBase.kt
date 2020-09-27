@@ -44,7 +44,7 @@ open class ActivityBase : AppCompatActivity() {
             callback?.invoke(true)
         } else
             callback?.invoke(false)
-    }
+    }  
 
     fun moveToLoginActivity() {
 
