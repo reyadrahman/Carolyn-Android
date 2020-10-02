@@ -8,20 +8,25 @@ import com.google.firebase.ml.custom.*
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.siddhantkushwaha.carolyn.common.RealmUtil
+import com.siddhantkushwaha.carolyn.common.cleanText
+import com.siddhantkushwaha.carolyn.entity.Message
 import java.io.File
 
-
-class MessageClassifier(activity: Activity) {
+class MessageClassifier(private val activity: Activity) {
 
     private val TAG = "MessageClassifier"
+
+    data class Metadata(
+        val maxlen: Int,
+        val classes: Array<String>,
+        val index: HashMap<String, Float>
+    )
 
     private val gson = Gson()
     private val firebaseStorage = FirebaseStorage.getInstance()
     private val remoteModel = FirebaseCustomRemoteModel.Builder("message_classifier").build()
-
-    data class Metadata(val maxlen:Int, val classes: Array<String>, val index: HashMap<String, Float>)
-
-    val localDirPath = activity.getExternalFilesDir(null)
+    private val localDirPath = activity.getExternalFilesDir(null)
 
     private fun downloadModel(success: () -> Unit, fail: () -> Unit) {
         val conditions = FirebaseModelDownloadConditions.Builder().build()
@@ -123,8 +128,9 @@ class MessageClassifier(activity: Activity) {
     ) {
 
         val tokenizedInputs = messages.map { input ->
-            val tokenizedInput: List<Float> =
-                input.split(" ").map { word -> metadata.index.getOrDefault(word, 0F).toFloat() }
+
+            val tokenizedInput: List<Float> = input.replace("#", "0").split(" ")
+                .map { word -> metadata.index.getOrDefault(word, 0F).toFloat() }
 
             val tokenList = ArrayList<Float>()
             tokenizedInput.forEachIndexed { i, fl ->
@@ -141,8 +147,16 @@ class MessageClassifier(activity: Activity) {
 
         val inputOutputOptions = FirebaseModelInputOutputOptions
             .Builder()
-            .setInputFormat(0, FirebaseModelDataType.FLOAT32, intArrayOf(tokenizedInputs.size, metadata.maxlen))
-            .setOutputFormat(0, FirebaseModelDataType.FLOAT32, intArrayOf(tokenizedInputs.size, metadata.classes.size)).build()
+            .setInputFormat(
+                0,
+                FirebaseModelDataType.FLOAT32,
+                intArrayOf(tokenizedInputs.size, metadata.maxlen)
+            )
+            .setOutputFormat(
+                0,
+                FirebaseModelDataType.FLOAT32,
+                intArrayOf(tokenizedInputs.size, metadata.classes.size)
+            ).build()
 
         val modelInput = FirebaseModelInputs.Builder().add((tokenizedInputs)).build()
         interpreter.run(modelInput, inputOutputOptions)
@@ -161,17 +175,41 @@ class MessageClassifier(activity: Activity) {
             }
     }
 
-    public fun interpretMessages(messages: Array<String>, callback: (Array<String>) -> Unit) {
-        loadModel(
-            ifLoaded = { interpreter ->
-                loadMetaData(
-                    ifLoaded = { metadata ->
-                        startClassification(interpreter, metadata, messages, callback)
-                    },
-                    ifNotLoaded = {}
-                )
-            },
-            ifNotLoaded = {}
-        )
+    public fun interpretMessages() {
+        RealmUtil.getCustomRealmInstance(activity).where(Message::class.java).isNull("type")
+            .findAll().forEach { message ->
+            val mId = message.id!!
+            val mBody = message.body!!
+            loadModel(
+                ifLoaded = { interpreter ->
+                    loadMetaData(
+                        ifLoaded = { metadata ->
+                            val cleanedBody = cleanText(mBody)
+                            if (cleanedBody.count { it == '#' } / cleanedBody.length.toFloat() < 0.5) {
+                                startClassification(
+                                    interpreter,
+                                    metadata,
+                                    arrayOf(cleanedBody)
+                                ) { classes ->
+                                    Log.i(TAG, "$cleanedBody - ${classes[0]}")
+                                    RealmUtil.getCustomRealmInstance(activity)
+                                        .executeTransaction { realmT ->
+                                            val messageL =
+                                                realmT.where(Message::class.java).equalTo("id", mId)
+                                                    .findFirst()
+                                            if (messageL != null) {
+                                                messageL.type = classes[0]
+                                                realmT.insertOrUpdate(messageL)
+                                            }
+                                        }
+                                }
+                            }
+                        },
+                        ifNotLoaded = {}
+                    )
+                },
+                ifNotLoaded = {}
+            )
+        }
     }
 }

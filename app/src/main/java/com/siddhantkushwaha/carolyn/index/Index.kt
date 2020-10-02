@@ -28,54 +28,6 @@ class Index(private val activity: ActivityBase) {
         }
     }
 
-    private fun containsDigit(s: String): Boolean {
-        var containsDigit = false
-        if (s.isNotEmpty()) {
-            for (c in s.toCharArray()) {
-                if (Character.isDigit(c).also { containsDigit = it }) {
-                    break
-                }
-            }
-        }
-        return containsDigit
-    }
-
-    private fun cleanText(text: String): String {
-        val textBuilder = StringBuilder()
-        for (word in text.split(" ")) {
-
-            // remove links and emails
-            if (word.contains('/') && word.contains('.')) {
-                continue
-            } else if (word.contains(".com") || word.contains(".me")) {
-                continue
-            } else if (word.contains('@') && word.contains('.')) {
-                continue
-            }
-
-            // remove all tokens with numbers
-            else if (containsDigit(word)) {
-                textBuilder.append(" #")
-            }
-
-            // otherwise clean and add
-            else {
-                var cleanedWord = word.toLowerCase()
-                cleanedWord = Regex("[^A-Za-z0-9 ]").replace(cleanedWord, " ")
-                textBuilder.append(" $cleanedWord")
-            }
-        }
-
-        val textBuilder2 = StringBuilder()
-        for (word in textBuilder.split(" ")) {
-            if (word.length > 1 || word == "#") {
-                textBuilder2.append(" $word")
-            }
-        }
-
-        return textBuilder2.toString().trim()
-    }
-
     private fun uploadToFirebase(contacts: HashMap<String, String>) {
         realm.where(Message::class.java).findAll().forEach { message ->
             val body = cleanText(message.body!!)

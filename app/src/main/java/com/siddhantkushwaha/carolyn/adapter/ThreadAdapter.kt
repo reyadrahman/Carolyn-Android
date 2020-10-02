@@ -1,6 +1,5 @@
 package com.siddhantkushwaha.carolyn.adapter
 
-
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,7 +13,8 @@ import io.realm.RealmRecyclerViewAdapter
 
 class ThreadAdapter(
     data: OrderedRealmCollection<MessageThread>,
-    autoUpdate: Boolean
+    autoUpdate: Boolean,
+    private val itemClickListener: (View, MessageThread) -> Unit
 ) : RealmRecyclerViewAdapter<MessageThread, RecyclerView.ViewHolder>(data, autoUpdate) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -24,12 +24,12 @@ class ThreadAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val thread = data!![position]
-        (holder as ThreadViewHolder).bind(thread)
+        (holder as ThreadViewHolder).bind(thread, itemClickListener)
     }
 
     private class ThreadViewHolder(itemView: View) :
         RecyclerView.ViewHolder(itemView) {
-        fun bind(messageThread: MessageThread) {
+        fun bind(messageThread: MessageThread, itemClickListener: (View, MessageThread) -> Unit) {
 
             val threadImageView = itemView.findViewById<ImageView>(R.id.icon_user)
             val threadTitleTextView = itemView.findViewById<TextView>(R.id.text_thread)
@@ -39,6 +39,10 @@ class ThreadAdapter(
             threadTitleTextView.text = messageThread.user2DisplayName
             lastMessageTextView.text = messageThread.lastMessage?.body ?: "No messages."
             timestampTextView.text = "${messageThread.lastMessage?.timestamp ?: 1}"
+
+            itemView.setOnClickListener { view ->
+                itemClickListener(view, messageThread)
+            }
         }
     }
 }

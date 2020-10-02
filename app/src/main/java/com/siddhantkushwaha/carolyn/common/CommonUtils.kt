@@ -14,7 +14,6 @@ import com.siddhantkushwaha.carolyn.activity.ActivityBase
 import java.io.File
 import java.security.MessageDigest
 
-
 fun getHash(data: String, algorithm: String = "SHA-256"): String {
     return MessageDigest.getInstance(algorithm).digest(data.toByteArray())
         .fold("", { str, it -> str + "%02x".format(it) })
@@ -140,6 +139,54 @@ fun getAllContacts(activity: ActivityBase, callback: (HashMap<String, String>) -
             callback(contactsList)
         }
     }
+}
+
+fun containsDigit(s: String): Boolean {
+    var containsDigit = false
+    if (s.isNotEmpty()) {
+        for (c in s.toCharArray()) {
+            if (Character.isDigit(c).also { containsDigit = it }) {
+                break
+            }
+        }
+    }
+    return containsDigit
+}
+
+fun cleanText(text: String): String {
+    val textBuilder = StringBuilder()
+    for (word in text.split(" ")) {
+
+        // remove links and emails
+        if (word.contains('/') && word.contains('.')) {
+            continue
+        } else if (word.contains(".com") || word.contains(".me")) {
+            continue
+        } else if (word.contains('@') && word.contains('.')) {
+            continue
+        }
+
+        // remove all tokens with numbers
+        else if (containsDigit(word)) {
+            textBuilder.append(" #")
+        }
+
+        // otherwise clean and add
+        else {
+            var cleanedWord = word.toLowerCase()
+            cleanedWord = Regex("[^A-Za-z0-9 ]").replace(cleanedWord, " ")
+            textBuilder.append(" $cleanedWord")
+        }
+    }
+
+    val textBuilder2 = StringBuilder()
+    for (word in textBuilder.split(" ")) {
+        if (word.length > 1 || word == "#") {
+            textBuilder2.append(" $word")
+        }
+    }
+
+    return textBuilder2.toString().trim()
 }
 
 fun writeFile(activity: Activity, data: String, fileName: String) {

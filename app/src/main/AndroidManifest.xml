@@ -16,8 +16,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <!-- This base activity will be inherited by all other activities -->
-        <activity android:name=".activity.ActivityBase" />
         <activity
             android:name=".activity.ActivityLogin"
             android:screenOrientation="portrait">
@@ -26,8 +24,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity android:name=".activity.ActivityHome" />
-        <activity android:name=".activity.ActivityMessage" />
+
+        <activity
+            android:name=".activity.ActivityMessage"
+            android:parentActivityName=".activity.ActivityHome" />
     </application>
 
 </manifest>

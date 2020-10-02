@@ -44,7 +44,7 @@ open class ActivityBase : AppCompatActivity() {
             callback?.invoke(true)
         } else
             callback?.invoke(false)
-    }  
+    }
 
     fun moveToLoginActivity() {
 
@@ -62,16 +62,6 @@ open class ActivityBase : AppCompatActivity() {
             return
 
         val intent = Intent(this, ActivityHome::class.java)
-        startActivity(intent)
-        finish()
-    }
-
-    fun moveToMessageActivity() {
-
-        if (this::class.java == ActivityMessage::class.java)
-            return
-
-        val intent = Intent(this, ActivityMessage::class.java)
         startActivity(intent)
         finish()
     }

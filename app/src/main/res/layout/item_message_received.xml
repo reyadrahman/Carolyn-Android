@@ -47,4 +47,14 @@
         app:layout_constraintStart_toEndOf="@+id/textview_message_timestamp"
         app:layout_constraintTop_toBottomOf="@+id/textview_message_text" />
 
+    <ImageView
+        android:id="@+id/image_view_message_class"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:contentDescription="To signify class of message."
+        android:src="@drawable/icon_message_spam"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@+id/textview_message_text"
+        app:layout_constraintTop_toBottomOf="@+id/textview_message_text" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,12 +1,13 @@
 package com.siddhantkushwaha.carolyn.activity
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.ThreadAdapter
+import com.siddhantkushwaha.carolyn.ai.MessageClassifier
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.MessageThread
-import com.siddhantkushwaha.carolyn.index.Index
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.Realm
 import io.realm.RealmResults
@@ -33,7 +34,11 @@ class ActivityHome : ActivityBase() {
                 .sort("lastMessage.timestamp", Sort.DESCENDING)
                 .findAllAsync()
 
-        threadsAdapter = ThreadAdapter(threads, true)
+        threadsAdapter = ThreadAdapter(threads, true, itemClickListener = { _, th ->
+            val messageActivityIntent = Intent(this, ActivityMessage::class.java)
+            messageActivityIntent.putExtra("user2", th.user2)
+            startActivity(messageActivityIntent)
+        })
 
         threadsChangeListener = OrderedRealmCollectionChangeListener { _, _ ->
             threadsAdapter.notifyDataSetChanged()
@@ -46,7 +51,10 @@ class ActivityHome : ActivityBase() {
         recycler_view_threads.adapter = threadsAdapter
 
         // start indexing process
-        Thread { Index(this).initIndex() }.start()
+        // Thread { Index(this).initIndex() }.start()
+
+        // start classification
+        Thread { MessageClassifier(this).interpretMessages() }.start()
     }
 
     override fun onStart() {

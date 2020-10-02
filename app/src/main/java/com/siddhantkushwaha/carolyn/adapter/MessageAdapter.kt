@@ -1,9 +1,9 @@
 package com.siddhantkushwaha.carolyn.adapter
 
-
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.siddhantkushwaha.carolyn.R
@@ -70,7 +70,20 @@ class MessageAdapter(
         RecyclerView.ViewHolder(itemView) {
         fun bind(message: Message) {
             val messageBodyTextView = itemView.findViewById<TextView>(R.id.textview_message_text)
+            val messageClassIcon = itemView.findViewById<ImageView>(R.id.image_view_message_class)
+
             messageBodyTextView.text = message.body
+            if (message.type == null) {
+                messageClassIcon.visibility = View.GONE
+            } else {
+                messageClassIcon.visibility = View.VISIBLE
+                when (message.type) {
+                    "otp" -> messageClassIcon.setImageResource(R.drawable.icon_message_otp)
+                    "transaction" -> messageClassIcon.setImageResource(R.drawable.icon_message_transaction)
+                    "update" -> messageClassIcon.setImageResource(R.drawable.icon_message_update)
+                    "spam" -> messageClassIcon.setImageResource(R.drawable.icon_message_spam)
+                }
+            }
         }
     }
 }
