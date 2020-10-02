@@ -7,7 +7,7 @@
     android:background="@color/colorPrimaryDark"
     tools:context=".activity.ActivityHome">
 
-    <Toolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -44,7 +44,7 @@
                 app:queryHint="This will be needed later" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-    </Toolbar>
+    </androidx.appcompat.widget.Toolbar>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_threads"
