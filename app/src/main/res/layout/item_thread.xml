@@ -7,9 +7,9 @@
 
     <ImageView
         android:id="@+id/icon_user"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="24dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
         android:src="@drawable/icon_user"
@@ -21,7 +21,7 @@
         android:id="@+id/text_thread"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="8dp"
         android:ellipsize="end"
@@ -62,5 +62,17 @@
         android:textSize="8sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/text_thread" />
+
+    <ImageView
+        android:id="@+id/image_view_thread_class"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginTop="4dp"
+        android:contentDescription="To signify class of thread."
+        android:src="@drawable/icon_message_spam"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="@+id/text_timestamp"
+        app:layout_constraintStart_toStartOf="@+id/text_timestamp"
+        app:layout_constraintTop_toBottomOf="@+id/text_timestamp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

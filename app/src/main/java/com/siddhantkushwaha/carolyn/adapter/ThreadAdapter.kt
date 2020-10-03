@@ -10,6 +10,9 @@ import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import io.realm.OrderedRealmCollection
 import io.realm.RealmRecyclerViewAdapter
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 class ThreadAdapter(
     data: OrderedRealmCollection<MessageThread>,
@@ -35,10 +38,35 @@ class ThreadAdapter(
             val threadTitleTextView = itemView.findViewById<TextView>(R.id.text_thread)
             val lastMessageTextView = itemView.findViewById<TextView>(R.id.text_message)
             val timestampTextView = itemView.findViewById<TextView>(R.id.text_timestamp)
+            val threadClassImageView = itemView.findViewById<ImageView>(R.id.image_view_thread_class)
 
             threadTitleTextView.text = messageThread.user2DisplayName
             lastMessageTextView.text = messageThread.lastMessage?.body ?: "No messages."
-            timestampTextView.text = "${messageThread.lastMessage?.timestamp ?: 1}"
+
+            val timeZoneId = TimeZone.getDefault().toZoneId()
+            val timestamp = messageThread.lastMessage?.timestamp
+            if (timestamp == null) {
+                timestampTextView.visibility = View.GONE
+            } else {
+                val date = Instant.ofEpochMilli(timestamp).atZone(timeZoneId)
+                val formattedDate = DateTimeFormatter.ofPattern("dd/mm/yy hh:mm a").format(date)
+                timestampTextView.visibility = View.VISIBLE
+                timestampTextView.text = formattedDate
+            }
+
+            val messageType = messageThread.lastMessage?.type
+            if (messageType == null) {
+                threadImageView.visibility = View.VISIBLE
+            } else {
+                threadClassImageView.visibility = View.VISIBLE
+                when (messageType) {
+                    "otp" -> threadClassImageView.setImageResource(R.drawable.icon_message_otp)
+                    "transaction" -> threadClassImageView.setImageResource(R.drawable.icon_message_transaction)
+                    "update" -> threadClassImageView.setImageResource(R.drawable.icon_message_update)
+                    "spam" -> threadClassImageView.setImageResource(R.drawable.icon_message_spam)
+                    else -> threadClassImageView.visibility = View.GONE
+                }
+            }
 
             itemView.setOnClickListener { view ->
                 itemClickListener(view, messageThread)

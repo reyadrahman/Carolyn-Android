@@ -99,10 +99,7 @@ class MessageClassifier(private val activity: Activity) {
         return Metadata(maxlen, classes, index)
     }
 
-    private fun loadMetaData(
-        ifLoaded: (Metadata) -> Unit,
-        ifNotLoaded: () -> Unit
-    ) {
+    private fun loadMetaData(ifLoaded: (Metadata) -> Unit, ifNotLoaded: () -> Unit) {
         val metaData = File(localDirPath, "meta.json")
         if (metaData.exists()) {
             Log.i(TAG, "Metadata already exists.")
@@ -120,17 +117,11 @@ class MessageClassifier(private val activity: Activity) {
         }
     }
 
-    private fun startClassification(
-        interpreter: FirebaseModelInterpreter,
-        metadata: Metadata,
-        messages: Array<String>,
-        callback: (Array<String>) -> Unit
-    ) {
+    private fun startClassification(interpreter: FirebaseModelInterpreter, metadata: Metadata, messages: Array<String>, callback: (Array<String>) -> Unit) {
 
         val tokenizedInputs = messages.map { input ->
 
-            val tokenizedInput: List<Float> = input.replace("#", "0").split(" ")
-                .map { word -> metadata.index.getOrDefault(word, 0F).toFloat() }
+            val tokenizedInput: List<Float> = input.replace("#", "0").split(" ").map { word -> metadata.index.getOrDefault(word, 0F).toFloat() }
 
             val tokenList = ArrayList<Float>()
             tokenizedInput.forEachIndexed { i, fl ->
@@ -175,41 +166,37 @@ class MessageClassifier(private val activity: Activity) {
             }
     }
 
-    public fun interpretMessages() {
-        RealmUtil.getCustomRealmInstance(activity).where(Message::class.java).isNull("type")
-            .findAll().forEach { message ->
-            val mId = message.id!!
-            val mBody = message.body!!
-            loadModel(
-                ifLoaded = { interpreter ->
-                    loadMetaData(
-                        ifLoaded = { metadata ->
-                            val cleanedBody = cleanText(mBody)
-                            if (cleanedBody.count { it == '#' } / cleanedBody.length.toFloat() < 0.5) {
-                                startClassification(
-                                    interpreter,
-                                    metadata,
-                                    arrayOf(cleanedBody)
-                                ) { classes ->
-                                    Log.i(TAG, "$cleanedBody - ${classes[0]}")
-                                    RealmUtil.getCustomRealmInstance(activity)
-                                        .executeTransaction { realmT ->
-                                            val messageL =
-                                                realmT.where(Message::class.java).equalTo("id", mId)
-                                                    .findFirst()
-                                            if (messageL != null) {
-                                                messageL.type = classes[0]
-                                                realmT.insertOrUpdate(messageL)
-                                            }
-                                        }
+    private fun classifyMessage(messageId: String, body: String) {
+        loadModel(
+            ifLoaded = { interpreter ->
+                loadMetaData(
+                    ifLoaded = { metadata ->
+                        val cleanedBody = cleanText(body)
+                        if (cleanedBody.count { it == '#' } / cleanedBody.length.toFloat() < 0.5) {
+                            startClassification(interpreter, metadata, arrayOf(cleanedBody)) { classes ->
+
+                                Log.i(TAG, "$cleanedBody - ${classes[0]}")
+                                RealmUtil.getCustomRealmInstance(activity).executeTransaction { realmT ->
+                                    val messageL = realmT.where(Message::class.java).equalTo("id", messageId).findFirst()
+                                    if (messageL != null) {
+                                        messageL.type = classes[0]
+                                        realmT.insertOrUpdate(messageL)
+                                    }
                                 }
+
                             }
-                        },
-                        ifNotLoaded = {}
-                    )
-                },
-                ifNotLoaded = {}
-            )
+                        }
+                    },
+                    ifNotLoaded = {}
+                )
+            },
+            ifNotLoaded = {}
+        )
+    }
+
+    public fun interpretMessages() {
+        RealmUtil.getCustomRealmInstance(activity).where(Message::class.java).isNull("type").findAll().forEach { message ->
+            classifyMessage(message.id!!, message.body!!)
         }
     }
 }

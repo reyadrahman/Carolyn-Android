@@ -82,6 +82,7 @@ class MessageAdapter(
                     "transaction" -> messageClassIcon.setImageResource(R.drawable.icon_message_transaction)
                     "update" -> messageClassIcon.setImageResource(R.drawable.icon_message_update)
                     "spam" -> messageClassIcon.setImageResource(R.drawable.icon_message_spam)
+                    else -> messageClassIcon.visibility = View.GONE
                 }
             }
         }

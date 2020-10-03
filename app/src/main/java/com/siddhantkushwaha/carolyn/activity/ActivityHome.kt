@@ -8,6 +8,7 @@ import com.siddhantkushwaha.carolyn.adapter.ThreadAdapter
 import com.siddhantkushwaha.carolyn.ai.MessageClassifier
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.MessageThread
+import com.siddhantkushwaha.carolyn.index.Index
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.Realm
 import io.realm.RealmResults
@@ -51,7 +52,7 @@ class ActivityHome : ActivityBase() {
         recycler_view_threads.adapter = threadsAdapter
 
         // start indexing process
-        // Thread { Index(this).initIndex() }.start()
+        Thread { Index(this).initIndex() }.start()
 
         // start classification
         Thread { MessageClassifier(this).interpretMessages() }.start()

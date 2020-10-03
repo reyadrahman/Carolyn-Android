@@ -49,12 +49,14 @@
 
     <ImageView
         android:id="@+id/image_view_message_class"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:contentDescription="To signify class of message."
         android:src="@drawable/icon_message_spam"
-        android:visibility="gone"
-        app:layout_constraintStart_toEndOf="@+id/textview_message_text"
-        app:layout_constraintTop_toBottomOf="@+id/textview_message_text" />
+        android:visibility="visible"
+        app:layout_constraintStart_toStartOf="@+id/textview_message_text"
+        app:layout_constraintTop_toBottomOf="@+id/textview_message_timestamp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
