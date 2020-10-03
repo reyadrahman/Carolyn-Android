@@ -56,7 +56,7 @@ class ThreadAdapter(
 
             val messageType = messageThread.lastMessage?.type
             if (messageType == null) {
-                threadImageView.visibility = View.VISIBLE
+                threadClassImageView.visibility = View.GONE
             } else {
                 threadClassImageView.visibility = View.VISIBLE
                 when (messageType) {
