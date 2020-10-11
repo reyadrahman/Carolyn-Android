@@ -24,16 +24,17 @@ class ActivityHome : ActivityBase() {
     private lateinit var threadsAdapter: ThreadAdapter
     private lateinit var threadsChangeListener: OrderedRealmCollectionChangeListener<RealmResults<MessageThread>>
 
+    private lateinit var messageClassifier: MessageClassifier
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
         realm = RealmUtil.getCustomRealmInstance(this)
 
-        threads =
-            realm.where(MessageThread::class.java).isNotNull("lastMessage")
-                .sort("lastMessage.timestamp", Sort.DESCENDING)
-                .findAllAsync()
+        messageClassifier = MessageClassifier(this)
+
+        threads = realm.where(MessageThread::class.java).isNotNull("lastMessage").sort("lastMessage.timestamp", Sort.DESCENDING).findAllAsync()
 
         threadsAdapter = ThreadAdapter(threads, true, itemClickListener = { _, th ->
             val messageActivityIntent = Intent(this, ActivityMessage::class.java)
@@ -42,6 +43,22 @@ class ActivityHome : ActivityBase() {
         })
 
         threadsChangeListener = OrderedRealmCollectionChangeListener { _, _ ->
+
+            // get messages to be classified here
+            val messagesToClassify = ArrayList<Pair<String, String>>()
+            threads.forEach { mt ->
+                if (mt.lastMessage?.type == null)
+                    messagesToClassify.add(Pair(mt.lastMessage!!.id!!, mt.lastMessage!!.body!!))
+            }
+
+            // start classification thread
+            val th = Thread {
+                messagesToClassify.forEach { mp ->
+                    messageClassifier.classify(mp.first, mp.second)
+                }
+            }
+            th.start()
+
             threadsAdapter.notifyDataSetChanged()
         }
 
@@ -53,9 +70,6 @@ class ActivityHome : ActivityBase() {
 
         // start indexing process
         Thread { Index(this).initIndex() }.start()
-
-        // start classification
-        Thread { MessageClassifier(this).interpretMessages() }.start()
     }
 
     override fun onStart() {

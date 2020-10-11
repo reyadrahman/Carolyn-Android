@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.MessageAdapter
+import com.siddhantkushwaha.carolyn.ai.MessageClassifier
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
@@ -23,6 +24,8 @@ class ActivityMessage : ActivityBase() {
 
     private lateinit var thread: MessageThread
 
+    private lateinit var messageClassifier: MessageClassifier
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_message)
@@ -31,6 +34,8 @@ class ActivityMessage : ActivityBase() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         realm = RealmUtil.getCustomRealmInstance(this)
+
+        messageClassifier = MessageClassifier(this)
 
         val user2 = intent.getStringExtra("user2")!!
         messages = realm.where(Message::class.java).equalTo("messageThread.user2", user2)
@@ -43,6 +48,21 @@ class ActivityMessage : ActivityBase() {
         messageAdapter = MessageAdapter(messages, true)
 
         messagesChangeListener = OrderedRealmCollectionChangeListener { _, _ ->
+
+            val messagesToClassify = ArrayList<Pair<String, String>>()
+            messages.forEach { ml ->
+                if (ml.type == null)
+                    messagesToClassify.add(Pair(ml.id!!, ml.body!!))
+            }
+
+            // start classification thread
+            val th = Thread {
+                messagesToClassify.forEach { mp ->
+                    messageClassifier.classify(mp.first, mp.second)
+                }
+            }
+            th.start()
+
             messageAdapter.notifyDataSetChanged()
         }
 

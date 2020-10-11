@@ -17,16 +17,15 @@ class MessageClassifier(private val activity: Activity) {
 
     private val TAG = "MessageClassifier"
 
-    data class Metadata(
-        val maxlen: Int,
-        val classes: Array<String>,
-        val index: HashMap<String, Float>
-    )
+    data class Metadata(val maxlen: Int, val classes: Array<String>, val index: HashMap<String, Float>)
 
     private val gson = Gson()
     private val firebaseStorage = FirebaseStorage.getInstance()
     private val remoteModel = FirebaseCustomRemoteModel.Builder("message_classifier").build()
     private val localDirPath = activity.getExternalFilesDir(null)
+
+    private var interpreter: FirebaseModelInterpreter? = null
+    private var metadata: Metadata? = null
 
     private fun downloadModel(success: () -> Unit, fail: () -> Unit) {
         val conditions = FirebaseModelDownloadConditions.Builder().build()
@@ -48,17 +47,14 @@ class MessageClassifier(private val activity: Activity) {
 
     }
 
-    private fun loadModel(
-        ifLoaded: (FirebaseModelInterpreter) -> Unit,
-        ifNotLoaded: () -> Unit
-    ) {
+    private fun loadModel(ifLoaded: (FirebaseModelInterpreter) -> Unit, ifNotLoaded: () -> Unit, forceDownload: Boolean = false) {
         FirebaseModelManager.getInstance().isModelDownloaded(remoteModel)
             .addOnSuccessListener { isDownloaded ->
-                if (isDownloaded) {
-                    Log.i(TAG, "Messaged classified model is already downloaded.")
+                if (isDownloaded && !forceDownload) {
+                    Log.i(TAG, "Message classifier model already downloaded.")
                     ifLoaded(getInterpreter())
                 } else {
-                    Log.i(TAG, "Messaged classified model has not been downloaded yet.")
+                    Log.i(TAG, "Message classifier model will be downloaded.")
                     downloadModel(
                         success = { ifLoaded(getInterpreter()) },
                         fail = { ifNotLoaded() }
@@ -87,21 +83,15 @@ class MessageClassifier(private val activity: Activity) {
         val metaJson = gson.fromJson(metaData.bufferedReader(), JsonObject::class.java)
 
         val maxlen = metaJson.getAsJsonPrimitive("maxlen").asInt
+        val classes = gson.fromJson(metaJson.getAsJsonArray("classes"), Array(0) { _ -> "" }.javaClass)
+        val index = gson.fromJson(metaJson.getAsJsonObject("index"), HashMap<String, Float>().javaClass)
 
-        val classes =
-            gson.fromJson(metaJson.getAsJsonArray("classes"), Array(0) { _ -> "" }.javaClass)
-        // Log.i(TAG, "Classes predicted by model - ")
-        // classes.forEachIndexed { index, s -> Log.i(TAG, "Class: $index - $s") }
-
-        val index =
-            gson.fromJson(metaJson.getAsJsonObject("index"), HashMap<String, Float>().javaClass)
-        // index.forEach { (s, fl) -> Log.i(TAG, "$s - $fl") }
         return Metadata(maxlen, classes, index)
     }
 
-    private fun loadMetaData(ifLoaded: (Metadata) -> Unit, ifNotLoaded: () -> Unit) {
+    private fun loadMetaData(ifLoaded: (Metadata) -> Unit, ifNotLoaded: () -> Unit, forceDownload: Boolean = false) {
         val metaData = File(localDirPath, "meta.json")
-        if (metaData.exists()) {
+        if (metaData.exists() && !forceDownload) {
             Log.i(TAG, "Metadata already exists.")
             val parsedMetaData = parseMetaData()
             ifLoaded(parsedMetaData)
@@ -117,19 +107,19 @@ class MessageClassifier(private val activity: Activity) {
         }
     }
 
-    private fun startClassification(interpreter: FirebaseModelInterpreter, metadata: Metadata, messages: Array<String>, callback: (Array<String>) -> Unit) {
+    private fun startClassification(messages: Array<String>, callback: (Array<String>) -> Unit) {
 
         val tokenizedInputs = messages.map { input ->
 
-            val tokenizedInput: List<Float> = input.replace("#", "0").split(" ").map { word -> metadata.index.getOrDefault(word, 0F).toFloat() }
+            val tokenizedInput: List<Float> = input.replace("#", "0").split(" ").map { word -> metadata!!.index.getOrDefault(word, 0F).toFloat() }
 
             val tokenList = ArrayList<Float>()
             tokenizedInput.forEachIndexed { i, fl ->
-                if (i < metadata.maxlen) {
+                if (i < metadata!!.maxlen) {
                     tokenList.add(fl)
                 }
             }
-            while (tokenList.size < metadata.maxlen) {
+            while (tokenList.size < metadata!!.maxlen) {
                 tokenList.add(0F)
             }
 
@@ -141,23 +131,21 @@ class MessageClassifier(private val activity: Activity) {
             .setInputFormat(
                 0,
                 FirebaseModelDataType.FLOAT32,
-                intArrayOf(tokenizedInputs.size, metadata.maxlen)
+                intArrayOf(tokenizedInputs.size, metadata!!.maxlen)
             )
             .setOutputFormat(
                 0,
                 FirebaseModelDataType.FLOAT32,
-                intArrayOf(tokenizedInputs.size, metadata.classes.size)
+                intArrayOf(tokenizedInputs.size, metadata!!.classes.size)
             ).build()
 
         val modelInput = FirebaseModelInputs.Builder().add((tokenizedInputs)).build()
-        interpreter.run(modelInput, inputOutputOptions)
+        interpreter!!.run(modelInput, inputOutputOptions)
             .addOnSuccessListener { result ->
                 Log.i("Message_Classifier", "Messages interpreted.")
                 val output = result.getOutput<Array<FloatArray>>(0)
                 val predictions = ArrayList<String>()
-                output.forEach { probabilities ->
-                    predictions.add(metadata.classes[probabilities.indexOf(probabilities.max()!!)])
-                }
+                output.forEach { probabilities -> predictions.add(metadata!!.classes[probabilities.indexOfFirst { it == probabilities.maxOrNull()!! }]) }
                 callback(predictions.toTypedArray())
             }
             .addOnFailureListener { e ->
@@ -166,37 +154,39 @@ class MessageClassifier(private val activity: Activity) {
             }
     }
 
-    private fun classifyMessage(messageId: String, body: String) {
-        loadModel(
-            ifLoaded = { interpreter ->
-                loadMetaData(
-                    ifLoaded = { metadata ->
-                        val cleanedBody = cleanText(body)
-                        if (cleanedBody.count { it == '#' } / cleanedBody.length.toFloat() < 0.5) {
-                            startClassification(interpreter, metadata, arrayOf(cleanedBody)) { classes ->
-
-                                Log.i(TAG, "$cleanedBody - ${classes[0]}")
-                                RealmUtil.getCustomRealmInstance(activity).executeTransaction { realmT ->
-                                    val messageL = realmT.where(Message::class.java).equalTo("id", messageId).findFirst()
-                                    if (messageL != null) {
-                                        messageL.type = classes[0]
-                                        realmT.insertOrUpdate(messageL)
-                                    }
-                                }
-
-                            }
-                        }
-                    },
-                    ifNotLoaded = {}
-                )
-            },
-            ifNotLoaded = {}
-        )
+    private fun classifyMessageAndSave(messageId: String, body: String) {
+        val cleanedBody = cleanText(body)
+        if (cleanedBody.count { it == '#' } / cleanedBody.length.toFloat() < 0.5) {
+            startClassification(arrayOf(cleanedBody)) { classes ->
+                Log.i(TAG, "$cleanedBody - ${classes[0]}")
+                RealmUtil.getCustomRealmInstance(activity).executeTransaction { realmT ->
+                    val messageL = realmT.where(Message::class.java).equalTo("id", messageId).findFirst()
+                    if (messageL != null) {
+                        messageL.type = classes[0]
+                        realmT.insertOrUpdate(messageL)
+                    }
+                }
+            }
+        }
     }
 
-    public fun interpretMessages() {
-        RealmUtil.getCustomRealmInstance(activity).where(Message::class.java).isNull("type").findAll().forEach { message ->
-            classifyMessage(message.id!!, message.body!!)
+    public fun classify(messageId: String, body: String) {
+        if (interpreter == null || metadata == null) {
+            loadModel(
+                ifLoaded = { interpreter ->
+                    loadMetaData(
+                        ifLoaded = { metadata ->
+                            this.interpreter = interpreter
+                            this.metadata = metadata
+                            classifyMessageAndSave(messageId, body)
+                        },
+                        ifNotLoaded = {}
+                    )
+                },
+                ifNotLoaded = {}
+            )
+        } else {
+            classifyMessageAndSave(messageId, body)
         }
     }
 }
