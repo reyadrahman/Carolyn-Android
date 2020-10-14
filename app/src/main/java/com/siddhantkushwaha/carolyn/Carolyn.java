@@ -12,8 +12,4 @@ public class Carolyn extends Application {
 
         Realm.init(this);
     }
-
-    static {
-        System.loadLibrary("native-lib");
-    }
 }

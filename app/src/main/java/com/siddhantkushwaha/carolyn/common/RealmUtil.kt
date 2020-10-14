@@ -5,6 +5,7 @@ import io.realm.Realm
 import io.realm.RealmConfiguration
 
 object RealmUtil {
+
     fun getCustomRealmInstance(context: Context?): Realm {
         Realm.init(context)
         val config = RealmConfiguration.Builder()

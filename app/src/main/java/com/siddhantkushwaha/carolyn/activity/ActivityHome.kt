@@ -5,7 +5,7 @@ import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.ThreadAdapter
-import com.siddhantkushwaha.carolyn.ai.MessageClassifier
+import com.siddhantkushwaha.carolyn.ai.MessageClassifierTask
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.index.Index
@@ -24,15 +24,11 @@ class ActivityHome : ActivityBase() {
     private lateinit var threadsAdapter: ThreadAdapter
     private lateinit var threadsChangeListener: OrderedRealmCollectionChangeListener<RealmResults<MessageThread>>
 
-    private lateinit var messageClassifier: MessageClassifier
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
         realm = RealmUtil.getCustomRealmInstance(this)
-
-        messageClassifier = MessageClassifier(this)
 
         threads = realm.where(MessageThread::class.java).isNotNull("lastMessage").sort("lastMessage.timestamp", Sort.DESCENDING).findAllAsync()
 
@@ -51,13 +47,8 @@ class ActivityHome : ActivityBase() {
                     messagesToClassify.add(Pair(mt.lastMessage!!.id!!, mt.lastMessage!!.body!!))
             }
 
-            // start classification thread
-            val th = Thread {
-                messagesToClassify.forEach { mp ->
-                    messageClassifier.classify(mp.first, mp.second)
-                }
-            }
-            th.start()
+            // TODO - do this as soon as a message comes in, change within the change listerner itself is not a good idea :/
+            MessageClassifierTask(this, messagesToClassify).start()
 
             threadsAdapter.notifyDataSetChanged()
         }

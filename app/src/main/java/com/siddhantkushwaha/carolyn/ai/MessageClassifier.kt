@@ -1,194 +1,133 @@
 package com.siddhantkushwaha.carolyn.ai
 
 import android.app.Activity
-import android.util.Log
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions
 import com.google.firebase.ml.common.modeldownload.FirebaseModelManager
-import com.google.firebase.ml.custom.*
+import com.google.firebase.ml.custom.FirebaseCustomRemoteModel
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.siddhantkushwaha.carolyn.common.RealmUtil
-import com.siddhantkushwaha.carolyn.common.cleanText
-import com.siddhantkushwaha.carolyn.entity.Message
+import org.tensorflow.lite.Interpreter
 import java.io.File
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
-class MessageClassifier(activity: Activity) {
+class MessageClassifier private constructor(
+        private val interpreter: Interpreter,
+        private val metaData: Metadata
+) {
 
-    private val TAG = "MessageClassifier"
+    data class Metadata(
+            val maxLen: Int,
+            val classes: Array<String>,
+            val index: HashMap<String, Float>
+    )
 
-    private val remoteModel = FirebaseCustomRemoteModel.Builder("message_classifier").build()
+    private val tag = "MessageClassifier"
 
-    data class Metadata(val maxlen: Int, val classes: Array<String>, val index: HashMap<String, Float>)
+    companion object {
 
-    private val gson = Gson()
-    private val realm = RealmUtil.getCustomRealmInstance(activity)
-    private val firebaseStorage = FirebaseStorage.getInstance()
-    private val localDirPath = activity.getExternalFilesDir(null)
-
-    private lateinit var interpreter: FirebaseModelInterpreter
-    private lateinit var metadata: Metadata
-
-    private var loaded: Boolean = false
-
-    init {
-        loadAll()
-    }
-
-    private fun downloadModel(): Boolean {
-        var downloaded = false
-        val conditions = FirebaseModelDownloadConditions.Builder().build()
-        try {
+        private fun downloadModel(remoteModel: FirebaseCustomRemoteModel) {
+            val conditions = FirebaseModelDownloadConditions.Builder().build()
             Tasks.await(FirebaseModelManager.getInstance().download(remoteModel, conditions))
-            downloaded = true
-        } catch (exception: Exception) {
-            Log.e(TAG, "Model download failed with below exception.")
-            exception.printStackTrace()
         }
-        return downloaded
-    }
 
-    private fun setInterpreter() {
-        val options = FirebaseModelInterpreterOptions.Builder(remoteModel).build()
-        val interpreterL = FirebaseModelInterpreter.getInstance(options)
-        if (interpreterL != null)
-            interpreter = interpreterL
-        else
-            throw Exception("Could not create interpreter object.")
-    }
+        private fun getInterpreter(remoteModel: FirebaseCustomRemoteModel): Interpreter {
+            val modelFile = Tasks.await(FirebaseModelManager.getInstance().getLatestModelFile(remoteModel))
+            return Interpreter(modelFile)
+        }
 
-    private fun loadModel(forceDownload: Boolean = false) {
-        try {
+        private fun loadModel(modelName: String, forceDownload: Boolean = false): Interpreter {
+            val remoteModel = FirebaseCustomRemoteModel.Builder(modelName).build()
             val isModelDownloaded = Tasks.await(FirebaseModelManager.getInstance().isModelDownloaded(remoteModel))
-            if (isModelDownloaded && !forceDownload)
-                setInterpreter()
-            else if (downloadModel())
-                setInterpreter()
-        } catch (exception: Exception) {
-            Log.e(TAG, "Exception in loadModel function.")
-            exception.printStackTrace()
+            return if (isModelDownloaded && !forceDownload) {
+                getInterpreter(remoteModel)
+            } else {
+                downloadModel(remoteModel)
+                getInterpreter(remoteModel)
+            }
         }
-    }
 
-    private fun downloadMetadata(): Boolean {
-        var downloaded = false
-        try {
-            val metaData = File(localDirPath, "meta.json")
-            Tasks.await(firebaseStorage.getReference("meta.json").getFile(metaData))
-            downloaded = true
-        } catch (exception: Exception) {
-            exception.printStackTrace()
+        private fun downloadMetadata(metadataName: String, localDirPath: File) {
+            val firebaseStorage = FirebaseStorage.getInstance()
+            val metaData = File(localDirPath, metadataName)
+            Tasks.await(firebaseStorage.getReference(metadataName).getFile(metaData))
         }
-        return downloaded
-    }
 
-    private fun setMetaData() {
-        try {
-            val metaDataFile = File(localDirPath, "meta.json")
+        private fun getMetaData(metadataName: String, localDirPath: File): Metadata {
+
+            val maxLenAttr = "maxlen"
+            val classesAttr = "classes"
+            val indexAttr = "index"
+
+            val gson = Gson()
+            val metaDataFile = File(localDirPath, metadataName)
             val metaJson = gson.fromJson(metaDataFile.bufferedReader(), JsonObject::class.java)
-            val maxLen = metaJson.getAsJsonPrimitive("maxlen").asInt
-            val classes = gson.fromJson(metaJson.getAsJsonArray("classes"), Array(0) { _ -> "" }.javaClass)
-            val index = gson.fromJson(metaJson.getAsJsonObject("index"), HashMap<String, Float>().javaClass)
-            metadata = Metadata(maxLen, classes, index)
-        } catch (exception: Exception) {
-            exception.printStackTrace()
-        }
-    }
-
-    private fun loadMetaData(forceDownload: Boolean = false) {
-        val metaData = File(localDirPath, "meta.json")
-        if (metaData.exists() && !forceDownload)
-            setMetaData()
-        else if (downloadMetadata())
-            setMetaData()
-    }
-
-    private fun loadAll() {
-        try {
-            loadModel()
-            loadMetaData()
-            loaded = false
-        } catch (exception: Exception) {
-            Log.e(TAG, "Failed to initiate message classfier.")
-            exception.printStackTrace()
-        }
-    }
-
-    private fun doClassification(messages: Array<String>): Array<String>? {
-
-        val tokenizedInputs = messages.map { input ->
-
-            val tokenizedInput: List<Float> = input.replace("#", "0").split(" ").map { word -> metadata.index.getOrDefault(word, 0F).toFloat() }
-
-            val tokenList = ArrayList<Float>()
-            tokenizedInput.forEachIndexed { i, fl ->
-                if (i < metadata.maxlen) {
-                    tokenList.add(fl)
-                }
-            }
-            while (tokenList.size < metadata.maxlen) {
-                tokenList.add(0F)
-            }
-
-            tokenList.toFloatArray()
-        }.toTypedArray()
-
-        val inputOutputOptions = FirebaseModelInputOutputOptions
-            .Builder()
-            .setInputFormat(
-                0,
-                FirebaseModelDataType.FLOAT32,
-                intArrayOf(tokenizedInputs.size, metadata.maxlen)
-            )
-            .setOutputFormat(
-                0,
-                FirebaseModelDataType.FLOAT32,
-                intArrayOf(tokenizedInputs.size, metadata.classes.size)
-            ).build()
-
-        val modelInput = FirebaseModelInputs.Builder().add((tokenizedInputs)).build()
-        interpreter.run(modelInput, inputOutputOptions)
-
-        var classes: Array<String>? = null
-
-        val task = interpreter.run(modelInput, inputOutputOptions)
-        try {
-            val result = Tasks.await(task)
-            val output = result.getOutput<Array<FloatArray>>(0)
-            val predictions = ArrayList<String>()
-            output.forEach { probabilities -> predictions.add(metadata.classes[probabilities.indexOfFirst { it == probabilities.maxOrNull()!! }]) }
-            classes = predictions.toTypedArray()
-        } catch (exception: Exception) {
-            exception.printStackTrace()
+            val maxLen = metaJson.getAsJsonPrimitive(maxLenAttr).asInt
+            val classes = gson.fromJson(metaJson.getAsJsonArray(classesAttr), Array(0) { "" }.javaClass)
+            val index = gson.fromJson(metaJson.getAsJsonObject(indexAttr), HashMap<String, Float>().javaClass)
+            return Metadata(maxLen, classes, index)
         }
 
-        return classes
-    }
-
-    private fun classifyMessageAndSave(messageId: String, body: String) {
-        val cleanedBody = cleanText(body)
-        val skipMessage = cleanedBody.count { it == '#' } / cleanedBody.length.toFloat() > 0.5
-        if (!skipMessage) {
-            val classes = doClassification(arrayOf(cleanedBody))
-            if (classes != null) {
-                realm.executeTransaction { realmT ->
-                    val messageL = realmT.where(Message::class.java).equalTo("id", messageId).findFirst()
-                    if (messageL != null) {
-                        messageL.type = classes[0]
-                        realmT.insertOrUpdate(messageL)
-                    }
-                }
+        private fun loadMetaData(activity: Activity, metadataName: String, forceDownload: Boolean = false): Metadata {
+            val localDirPath = activity.getExternalFilesDir(null)!!
+            val metaDataFile = File(localDirPath, metadataName)
+            return if (metaDataFile.exists() && !forceDownload) {
+                getMetaData(metadataName, localDirPath)
+            } else {
+                downloadMetadata(metadataName, localDirPath)
+                getMetaData(metadataName, localDirPath)
             }
         }
+
+        fun getInstance(activity: Activity): MessageClassifier? {
+            var messageClassifier: MessageClassifier? = null
+            try {
+                val modelName = "message_classifier"
+                val interpreter = loadModel(modelName)
+
+                val metadataName = "meta.json"
+                val metaData = loadMetaData(activity, metadataName)
+
+                messageClassifier = MessageClassifier(interpreter, metaData)
+            } catch (exception: Exception) {
+                exception.printStackTrace()
+            }
+            return messageClassifier
+        }
     }
 
-    public fun classify(messageId: String, body: String) {
-        if (loaded) {
-            classifyMessageAndSave(messageId, body)
-        } else {
-            loadAll()
-            if (loaded) classifyMessageAndSave(messageId, body)
+    public fun doClassification(message: String): String {
+        val body = message.replace("#", "0")
+        val tokens = body.split(" ")
+        val tokenToIndex = ArrayList<Float>()
+
+        tokens.forEachIndexed { index, token ->
+            if (index < metaData.maxLen) {
+                tokenToIndex.add(metaData.index.getOrDefault(token, 0F))
+            }
         }
+
+        while (tokenToIndex.size < metaData.maxLen) {
+            tokenToIndex.add(0F)
+        }
+
+        val input = ByteBuffer.allocateDirect(metaData.maxLen * 4).order(ByteOrder.nativeOrder())
+        val output = ByteBuffer.allocateDirect(metaData.classes.size * 4).order(ByteOrder.nativeOrder())
+
+        tokenToIndex.forEach { tokenVal -> input.putFloat(tokenVal) }
+        interpreter.run(input, output)
+
+        val probabilities = FloatArray(4)
+        output.rewind()
+        output.asFloatBuffer().get(probabilities)
+
+        var prediction = 0
+        for (i in probabilities.indices)
+            if (probabilities[i] > probabilities[prediction])
+                prediction = i
+
+        return metaData.classes[prediction]
     }
 }

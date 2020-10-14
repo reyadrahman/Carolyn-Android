@@ -24,10 +24,10 @@ class ActivityLogin : ActivityBase() {
         setContentView(R.layout.activity_login)
 
         gso =
-            GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build()
+                GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken(getString(R.string.default_web_client_id))
+                        .requestEmail()
+                        .build()
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
 
         button_login.setOnClickListener {
@@ -64,14 +64,14 @@ class ActivityLogin : ActivityBase() {
     private fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         mAuth.signInWithCredential(credential)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    Log.d(TAG, "signInWithCredential:success")
-                    moveToHomeActivity()
-                } else {
-                    Log.w(TAG, "signInWithCredential:failure", task.exception)
-                    Snackbar.make(root, "Authentication Failed.", Snackbar.LENGTH_SHORT).show()
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        Log.d(TAG, "signInWithCredential:success")
+                        moveToHomeActivity()
+                    } else {
+                        Log.w(TAG, "signInWithCredential:failure", task.exception)
+                        Snackbar.make(root, "Authentication Failed.", Snackbar.LENGTH_SHORT).show()
+                    }
                 }
-            }
     }
 }
