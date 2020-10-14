@@ -9,9 +9,9 @@ object RealmUtil {
     fun getCustomRealmInstance(context: Context?): Realm {
         Realm.init(context)
         val config = RealmConfiguration.Builder()
-            .name("raven_realm.realm")
-            .deleteRealmIfMigrationNeeded()
-            .build()
+                .name("realm_custom.realm")
+                .deleteRealmIfMigrationNeeded()
+                .build()
         return Realm.getInstance(config)
     }
 
