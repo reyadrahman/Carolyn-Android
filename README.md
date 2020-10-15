@@ -2,7 +2,7 @@
 
 <img  src="https://raw.githubusercontent.com/siddhantkushwaha/Carolyn-Android/master/static/logo_carolyn.svg"  width="40%"/>
 
-[![forthebadge](https://forthebadge.com/images/badges/built-for-android.svg)](https://forthebadge.com) [![forthebadge](https://forthebadge.com/images/badges/made-with-java.svg)](https://forthebadge.com)
+[![forthebadge](https://forthebadge.com/images/badges/built-for-android.svg)](https://forthebadge.com) [![forthebadge](https://forthebadge.com/images/badges/for-you.svg)](https://forthebadge.com)
 
 ### What can Carolyn do?
 
