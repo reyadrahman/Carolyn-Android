@@ -7,6 +7,7 @@ import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.ThreadAdapter
 import com.siddhantkushwaha.carolyn.ai.MessageClassifierTask
 import com.siddhantkushwaha.carolyn.common.RealmUtil
+import com.siddhantkushwaha.carolyn.common.RequestCodes
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.index.Index
 import io.realm.OrderedRealmCollectionChangeListener
@@ -28,6 +29,14 @@ class ActivityHome : ActivityBase() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
+        requestPermissions(
+                arrayOf(
+                        android.Manifest.permission.READ_SMS,
+                        android.Manifest.permission.READ_CONTACTS,
+                        android.Manifest.permission.READ_PHONE_STATE
+                ), RequestCodes.REQUEST_PERMISSION_BASIC
+        )
+
         realm = RealmUtil.getCustomRealmInstance(this)
 
         threads = realm.where(MessageThread::class.java).isNotNull("lastMessage").sort("lastMessage.timestamp", Sort.DESCENDING).findAllAsync()
@@ -40,15 +49,7 @@ class ActivityHome : ActivityBase() {
 
         threadsChangeListener = OrderedRealmCollectionChangeListener { _, _ ->
 
-            // get messages to be classified here
-            val messagesToClassify = ArrayList<Pair<String, String>>()
-            threads.forEach { mt ->
-                if (mt.lastMessage?.type == null)
-                    messagesToClassify.add(Pair(mt.lastMessage!!.id!!, mt.lastMessage!!.body!!))
-            }
-
-            // TODO - do this as soon as a message comes in, change within the change listerner itself is not a good idea :/
-            MessageClassifierTask(this, messagesToClassify).start()
+            addMessagesToClassifier()
 
             threadsAdapter.notifyDataSetChanged()
         }
@@ -63,13 +64,29 @@ class ActivityHome : ActivityBase() {
         Thread { Index(this).initIndex() }.start()
     }
 
-    override fun onStart() {
-        super.onStart()
+    override fun onResume() {
+        super.onResume()
         threads.addChangeListener(threadsChangeListener)
     }
 
     override fun onPause() {
         super.onPause()
         threads.removeAllChangeListeners()
+    }
+
+    private fun addMessagesToClassifier() {
+        val messagesToClassify = ArrayList<Pair<String, String>>()
+        threads.forEach { mt ->
+            val mId = mt.lastMessage?.id
+            val mBody = mt.lastMessage?.body
+            val mType = mt.lastMessage?.type
+            if (mId != null && mBody != null && mType == null) {
+                messagesToClassify.add(Pair(mId, mBody))
+            }
+        }
+
+        if (messagesToClassify.size > 0) {
+            MessageClassifierTask(this, messagesToClassify).start()
+        }
     }
 }

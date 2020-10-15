@@ -45,14 +45,7 @@ class ActivityMessage : ActivityBase() {
 
         messagesChangeListener = OrderedRealmCollectionChangeListener { _, _ ->
 
-            val messagesToClassify = ArrayList<Pair<String, String>>()
-            messages.forEach { ml ->
-                if (ml.type == null)
-                    messagesToClassify.add(Pair(ml.id!!, ml.body!!))
-            }
-
-            // TODO - do this as soon as a message comes in, change within the change listerner itself is not a good idea :/
-            MessageClassifierTask(this, messagesToClassify).start()
+            addMessagesToClassifier()
 
             messageAdapter.notifyDataSetChanged()
         }
@@ -64,8 +57,8 @@ class ActivityMessage : ActivityBase() {
         recycler_view_messages.adapter = messageAdapter
     }
 
-    override fun onStart() {
-        super.onStart()
+    override fun onResume() {
+        super.onResume()
         messages.addChangeListener(messagesChangeListener)
     }
 
@@ -77,5 +70,20 @@ class ActivityMessage : ActivityBase() {
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
         return true
+    }
+
+    private fun addMessagesToClassifier() {
+        val messagesToClassify = ArrayList<Pair<String, String>>()
+        messages.forEach { ml ->
+            val mId = ml.id
+            val mBody = ml.body
+            val mType = ml.type
+            if (mId != null && mBody != null && mType == null)
+                messagesToClassify.add(Pair(mId, mBody))
+        }
+
+        if (messagesToClassify.size > 0) {
+            MessageClassifierTask(this, messagesToClassify).start()
+        }
     }
 }

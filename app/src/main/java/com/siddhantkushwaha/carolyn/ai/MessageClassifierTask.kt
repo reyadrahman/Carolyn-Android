@@ -6,6 +6,7 @@ import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.Message
 import io.realm.Realm
 
+
 class MessageClassifierTask(
         private val activity: Activity,
         private val messages: ArrayList<Pair<String, String>>
@@ -18,28 +19,30 @@ class MessageClassifierTask(
         private var inProgress = false
     }
 
+    private val taskId = ('a'..'z').shuffled().take(6).joinToString("")
+
     private var realm: Realm? = null
     private var messageClassifier: MessageClassifier? = null
 
     override fun run() {
 
         if (inProgress) {
-            Log.i(tag, "Another instance of this task in doing classification, skip.")
+            Log.d("$tag-$taskId", "Another instance of this task is running, skip.")
             return
         }
 
-        Log.i(tag, "Started classifying messages.")
+        Log.d("$tag-$taskId", "Started classifying messages.")
 
         /* mark as true so that another task does not do the same task */
         inProgress = true
 
         if (messageClassifier == null) {
-            Log.i(tag, "Initializing MessageClassifier.")
+            Log.d("$tag-$taskId", "Initializing MessageClassifier.")
             messageClassifier = MessageClassifier.getInstance(activity)
         }
 
         if (realm == null) {
-            Log.i(tag, "Initializing Realm.")
+            Log.d("$tag-$taskId", "Initializing Realm.")
             realm = RealmUtil.getCustomRealmInstance(activity)
         }
 
@@ -60,6 +63,6 @@ class MessageClassifierTask(
         /* clear the flag */
         inProgress = false
 
-        Log.i(tag, "Finished classifying messages.")
+        Log.d("$tag-$taskId", "Finished classifying messages.")
     }
 }

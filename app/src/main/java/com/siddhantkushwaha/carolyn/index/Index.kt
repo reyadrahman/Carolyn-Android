@@ -12,8 +12,6 @@ class Index(private val activity: ActivityBase) {
 
     private val TAG: String = this::class.java.toString()
 
-    private val realm = RealmUtil.getCustomRealmInstance(activity)
-
     private val firebaseDatabase = FirebaseUtils.getRealtimeDb(false)
     private val firebaseAuth = FirebaseAuth.getInstance()
 
@@ -29,6 +27,7 @@ class Index(private val activity: ActivityBase) {
     }
 
     private fun uploadToFirebase(contacts: HashMap<String, String>) {
+        val realm = RealmUtil.getCustomRealmInstance(activity)
         realm.where(Message::class.java).findAll().forEach { message ->
             val body = cleanText(message.body!!)
 
@@ -52,18 +51,20 @@ class Index(private val activity: ActivityBase) {
     }
 
     private fun saveToRealm(
-        contacts: HashMap<String, String>,
-        subscriptions: HashMap<Int, String>,
-        messages: ArrayList<Array<Any>>,
+            contacts: HashMap<String, String>,
+            subscriptions: HashMap<Int, String>,
+            messages: ArrayList<Array<Any>>,
     ) {
 
         contacts.forEach { contact ->
-            Log.i(TAG, contact.toString())
+            Log.d(TAG, contact.toString())
         }
 
         subscriptions.forEach { subscription ->
-            Log.i(TAG, subscription.toString())
+            Log.d(TAG, subscription.toString())
         }
+
+        val realm = RealmUtil.getCustomRealmInstance(activity)
 
         // save all messages/build threads and save to realm
         messages.forEach { message ->
@@ -81,6 +82,7 @@ class Index(private val activity: ActivityBase) {
 
             val id = getHash("$timestamp, $body, $sent")
 
+            Log.d(TAG, "Saving message $id")
             realm.executeTransaction { realmT ->
 
                 var realmMessage = realmT.where(Message::class.java).equalTo("id", id).findFirst()
@@ -92,8 +94,7 @@ class Index(private val activity: ActivityBase) {
                     realmMessage.buildId()
                 }
 
-                var realmThread =
-                    realmT.where(MessageThread::class.java).equalTo("user2", user2).findFirst()
+                var realmThread = realmT.where(MessageThread::class.java).equalTo("user2", user2).findFirst()
                 if (realmThread == null) {
                     realmThread = MessageThread()
                     realmThread.user2 = user2

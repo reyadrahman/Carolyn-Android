@@ -16,7 +16,7 @@ import java.security.MessageDigest
 
 fun getHash(data: String, algorithm: String = "SHA-256"): String {
     return MessageDigest.getInstance(algorithm).digest(data.toByteArray())
-        .fold("", { str, it -> str + "%02x".format(it) })
+            .fold("", { str, it -> str + "%02x".format(it) })
 }
 
 fun normalizePhoneNumber(number: String): String {
@@ -34,9 +34,9 @@ fun normalizePhoneNumber(number: String): String {
 
 @SuppressLint("MissingPermission")
 fun getSubscriptions(activity: ActivityBase, callback: (HashMap<Int, String>) -> Unit) {
-    activity.requestPermission(
-        android.Manifest.permission.READ_PHONE_STATE,
-        RequestCodes.REQUEST_PERMISSION_READ_PHONE_STATE
+    activity.requestPermissions(
+            arrayOf(android.Manifest.permission.READ_PHONE_STATE),
+            RequestCodes.REQUEST_PERMISSION_READ_PHONE_STATE
     ) { granted ->
         if (granted) {
             val subscriptionManager = activity.getSystemService(SubscriptionManager::class.java)
@@ -51,16 +51,16 @@ fun getSubscriptions(activity: ActivityBase, callback: (HashMap<Int, String>) ->
 
 @SuppressLint("MissingPermission")
 fun getAllSms(activity: ActivityBase, callback: (ArrayList<Array<Any>>) -> Unit) {
-    activity.requestPermission(
-        android.Manifest.permission.READ_SMS,
-        RequestCodes.REQUEST_PERMISSION_READ_SMS
+    activity.requestPermissions(
+            arrayOf(android.Manifest.permission.READ_SMS),
+            RequestCodes.REQUEST_PERMISSION_READ_SMS
     ) { granted ->
         if (granted) {
 
             val messages = ArrayList<Array<Any>>()
 
             val c =
-                activity.contentResolver.query(Telephony.Sms.CONTENT_URI, null, null, null, null)
+                    activity.contentResolver.query(Telephony.Sms.CONTENT_URI, null, null, null, null)
             val totalSMS: Int
             if (c != null) {
                 totalSMS = c.count
@@ -70,30 +70,30 @@ fun getAllSms(activity: ActivityBase, callback: (ArrayList<Array<Any>>) -> Unit)
                         val threadId = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.THREAD_ID))
 
                         val user2: String =
-                            c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
+                                c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
 
                         val body: String =
-                            c.getString(c.getColumnIndexOrThrow(Telephony.Sms.BODY))
+                                c.getString(c.getColumnIndexOrThrow(Telephony.Sms.BODY))
 
                         /*
                             Epoch time
                         */
                         val date =
-                            c.getLong(c.getColumnIndexOrThrow(Telephony.Sms.DATE))
+                                c.getLong(c.getColumnIndexOrThrow(Telephony.Sms.DATE))
 
                         /*
                             1 - Received
                             2 - Sent
                         */
                         val type: Int =
-                            c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.TYPE))
+                                c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.TYPE))
 
                         val subId: Int =
-                            if (c.columnNames.find { it == Telephony.Sms.SUBSCRIPTION_ID } != null) {
-                                c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.SUBSCRIPTION_ID))
-                            } else {
-                                c.getInt(c.getColumnIndex("sim_id"))
-                            }
+                                if (c.columnNames.find { it == Telephony.Sms.SUBSCRIPTION_ID } != null) {
+                                    c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.SUBSCRIPTION_ID))
+                                } else {
+                                    c.getInt(c.getColumnIndex("sim_id"))
+                                }
 
                         val message = Array<Any>(6) { 0 }
                         message[0] = threadId
@@ -116,9 +116,9 @@ fun getAllSms(activity: ActivityBase, callback: (ArrayList<Array<Any>>) -> Unit)
 
 @SuppressLint("MissingPermission")
 fun getAllContacts(activity: ActivityBase, callback: (HashMap<String, String>) -> Unit) {
-    activity.requestPermission(
-        android.Manifest.permission.READ_CONTACTS,
-        RequestCodes.REQUEST_PERMISSION_READ_CONTACTS
+    activity.requestPermissions(
+            arrayOf(android.Manifest.permission.READ_CONTACTS),
+            RequestCodes.REQUEST_PERMISSION_READ_CONTACTS
     ) { granted ->
         if (granted) {
             val contactsList: HashMap<String, String> = HashMap()
@@ -128,9 +128,9 @@ fun getAllContacts(activity: ActivityBase, callback: (HashMap<String, String>) -
             if (cursor != null) {
                 while (cursor.moveToNext()) {
                     var phoneNumber: String =
-                        cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                            cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
                     val name: String =
-                        cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
+                            cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
                     phoneNumber = normalizePhoneNumber(phoneNumber)
                     contactsList[phoneNumber] = name
                 }
