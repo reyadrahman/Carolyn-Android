@@ -28,6 +28,7 @@ class Index(private val activity: ActivityBase) {
 
     private fun uploadToFirebase(contacts: HashMap<String, String>) {
         val realm = RealmUtil.getCustomRealmInstance(activity)
+
         realm.where(Message::class.java).findAll().forEach { message ->
             val body = cleanText(message.body!!)
 
@@ -48,6 +49,8 @@ class Index(private val activity: ActivityBase) {
                 }
             }
         }
+
+        realm.close()
     }
 
     private fun saveToRealm(
@@ -113,5 +116,7 @@ class Index(private val activity: ActivityBase) {
                 realmT.insertOrUpdate(realmMessage)
             }
         }
+
+        realm.close()
     }
 }

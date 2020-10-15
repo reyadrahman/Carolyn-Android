@@ -4,8 +4,6 @@ import android.app.Activity
 import android.util.Log
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.Message
-import io.realm.Realm
-
 
 class MessageClassifierTask(
         private val activity: Activity,
@@ -21,7 +19,6 @@ class MessageClassifierTask(
 
     private val taskId = ('a'..'z').shuffled().take(6).joinToString("")
 
-    private var realm: Realm? = null
     private var messageClassifier: MessageClassifier? = null
 
     override fun run() {
@@ -41,15 +38,12 @@ class MessageClassifierTask(
             messageClassifier = MessageClassifier.getInstance(activity)
         }
 
-        if (realm == null) {
-            Log.d("$tag-$taskId", "Initializing Realm.")
-            realm = RealmUtil.getCustomRealmInstance(activity)
-        }
+        val realm = RealmUtil.getCustomRealmInstance(activity)
 
         messages.forEach { message ->
             val messageClass = messageClassifier?.doClassification(message.second)
             if (messageClass != null) {
-                realm?.executeTransaction { realmT ->
+                realm.executeTransaction { realmT ->
                     val messageL = realmT.where(Message::class.java).equalTo("id", message.first).findFirst()
                     if (messageL != null) {
                         messageL.type = messageClass
@@ -59,6 +53,7 @@ class MessageClassifierTask(
             }
         }
 
+        realm.close()
 
         /* clear the flag */
         inProgress = false
