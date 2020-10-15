@@ -3,6 +3,7 @@ package com.siddhantkushwaha.carolyn.activity
 import android.content.Intent
 import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.ThreadAdapter
 import com.siddhantkushwaha.carolyn.ai.MessageClassifierTask
@@ -29,17 +30,21 @@ class ActivityHome : ActivityBase() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
+        FirebaseCrashlytics.getInstance()
+            .setCustomKey("userEmail", mAuth.currentUser?.email ?: "null")
+
         requestPermissions(
-                arrayOf(
-                        android.Manifest.permission.READ_SMS,
-                        android.Manifest.permission.READ_CONTACTS,
-                        android.Manifest.permission.READ_PHONE_STATE
-                ), RequestCodes.REQUEST_PERMISSION_BASIC
+            arrayOf(
+                android.Manifest.permission.READ_SMS,
+                android.Manifest.permission.READ_CONTACTS,
+                android.Manifest.permission.READ_PHONE_STATE
+            ), RequestCodes.REQUEST_PERMISSION_BASIC
         )
 
         realm = RealmUtil.getCustomRealmInstance(this)
 
-        threads = realm.where(MessageThread::class.java).isNotNull("lastMessage").sort("lastMessage.timestamp", Sort.DESCENDING).findAllAsync()
+        threads = realm.where(MessageThread::class.java).isNotNull("lastMessage")
+            .sort("lastMessage.timestamp", Sort.DESCENDING).findAllAsync()
 
         threadsAdapter = ThreadAdapter(threads, true, itemClickListener = { _, th ->
             val messageActivityIntent = Intent(this, ActivityMessage::class.java)

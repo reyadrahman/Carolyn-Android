@@ -32,9 +32,9 @@ open class ActivityBase : AppCompatActivity() {
     }
 
     override fun onRequestPermissionsResult(
-            requestCode: Int,
-            permissions: Array<out String>,
-            grantResults: IntArray
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         val callback = requestPermissionCallbacks[requestCode]
@@ -65,8 +65,17 @@ open class ActivityBase : AppCompatActivity() {
         finish()
     }
 
-    fun requestPermissions(permissions: Array<String>, requestCode: Int, callback: (Boolean) -> Unit) {
-        val requiredPermissions = permissions.filter { permission -> ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED }.toTypedArray()
+    fun requestPermissions(
+        permissions: Array<String>,
+        requestCode: Int,
+        callback: (Boolean) -> Unit
+    ) {
+        val requiredPermissions = permissions.filter { permission ->
+            ActivityCompat.checkSelfPermission(
+                this,
+                permission
+            ) != PackageManager.PERMISSION_GRANTED
+        }.toTypedArray()
         if (requiredPermissions.isNotEmpty()) {
             requestPermissionCallbacks[requestCode] = callback
             ActivityCompat.requestPermissions(this, requiredPermissions, requestCode)
