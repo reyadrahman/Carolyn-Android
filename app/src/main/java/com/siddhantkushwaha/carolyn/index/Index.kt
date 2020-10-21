@@ -16,13 +16,13 @@ class Index(private val activity: ActivityBase) {
     private val firebaseAuth = FirebaseAuth.getInstance()
 
     public fun initIndex() {
-        getAllContacts(activity) { contacts ->
-            getSubscriptions(activity) { subscriptions ->
-                getAllSms(activity) { messages ->
-                    saveToRealm(contacts, subscriptions, messages)
-                    uploadToFirebase(contacts)
-                }
-            }
+        val contacts = getAllContacts(activity)
+        val subscriptions = getSubscriptions(activity)
+        val messages = getAllSms(activity)
+
+        if (contacts != null && subscriptions != null && messages != null) {
+            saveToRealm(contacts, subscriptions, messages)
+            uploadToFirebase(contacts)
         }
     }
 
@@ -54,9 +54,9 @@ class Index(private val activity: ActivityBase) {
     }
 
     private fun saveToRealm(
-            contacts: HashMap<String, String>,
-            subscriptions: HashMap<Int, String>,
-            messages: ArrayList<Array<Any>>,
+        contacts: HashMap<String, String>,
+        subscriptions: HashMap<Int, String>,
+        messages: ArrayList<Array<Any>>,
     ) {
 
         contacts.forEach { contact ->
@@ -97,7 +97,8 @@ class Index(private val activity: ActivityBase) {
                     realmMessage.buildId()
                 }
 
-                var realmThread = realmT.where(MessageThread::class.java).equalTo("user2", user2).findFirst()
+                var realmThread =
+                    realmT.where(MessageThread::class.java).equalTo("user2", user2).findFirst()
                 if (realmThread == null) {
                     realmThread = MessageThread()
                     realmThread.user2 = user2

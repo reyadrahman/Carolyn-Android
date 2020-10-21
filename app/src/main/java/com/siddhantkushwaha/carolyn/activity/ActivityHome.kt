@@ -2,6 +2,7 @@ package com.siddhantkushwaha.carolyn.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.siddhantkushwaha.carolyn.R
@@ -10,13 +11,11 @@ import com.siddhantkushwaha.carolyn.ai.MessageClassifierTask
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.common.RequestCodes
 import com.siddhantkushwaha.carolyn.entity.MessageThread
-import com.siddhantkushwaha.carolyn.index.Index
-import io.realm.OrderedRealmCollectionChangeListener
-import io.realm.Realm
-import io.realm.RealmResults
-import io.realm.Sort
+import com.siddhantkushwaha.carolyn.index.IndexTask
+import io.realm.*
 import kotlinx.android.synthetic.main.activity_home.*
-
+import java.util.*
+import kotlin.collections.ArrayList
 
 class ActivityHome : ActivityBase() {
 
@@ -30,16 +29,10 @@ class ActivityHome : ActivityBase() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
+        checkPermissions()
+
         FirebaseCrashlytics.getInstance()
             .setCustomKey("userEmail", mAuth.currentUser?.email ?: "null")
-
-        requestPermissions(
-            arrayOf(
-                android.Manifest.permission.READ_SMS,
-                android.Manifest.permission.READ_CONTACTS,
-                android.Manifest.permission.READ_PHONE_STATE
-            ), RequestCodes.REQUEST_PERMISSION_BASIC
-        )
 
         realm = RealmUtil.getCustomRealmInstance(this)
 
@@ -53,9 +46,6 @@ class ActivityHome : ActivityBase() {
         })
 
         threadsChangeListener = OrderedRealmCollectionChangeListener { _, _ ->
-
-            addMessagesToClassifier()
-
             threadsAdapter.notifyDataSetChanged()
         }
 
@@ -65,8 +55,7 @@ class ActivityHome : ActivityBase() {
         recycler_view_threads.layoutManager = layoutManager
         recycler_view_threads.adapter = threadsAdapter
 
-        // start indexing process
-        Thread { Index(this).initIndex() }.start()
+        digest()
     }
 
     override fun onResume() {
@@ -77,6 +66,22 @@ class ActivityHome : ActivityBase() {
     override fun onPause() {
         super.onPause()
         threads.removeAllChangeListeners()
+    }
+
+    private fun checkPermissions() {
+        requestPermissions(
+            arrayOf(
+                android.Manifest.permission.READ_SMS,
+                android.Manifest.permission.READ_CONTACTS,
+                android.Manifest.permission.READ_PHONE_STATE
+            ), RequestCodes.REQUEST_PERMISSION_BASIC
+        ) {
+            startIndexingThread()
+        }
+    }
+
+    private fun startIndexingThread() {
+        IndexTask(this).start()
     }
 
     private fun addMessagesToClassifier() {
@@ -93,5 +98,16 @@ class ActivityHome : ActivityBase() {
         if (messagesToClassify.size > 0) {
             MessageClassifierTask(this, messagesToClassify).start()
         }
+    }
+
+    private fun digest() {
+        Timer().scheduleAtFixedRate(object : TimerTask() {
+            override fun run() {
+                Log.d(TAG, "Digest called for MessageClassifierTask")
+                runOnUiThread {
+                    addMessagesToClassifier()
+                }
+            }
+        }, 30 * 1000, 60 * 1000)
     }
 }

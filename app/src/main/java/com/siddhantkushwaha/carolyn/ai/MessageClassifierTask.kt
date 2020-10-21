@@ -6,8 +6,8 @@ import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.Message
 
 class MessageClassifierTask(
-        private val activity: Activity,
-        private val messages: ArrayList<Pair<String, String>>
+    private val activity: Activity,
+    private val messages: ArrayList<Pair<String, String>>
 ) : Thread() {
 
     companion object {
@@ -15,11 +15,13 @@ class MessageClassifierTask(
 
         @JvmStatic
         private var inProgress = false
+
+        @JvmStatic
+        private var messageClassifier: MessageClassifier? = null
     }
 
     private val taskId = ('a'..'z').shuffled().take(6).joinToString("")
 
-    private var messageClassifier: MessageClassifier? = null
 
     override fun run() {
 
@@ -44,7 +46,8 @@ class MessageClassifierTask(
             val messageClass = messageClassifier?.doClassification(message.second)
             if (messageClass != null) {
                 realm.executeTransaction { realmT ->
-                    val messageL = realmT.where(Message::class.java).equalTo("id", message.first).findFirst()
+                    val messageL =
+                        realmT.where(Message::class.java).equalTo("id", message.first).findFirst()
                     if (messageL != null) {
                         messageL.type = messageClass
                         realmT.insertOrUpdate(messageL)

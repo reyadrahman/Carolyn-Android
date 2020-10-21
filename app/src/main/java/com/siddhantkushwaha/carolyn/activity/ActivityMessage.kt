@@ -35,7 +35,7 @@ class ActivityMessage : ActivityBase() {
 
         val user2 = intent.getStringExtra("user2")!!
         messages = realm.where(Message::class.java).equalTo("messageThread.user2", user2)
-                .sort("timestamp", Sort.ASCENDING).findAllAsync()
+            .sort("timestamp", Sort.ASCENDING).findAllAsync()
 
         thread = realm.where(MessageThread::class.java).equalTo("user2", user2).findFirst()!!
 
@@ -44,9 +44,6 @@ class ActivityMessage : ActivityBase() {
         messageAdapter = MessageAdapter(messages, true)
 
         messagesChangeListener = OrderedRealmCollectionChangeListener { _, _ ->
-
-            addMessagesToClassifier()
-
             messageAdapter.notifyDataSetChanged()
         }
 
