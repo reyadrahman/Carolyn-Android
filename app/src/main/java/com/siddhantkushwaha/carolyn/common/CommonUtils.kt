@@ -14,12 +14,12 @@ import com.siddhantkushwaha.carolyn.activity.ActivityBase
 import java.io.File
 import java.security.MessageDigest
 
-fun getHash(data: String, algorithm: String = "SHA-256"): String {
+public fun getHash(data: String, algorithm: String = "SHA-256"): String {
     return MessageDigest.getInstance(algorithm).digest(data.toByteArray())
         .fold("", { str, it -> str + "%02x".format(it) })
 }
 
-fun normalizePhoneNumber(number: String): String {
+public fun normalizePhoneNumber(number: String): String {
     return try {
         val phoneNumberUtil = PhoneNumberUtil.getInstance()
         val parsedPhone = phoneNumberUtil.parse(number, "IN")
@@ -33,7 +33,7 @@ fun normalizePhoneNumber(number: String): String {
 }
 
 @SuppressLint("MissingPermission")
-fun getSubscriptions(activity: ActivityBase): HashMap<Int, String>? {
+public fun getSubscriptions(activity: ActivityBase): HashMap<Int, String>? {
     var subscriptions: HashMap<Int, String>? = null
     if (activity.checkPermissions(arrayOf(android.Manifest.permission.READ_PHONE_STATE)).isEmpty()
     ) {
@@ -47,7 +47,7 @@ fun getSubscriptions(activity: ActivityBase): HashMap<Int, String>? {
 }
 
 @SuppressLint("MissingPermission")
-fun getAllSms(activity: ActivityBase): ArrayList<Array<Any>>? {
+public fun getAllSms(activity: ActivityBase): ArrayList<Array<Any>>? {
     var messages: ArrayList<Array<Any>>? = null
     if (activity.checkPermissions(arrayOf(android.Manifest.permission.READ_SMS)).isEmpty()) {
         messages = ArrayList()
@@ -106,7 +106,7 @@ fun getAllSms(activity: ActivityBase): ArrayList<Array<Any>>? {
 }
 
 @SuppressLint("MissingPermission")
-fun getAllContacts(
+public fun getAllContacts(
     activity: ActivityBase,
 ): HashMap<String, String>? {
     var contactsList: HashMap<String, String>? = null
@@ -130,7 +130,7 @@ fun getAllContacts(
     return contactsList
 }
 
-fun containsDigit(s: String): Boolean {
+public fun containsDigit(s: String): Boolean {
     var containsDigit = false
     if (s.isNotEmpty()) {
         for (c in s.toCharArray()) {
@@ -142,7 +142,7 @@ fun containsDigit(s: String): Boolean {
     return containsDigit
 }
 
-fun cleanText(text: String): String {
+public fun cleanText(text: String): String {
     val textBuilder = StringBuilder()
     for (word in text.split(" ")) {
 
@@ -178,7 +178,7 @@ fun cleanText(text: String): String {
     return textBuilder2.toString().trim()
 }
 
-fun writeFile(activity: Activity, data: String, fileName: String) {
+public fun writeFile(activity: Activity, data: String, fileName: String) {
     val path = activity.getExternalFilesDir(null)
     println("Writing file: $path")
     val file = File(path, fileName)
@@ -188,4 +188,9 @@ fun writeFile(activity: Activity, data: String, fileName: String) {
     } catch (exp: Exception) {
         exp.printStackTrace()
     }
+}
+
+public fun getExternalFilesDir(activity: Activity): File {
+    return activity.getExternalFilesDir(null)
+        ?: throw Exception("Couldn't create file object.")
 }

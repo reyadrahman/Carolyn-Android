@@ -1,4 +1,4 @@
-package com.siddhantkushwaha.carolyn;
+package com.siddhantkushwaha.carolyn.common;
 
 import com.google.firebase.database.FirebaseDatabase;
 

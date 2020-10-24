@@ -8,54 +8,70 @@ import com.google.firebase.ml.custom.FirebaseCustomRemoteModel
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.siddhantkushwaha.carolyn.common.getExternalFilesDir
 import org.tensorflow.lite.Interpreter
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 class MessageClassifier private constructor(
-        private val interpreter: Interpreter,
-        private val metaData: Metadata
+    private val interpreter: Interpreter,
+    private val metaData: Metadata
 ) {
 
     data class Metadata(
-            val maxLen: Int,
-            val classes: Array<String>,
-            val index: HashMap<String, Float>
+        val maxLen: Int,
+        val classes: Array<String>,
+        val index: HashMap<String, Float>
     )
 
     private val tag = "MessageClassifier"
 
     companion object {
 
-        private fun downloadModel(remoteModel: FirebaseCustomRemoteModel) {
+        private val modelName = "message_classifier"
+        private val metadataName = "meta.json"
+        private val remoteModel = FirebaseCustomRemoteModel.Builder(modelName).build()
+
+        /* --------------------------- FirebaseML model functions -------------------------------- */
+
+        public fun downloadModel() {
             val conditions = FirebaseModelDownloadConditions.Builder().build()
             Tasks.await(FirebaseModelManager.getInstance().download(remoteModel, conditions))
         }
 
-        private fun getInterpreter(remoteModel: FirebaseCustomRemoteModel): Interpreter {
-            val modelFile = Tasks.await(FirebaseModelManager.getInstance().getLatestModelFile(remoteModel))
+        public fun isModelDownloaded(): Boolean {
+            return Tasks.await(FirebaseModelManager.getInstance().isModelDownloaded(remoteModel))
+        }
+
+        private fun getInterpreter(): Interpreter {
+            val modelFile =
+                Tasks.await(FirebaseModelManager.getInstance().getLatestModelFile(remoteModel))
             return Interpreter(modelFile)
         }
 
-        private fun loadModel(modelName: String, forceDownload: Boolean = false): Interpreter {
-            val remoteModel = FirebaseCustomRemoteModel.Builder(modelName).build()
-            val isModelDownloaded = Tasks.await(FirebaseModelManager.getInstance().isModelDownloaded(remoteModel))
-            return if (isModelDownloaded && !forceDownload) {
-                getInterpreter(remoteModel)
+        private fun loadModel(forceDownload: Boolean = false): Interpreter {
+            return if (isModelDownloaded() && !forceDownload) {
+                getInterpreter()
             } else {
-                downloadModel(remoteModel)
-                getInterpreter(remoteModel)
+                downloadModel()
+                getInterpreter()
             }
         }
 
-        private fun downloadMetadata(metadataName: String, localDirPath: File) {
+        /* -------------------------------- Metadata functions ---------------------------------- */
+
+        public fun downloadMetadata(activity: Activity) {
             val firebaseStorage = FirebaseStorage.getInstance()
-            val metaData = File(localDirPath, metadataName)
+            val metaData = File(getExternalFilesDir(activity), metadataName)
             Tasks.await(firebaseStorage.getReference(metadataName).getFile(metaData))
         }
 
-        private fun getMetaData(metadataName: String, localDirPath: File): Metadata {
+        public fun isMetadataDownloaded(activity: Activity): Boolean {
+            return File(getExternalFilesDir(activity), metadataName).exists()
+        }
+
+        private fun getMetaData(localDirPath: File): Metadata {
 
             val maxLenAttr = "maxlen"
             val classesAttr = "classes"
@@ -65,30 +81,32 @@ class MessageClassifier private constructor(
             val metaDataFile = File(localDirPath, metadataName)
             val metaJson = gson.fromJson(metaDataFile.bufferedReader(), JsonObject::class.java)
             val maxLen = metaJson.getAsJsonPrimitive(maxLenAttr).asInt
-            val classes = gson.fromJson(metaJson.getAsJsonArray(classesAttr), Array(0) { "" }.javaClass)
-            val index = gson.fromJson(metaJson.getAsJsonObject(indexAttr), HashMap<String, Float>().javaClass)
+            val classes =
+                gson.fromJson(metaJson.getAsJsonArray(classesAttr), Array(0) { "" }.javaClass)
+            val index = gson.fromJson(
+                metaJson.getAsJsonObject(indexAttr),
+                HashMap<String, Float>().javaClass
+            )
             return Metadata(maxLen, classes, index)
         }
 
-        private fun loadMetaData(activity: Activity, metadataName: String, forceDownload: Boolean = false): Metadata {
-            val localDirPath = activity.getExternalFilesDir(null)!!
-            val metaDataFile = File(localDirPath, metadataName)
-            return if (metaDataFile.exists() && !forceDownload) {
-                getMetaData(metadataName, localDirPath)
+        private fun loadMetaData(activity: Activity, forceDownload: Boolean = false): Metadata {
+            return if (isMetadataDownloaded(activity) && !forceDownload) {
+                getMetaData(getExternalFilesDir(activity))
             } else {
-                downloadMetadata(metadataName, localDirPath)
-                getMetaData(metadataName, localDirPath)
+                downloadMetadata(activity)
+                getMetaData(getExternalFilesDir(activity))
             }
         }
 
-        fun getInstance(activity: Activity): MessageClassifier? {
+        /* ----------------------------- get classifier object ---------------------------------- */
+
+        public fun getInstance(activity: Activity): MessageClassifier? {
             var messageClassifier: MessageClassifier? = null
             try {
-                val modelName = "message_classifier"
-                val interpreter = loadModel(modelName)
 
-                val metadataName = "meta.json"
-                val metaData = loadMetaData(activity, metadataName)
+                val interpreter = loadModel()
+                val metaData = loadMetaData(activity)
 
                 messageClassifier = MessageClassifier(interpreter, metaData)
             } catch (exception: Exception) {
@@ -114,7 +132,8 @@ class MessageClassifier private constructor(
         }
 
         val input = ByteBuffer.allocateDirect(metaData.maxLen * 4).order(ByteOrder.nativeOrder())
-        val output = ByteBuffer.allocateDirect(metaData.classes.size * 4).order(ByteOrder.nativeOrder())
+        val output =
+            ByteBuffer.allocateDirect(metaData.classes.size * 4).order(ByteOrder.nativeOrder())
 
         tokenToIndex.forEach { tokenVal -> input.putFloat(tokenVal) }
         interpreter.run(input, output)

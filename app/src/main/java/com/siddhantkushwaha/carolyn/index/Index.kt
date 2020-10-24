@@ -2,7 +2,7 @@ package com.siddhantkushwaha.carolyn.index
 
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
-import com.siddhantkushwaha.carolyn.FirebaseUtils
+import com.siddhantkushwaha.carolyn.common.FirebaseUtils
 import com.siddhantkushwaha.carolyn.activity.ActivityBase
 import com.siddhantkushwaha.carolyn.common.*
 import com.siddhantkushwaha.carolyn.entity.Message
@@ -21,7 +21,7 @@ class Index(private val activity: ActivityBase) {
         val messages = getAllSms(activity)
 
         if (contacts != null && subscriptions != null && messages != null) {
-            saveToRealm(contacts, subscriptions, messages)
+            saveToRealm(subscriptions, messages)
             uploadToFirebase(contacts)
         }
     }
@@ -54,70 +54,65 @@ class Index(private val activity: ActivityBase) {
     }
 
     private fun saveToRealm(
-        contacts: HashMap<String, String>,
         subscriptions: HashMap<Int, String>,
         messages: ArrayList<Array<Any>>,
     ) {
-
-        contacts.forEach { contact ->
-            Log.d(TAG, contact.toString())
+        // save all messages/build threads and save to realm
+        messages.forEach { message ->
+            indexMessage(message, subscriptions)
         }
+    }
 
-        subscriptions.forEach { subscription ->
-            Log.d(TAG, subscription.toString())
-        }
+    public fun indexMessage(message: Array<Any>, subscriptions: HashMap<Int, String>) {
+        var user2DisplayName = message[1] as String
+        val timestamp = message[2] as Long
+        val body = message[3] as String
+        val type = message[4] as Int
+        val subId = message[5] as Int
+
+        val sent = type == 2
+        val user1 = subscriptions[subId] ?: "unknown"
+
+        user2DisplayName = normalizePhoneNumber(user2DisplayName)
+        val user2 = user2DisplayName.toLowerCase()
+
+        val id = getHash("$timestamp, $body, $sent")
 
         val realm = RealmUtil.getCustomRealmInstance(activity)
 
-        // save all messages/build threads and save to realm
-        messages.forEach { message ->
-            var user2DisplayName = message[1] as String
-            val timestamp = message[2] as Long
-            val body = message[3] as String
-            val type = message[4] as Int
-            val subId = message[5] as Int
+        Log.d(TAG, "Saving message $id")
+        realm.executeTransaction { realmT ->
 
-            val sent = type == 2
-            val user1 = subscriptions[subId] ?: "unknown"
-
-            user2DisplayName = normalizePhoneNumber(user2DisplayName)
-            val user2 = user2DisplayName.toLowerCase()
-
-            val id = getHash("$timestamp, $body, $sent")
-
-            Log.d(TAG, "Saving message $id")
-            realm.executeTransaction { realmT ->
-
-                var realmMessage = realmT.where(Message::class.java).equalTo("id", id).findFirst()
-                if (realmMessage == null) {
-                    realmMessage = Message()
-                    realmMessage.body = body
-                    realmMessage.timestamp = timestamp
-                    realmMessage.sent = sent
-                    realmMessage.buildId()
-                }
-
-                var realmThread =
-                    realmT.where(MessageThread::class.java).equalTo("user2", user2).findFirst()
-                if (realmThread == null) {
-                    realmThread = MessageThread()
-                    realmThread.user2 = user2
-                }
-
-                realmThread.user1 = user1
-                realmThread.user2DisplayName = user2DisplayName
-
-                if (realmMessage.timestamp!! > realmThread.lastMessage?.timestamp ?: 0) {
-                    realmThread.lastMessage = realmT.copyToRealm(realmMessage)
-                }
-
-                realmMessage.messageThread = realmThread
-
-                realmT.insertOrUpdate(realmThread)
-                realmT.insertOrUpdate(realmMessage)
+            var realmMessage = realmT.where(Message::class.java).equalTo("id", id).findFirst()
+            if (realmMessage == null) {
+                realmMessage = Message()
+                realmMessage.body = body
+                realmMessage.timestamp = timestamp
+                realmMessage.sent = sent
+                realmMessage.buildId()
             }
+
+            var realmThread =
+                realmT.where(MessageThread::class.java).equalTo("user2", user2).findFirst()
+            if (realmThread == null) {
+                realmThread = MessageThread()
+                realmThread.user2 = user2
+            }
+
+            realmThread.user1 = user1
+            realmThread.user2DisplayName = user2DisplayName
+
+            if (realmMessage.timestamp!! > realmThread.lastMessage?.timestamp ?: 0) {
+                realmThread.lastMessage = realmT.copyToRealm(realmMessage)
+            }
+
+            realmMessage.messageThread = realmThread
+
+            realmT.insertOrUpdate(realmThread)
+            realmT.insertOrUpdate(realmMessage)
         }
 
         realm.close()
     }
+
 }

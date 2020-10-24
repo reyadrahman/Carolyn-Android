@@ -25,6 +25,13 @@ class ActivityHome : ActivityBase() {
     private lateinit var threadsAdapter: ThreadAdapter
     private lateinit var threadsChangeListener: OrderedRealmCollectionChangeListener<RealmResults<MessageThread>>
 
+    private lateinit var timer: Timer
+
+    private lateinit var timerTaskClassify: TimerTask
+    private lateinit var timerTaskIndexing: TimerTask
+
+    private val taskInterval = 10 * 1000L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
@@ -55,17 +62,36 @@ class ActivityHome : ActivityBase() {
         recycler_view_threads.layoutManager = layoutManager
         recycler_view_threads.adapter = threadsAdapter
 
-        digest()
+        timer = Timer()
+
+        timerTaskClassify = object : TimerTask() {
+            override fun run() {
+                Log.d(TAG, "MessageClassifierTask called.")
+                runOnUiThread {
+                    addMessagesToClassifier()
+                }
+            }
+        }
+
+        timerTaskIndexing = object : TimerTask() {
+            override fun run() {
+                Log.d(TAG, "IndexTask called.")
+                IndexTask(this@ActivityHome).start()
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
         threads.addChangeListener(threadsChangeListener)
+        timer.scheduleAtFixedRate(timerTaskIndexing, taskInterval, taskInterval)
+        timer.scheduleAtFixedRate(timerTaskClassify, taskInterval + 5, taskInterval)
     }
 
     override fun onPause() {
         super.onPause()
         threads.removeAllChangeListeners()
+        timer.cancel()
     }
 
     private fun checkPermissions() {
@@ -76,13 +102,10 @@ class ActivityHome : ActivityBase() {
                 android.Manifest.permission.READ_PHONE_STATE
             ), RequestCodes.REQUEST_PERMISSION_BASIC
         ) {
-            startIndexingThread()
+            IndexTask(this).start()
         }
     }
 
-    private fun startIndexingThread() {
-        IndexTask(this).start()
-    }
 
     private fun addMessagesToClassifier() {
         val messagesToClassify = ArrayList<Pair<String, String>>()
@@ -98,16 +121,5 @@ class ActivityHome : ActivityBase() {
         if (messagesToClassify.size > 0) {
             MessageClassifierTask(this, messagesToClassify).start()
         }
-    }
-
-    private fun digest() {
-        Timer().scheduleAtFixedRate(object : TimerTask() {
-            override fun run() {
-                Log.d(TAG, "Digest called for MessageClassifierTask")
-                runOnUiThread {
-                    addMessagesToClassifier()
-                }
-            }
-        }, 30 * 1000, 60 * 1000)
     }
 }

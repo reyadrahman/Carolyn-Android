@@ -6,7 +6,7 @@ import io.realm.RealmConfiguration
 
 object RealmUtil {
 
-    fun getCustomRealmInstance(context: Context?): Realm {
+    public fun getCustomRealmInstance(context: Context?): Realm {
         Realm.init(context)
         val config = RealmConfiguration.Builder()
                 .name("realm_custom.realm")
@@ -15,7 +15,7 @@ object RealmUtil {
         return Realm.getInstance(config)
     }
 
-    fun clearData(realm: Realm) {
+    public fun clearData(realm: Realm) {
         realm.executeTransaction { realmL: Realm -> realmL.deleteAll() }
     }
 }
