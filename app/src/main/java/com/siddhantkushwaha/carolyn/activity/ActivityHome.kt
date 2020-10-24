@@ -25,12 +25,11 @@ class ActivityHome : ActivityBase() {
     private lateinit var threadsAdapter: ThreadAdapter
     private lateinit var threadsChangeListener: OrderedRealmCollectionChangeListener<RealmResults<MessageThread>>
 
-    private lateinit var timer: Timer
+    private var timer: Timer? = null
+    private var timerTaskClassify: TimerTask? = null
+    private var timerTaskIndexing: TimerTask? = null
 
-    private lateinit var timerTaskClassify: TimerTask
-    private lateinit var timerTaskIndexing: TimerTask
-
-    private val taskInterval = 10 * 1000L
+    private val taskInterval = 15 * 1000L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,9 +60,13 @@ class ActivityHome : ActivityBase() {
 
         recycler_view_threads.layoutManager = layoutManager
         recycler_view_threads.adapter = threadsAdapter
+    }
+
+    override fun onResume() {
+        super.onResume()
+        threads.addChangeListener(threadsChangeListener)
 
         timer = Timer()
-
         timerTaskClassify = object : TimerTask() {
             override fun run() {
                 Log.d(TAG, "MessageClassifierTask called.")
@@ -72,26 +75,21 @@ class ActivityHome : ActivityBase() {
                 }
             }
         }
-
         timerTaskIndexing = object : TimerTask() {
             override fun run() {
                 Log.d(TAG, "IndexTask called.")
                 IndexTask(this@ActivityHome).start()
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        threads.addChangeListener(threadsChangeListener)
-        timer.scheduleAtFixedRate(timerTaskIndexing, taskInterval, taskInterval)
-        timer.scheduleAtFixedRate(timerTaskClassify, taskInterval + 5, taskInterval)
+        timer!!.scheduleAtFixedRate(timerTaskIndexing!!, taskInterval, taskInterval)
+        timer!!.scheduleAtFixedRate(timerTaskClassify!!, taskInterval + 5, taskInterval)
     }
 
     override fun onPause() {
         super.onPause()
         threads.removeAllChangeListeners()
-        timer.cancel()
+
+        timer!!.cancel()
     }
 
     private fun checkPermissions() {
