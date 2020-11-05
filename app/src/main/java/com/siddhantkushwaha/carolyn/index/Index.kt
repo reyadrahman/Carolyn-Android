@@ -1,69 +1,25 @@
 package com.siddhantkushwaha.carolyn.index
 
+import android.content.Context
 import android.util.Log
-import com.google.firebase.auth.FirebaseAuth
-import com.siddhantkushwaha.carolyn.common.FirebaseUtils
-import com.siddhantkushwaha.carolyn.activity.ActivityBase
 import com.siddhantkushwaha.carolyn.common.*
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 
-class Index(private val activity: ActivityBase) {
+class Index(val context: Context) {
 
-    private val TAG: String = this::class.java.toString()
-
-    private val firebaseDatabase = FirebaseUtils.getRealtimeDb(false)
-    private val firebaseAuth = FirebaseAuth.getInstance()
+    private val tag: String = this::class.java.toString()
+    private var subscriptions: HashMap<Int, String>? = getSubscriptions(context)
 
     public fun initIndex() {
-        val contacts = getAllContacts(activity)
-        val subscriptions = getSubscriptions(activity)
-        val messages = getAllSms(activity)
-
-        if (contacts != null && subscriptions != null && messages != null) {
-            saveToRealm(subscriptions, messages)
-            uploadToFirebase(contacts)
+        getAllSms(context)?.forEach { message ->
+            indexMessage(message)
         }
     }
 
-    private fun uploadToFirebase(contacts: HashMap<String, String>) {
-        val realm = RealmUtil.getCustomRealmInstance(activity)
+    public fun indexMessage(message: Array<Any>): Int {
+        val subscriptions = subscriptions ?: return 1
 
-        realm.where(Message::class.java).findAll().forEach { message ->
-            val body = cleanText(message.body!!)
-
-            // validate message body
-            if (body.count { it == '#' } / body.length.toFloat() < 0.5) {
-                // if message is not in contacts
-                if (!contacts.containsKey(message.messageThread!!.user2!!)) {
-                    val data = HashMap<String, String>()
-
-                    data["userId"] = firebaseAuth.currentUser?.email ?: "unknown"
-                    data["messageId"] = message.id!!
-                    data["user1"] = message.messageThread!!.user1!!
-                    data["user2"] = message.messageThread!!.user2!!
-                    data["timestamp"] = "${message.timestamp!!}"
-                    data["body"] = body
-
-                    firebaseDatabase.getReference("messages/${message.id!!}").setValue(data)
-                }
-            }
-        }
-
-        realm.close()
-    }
-
-    private fun saveToRealm(
-        subscriptions: HashMap<Int, String>,
-        messages: ArrayList<Array<Any>>,
-    ) {
-        // save all messages/build threads and save to realm
-        messages.forEach { message ->
-            indexMessage(message, subscriptions)
-        }
-    }
-
-    public fun indexMessage(message: Array<Any>, subscriptions: HashMap<Int, String>) {
         var user2DisplayName = message[1] as String
         val timestamp = message[2] as Long
         val body = message[3] as String
@@ -78,9 +34,9 @@ class Index(private val activity: ActivityBase) {
 
         val id = getHash("$timestamp, $body, $sent")
 
-        val realm = RealmUtil.getCustomRealmInstance(activity)
+        val realm = RealmUtil.getCustomRealmInstance(context)
 
-        Log.d(TAG, "Saving message $id")
+        Log.d(tag, "Saving message $id")
         realm.executeTransaction { realmT ->
 
             var realmMessage = realmT.where(Message::class.java).equalTo("id", id).findFirst()
@@ -113,6 +69,8 @@ class Index(private val activity: ActivityBase) {
         }
 
         realm.close()
+
+        return 0
     }
 
 }

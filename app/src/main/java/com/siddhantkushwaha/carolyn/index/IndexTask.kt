@@ -5,14 +5,18 @@ import com.siddhantkushwaha.carolyn.activity.ActivityBase
 
 class IndexTask(private val activity: ActivityBase) : Thread() {
 
+    private val tag = "IndexTask"
+
     companion object {
-        private val tag = "IndexTask"
 
         @JvmStatic
         private var inProgress = false
 
         @JvmStatic
         private var index: Index? = null
+
+        @JvmStatic
+        private var indexToFirebase: IndexToFirebase? = null
     }
 
     private val taskId = ('a'..'z').shuffled().take(6).joinToString("")
@@ -31,6 +35,12 @@ class IndexTask(private val activity: ActivityBase) : Thread() {
             index = Index(activity)
         }
         index?.initIndex()
+
+        if (indexToFirebase == null) {
+            Log.d("${tag}-$taskId", "Initializing indexToFirebase object.")
+            indexToFirebase = IndexToFirebase(activity)
+        }
+        indexToFirebase?.upload()
 
         inProgress = false
 

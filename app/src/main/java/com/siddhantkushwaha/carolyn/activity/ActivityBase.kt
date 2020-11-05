@@ -5,7 +5,6 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import com.google.firebase.auth.FirebaseAuth
 
 open class ActivityBase : AppCompatActivity() {
@@ -14,7 +13,7 @@ open class ActivityBase : AppCompatActivity() {
     lateinit var mAuth: FirebaseAuth
 
     // saves callbacks to be used in onRequestPermissionsResult
-    private val requestPermissionCallbacks = HashMap<Int, (Boolean) -> Unit>()
+    protected val requestPermissionCallbacks = HashMap<Int, (Boolean) -> Unit>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,28 +62,5 @@ open class ActivityBase : AppCompatActivity() {
         val intent = Intent(this, ActivityHome::class.java)
         startActivity(intent)
         finish()
-    }
-
-    fun checkPermissions(permissions: Array<String>): Array<String> {
-        return permissions.filter { permission ->
-            ActivityCompat.checkSelfPermission(
-                this,
-                permission
-            ) != PackageManager.PERMISSION_GRANTED
-        }.toTypedArray()
-    }
-
-    fun requestPermissions(
-        permissions: Array<String>,
-        requestCode: Int,
-        callback: (Boolean) -> Unit
-    ) {
-        val requiredPermissions = checkPermissions(permissions)
-        if (requiredPermissions.isNotEmpty()) {
-            requestPermissionCallbacks[requestCode] = callback
-            ActivityCompat.requestPermissions(this, requiredPermissions, requestCode)
-        } else {
-            callback(true)
-        }
     }
 }

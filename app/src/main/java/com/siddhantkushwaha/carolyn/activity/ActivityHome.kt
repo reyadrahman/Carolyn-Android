@@ -8,11 +8,15 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.ThreadAdapter
 import com.siddhantkushwaha.carolyn.ai.MessageClassifierTask
+import com.siddhantkushwaha.carolyn.common.PermissionsUtil
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.common.RequestCodes
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.index.IndexTask
-import io.realm.*
+import io.realm.OrderedRealmCollectionChangeListener
+import io.realm.Realm
+import io.realm.RealmResults
+import io.realm.Sort
 import kotlinx.android.synthetic.main.activity_home.*
 import java.util.*
 import kotlin.collections.ArrayList
@@ -93,17 +97,20 @@ class ActivityHome : ActivityBase() {
     }
 
     private fun checkPermissions() {
-        requestPermissions(
+        PermissionsUtil.requestPermissions(
+            this,
             arrayOf(
                 android.Manifest.permission.READ_SMS,
+                android.Manifest.permission.RECEIVE_SMS,
                 android.Manifest.permission.READ_CONTACTS,
                 android.Manifest.permission.READ_PHONE_STATE
-            ), RequestCodes.REQUEST_PERMISSION_BASIC
+            ),
+            RequestCodes.REQUEST_CODE_PERMISSION_BASIC,
+            requestPermissionCallbacks
         ) {
             IndexTask(this).start()
         }
     }
-
 
     private fun addMessagesToClassifier() {
         val messagesToClassify = ArrayList<Pair<String, String>>()

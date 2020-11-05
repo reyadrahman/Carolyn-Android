@@ -10,7 +10,7 @@ import com.google.android.gms.common.api.ApiException
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.GoogleAuthProvider
 import com.siddhantkushwaha.carolyn.R
-import com.siddhantkushwaha.carolyn.common.RequestCodes.RC_SIGN_IN
+import com.siddhantkushwaha.carolyn.common.RequestCodes.REQUEST_CODE_SIGN_IN
 import kotlinx.android.synthetic.main.activity_login.*
 
 
@@ -44,12 +44,12 @@ class ActivityLogin : ActivityBase() {
 
     private fun startLogin() {
         val signInIntent = mGoogleSignInClient.signInIntent
-        startActivityForResult(signInIntent, RC_SIGN_IN)
+        startActivityForResult(signInIntent, REQUEST_CODE_SIGN_IN)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == RC_SIGN_IN) {
+        if (requestCode == REQUEST_CODE_SIGN_IN) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
                 val account = task.getResult(ApiException::class.java)!!
