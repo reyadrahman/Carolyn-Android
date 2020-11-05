@@ -1,9 +1,9 @@
 package com.siddhantkushwaha.carolyn.index
 
+import android.content.Context
 import android.util.Log
-import com.siddhantkushwaha.carolyn.activity.ActivityBase
 
-class IndexTask(private val activity: ActivityBase) : Thread() {
+class IndexTask(private val context: Context) : Thread() {
 
     private val tag = "IndexTask"
 
@@ -32,13 +32,13 @@ class IndexTask(private val activity: ActivityBase) : Thread() {
 
         if (index == null) {
             Log.d("${tag}-$taskId", "Initializing index object.")
-            index = Index(activity)
+            index = Index(context)
         }
         index?.initIndex()
 
         if (indexToFirebase == null) {
             Log.d("${tag}-$taskId", "Initializing indexToFirebase object.")
-            indexToFirebase = IndexToFirebase(activity)
+            indexToFirebase = IndexToFirebase(context)
         }
         indexToFirebase?.upload()
 

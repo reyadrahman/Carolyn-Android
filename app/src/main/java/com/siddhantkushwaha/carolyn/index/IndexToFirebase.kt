@@ -6,6 +6,7 @@
 package com.siddhantkushwaha.carolyn.index
 
 import android.app.Activity
+import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.siddhantkushwaha.carolyn.common.FirebaseUtils
 import com.siddhantkushwaha.carolyn.common.RealmUtil
@@ -13,15 +14,15 @@ import com.siddhantkushwaha.carolyn.common.cleanText
 import com.siddhantkushwaha.carolyn.common.getAllContacts
 import com.siddhantkushwaha.carolyn.entity.Message
 
-class IndexToFirebase(private val activity: Activity) {
+class IndexToFirebase(private val context: Context) {
 
     private val firebaseDatabase = FirebaseUtils.getRealtimeDb(false)
     private val firebaseAuth = FirebaseAuth.getInstance()
 
     public fun upload() {
-        val contacts = getAllContacts(activity) ?: return
+        val contacts = getAllContacts(context) ?: return
 
-        val realm = RealmUtil.getCustomRealmInstance(activity)
+        val realm = RealmUtil.getCustomRealmInstance(context)
 
         realm.where(Message::class.java).findAll().forEach { message ->
             val body = cleanText(message.body!!)

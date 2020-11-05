@@ -10,7 +10,6 @@ import com.siddhantkushwaha.carolyn.index.Index
 
 class SMSReceiver : BroadcastReceiver() {
 
-
     override fun onReceive(context: Context, intent: Intent) {
 
         val tag = this::class.java.toString()
@@ -46,5 +45,4 @@ class SMSReceiver : BroadcastReceiver() {
         }
 
     }
-
 }
