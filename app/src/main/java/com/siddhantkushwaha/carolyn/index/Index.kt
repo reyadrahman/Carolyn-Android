@@ -12,9 +12,41 @@ class Index(val context: Context) {
     private var subscriptions: HashMap<Int, String>? = getSubscriptions(context)
 
     public fun initIndex() {
-        getAllSms(context)?.forEach { message ->
+        val messages = getAllSms(context)
+
+        // add all new messages
+        messages?.forEach { message ->
             indexMessage(message)
         }
+
+        // remove deleted messages
+        val realm = RealmUtil.getCustomRealmInstance(context)
+
+        realm.where(Message::class.java).findAll().forEach { message ->
+
+            val result = messages?.find { arrMessage ->
+                arrMessage[2] == message.timestamp && arrMessage[3] == message.body
+            }
+
+            if(result == null) {
+                Log.d(tag, "Message deleted: ${message.body}")
+                realm.executeTransaction {
+                    message.deleteFromRealm()
+                }
+            }
+        }
+
+
+        // delete threads with no messages
+        realm.where(MessageThread::class.java).findAll().forEach { th ->
+            if(th.lastMessage == null) {
+                realm.executeTransaction {
+                    th.deleteFromRealm()
+                }
+            }
+        }
+
+        realm.close()
     }
 
     public fun indexMessage(message: Array<Any>): Int {
