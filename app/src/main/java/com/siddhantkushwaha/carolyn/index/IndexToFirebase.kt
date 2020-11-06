@@ -5,7 +5,6 @@
 
 package com.siddhantkushwaha.carolyn.index
 
-import android.app.Activity
 import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.siddhantkushwaha.carolyn.common.FirebaseUtils

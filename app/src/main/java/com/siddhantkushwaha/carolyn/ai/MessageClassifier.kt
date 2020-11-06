@@ -1,6 +1,6 @@
 package com.siddhantkushwaha.carolyn.ai
 
-import android.app.Activity
+import android.content.Context
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions
 import com.google.firebase.ml.common.modeldownload.FirebaseModelManager
@@ -8,7 +8,7 @@ import com.google.firebase.ml.custom.FirebaseCustomRemoteModel
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.siddhantkushwaha.carolyn.common.getExternalFilesDir
+import com.siddhantkushwaha.carolyn.common.cleanText
 import org.tensorflow.lite.Interpreter
 import java.io.File
 import java.nio.ByteBuffer
@@ -61,24 +61,24 @@ class MessageClassifier private constructor(
 
         /* -------------------------------- Metadata functions ---------------------------------- */
 
-        public fun downloadMetadata(activity: Activity) {
+        public fun downloadMetadata(context: Context) {
             val firebaseStorage = FirebaseStorage.getInstance()
-            val metaData = File(getExternalFilesDir(activity), metadataName)
+            val metaData = File(context.getExternalFilesDir(null), metadataName)
             Tasks.await(firebaseStorage.getReference(metadataName).getFile(metaData))
         }
 
-        public fun isMetadataDownloaded(activity: Activity): Boolean {
-            return File(getExternalFilesDir(activity), metadataName).exists()
+        public fun isMetadataDownloaded(context: Context): Boolean {
+            return File(context.getExternalFilesDir(null), metadataName).exists()
         }
 
-        private fun getMetaData(localDirPath: File): Metadata {
+        private fun getMetaData(context: Context): Metadata {
 
             val maxLenAttr = "maxlen"
             val classesAttr = "classes"
             val indexAttr = "index"
 
             val gson = Gson()
-            val metaDataFile = File(localDirPath, metadataName)
+            val metaDataFile = File(context.getExternalFilesDir(null), metadataName)
             val metaJson = gson.fromJson(metaDataFile.bufferedReader(), JsonObject::class.java)
             val maxLen = metaJson.getAsJsonPrimitive(maxLenAttr).asInt
             val classes =
@@ -90,23 +90,23 @@ class MessageClassifier private constructor(
             return Metadata(maxLen, classes, index)
         }
 
-        private fun loadMetaData(activity: Activity, forceDownload: Boolean = false): Metadata {
-            return if (isMetadataDownloaded(activity) && !forceDownload) {
-                getMetaData(getExternalFilesDir(activity))
+        private fun loadMetaData(context: Context, forceDownload: Boolean = false): Metadata {
+            return if (isMetadataDownloaded(context) && !forceDownload) {
+                getMetaData(context)
             } else {
-                downloadMetadata(activity)
-                getMetaData(getExternalFilesDir(activity))
+                downloadMetadata(context)
+                getMetaData(context)
             }
         }
 
         /* ----------------------------- get classifier object ---------------------------------- */
 
-        public fun getInstance(activity: Activity): MessageClassifier? {
+        public fun getInstance(context: Context): MessageClassifier? {
             var messageClassifier: MessageClassifier? = null
             try {
 
                 val interpreter = loadModel()
-                val metaData = loadMetaData(activity)
+                val metaData = loadMetaData(context)
 
                 messageClassifier = MessageClassifier(interpreter, metaData)
             } catch (exception: Exception) {
@@ -116,8 +116,10 @@ class MessageClassifier private constructor(
         }
     }
 
-    public fun doClassification(message: String): String {
-        val body = message.replace("#", "0")
+    public fun doClassification(uncleanedMessage: String): String {
+        var body = cleanText(uncleanedMessage)
+        body = body.replace("#", "0")
+
         val tokens = body.split(" ")
         val tokenToIndex = ArrayList<Float>()
 

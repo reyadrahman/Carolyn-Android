@@ -5,8 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
+import com.siddhantkushwaha.carolyn.ai.MessageClassifier
 import com.siddhantkushwaha.carolyn.index.Index
-
 
 class SMSReceiver : BroadcastReceiver() {
 
@@ -40,9 +40,22 @@ class SMSReceiver : BroadcastReceiver() {
                     Log.d(tag, "$it")
                 }
 
-                var err = index.indexMessage(message)
+                val thread = Thread {
+
+                    var messageClass: String? = null
+                    if (MessageClassifier.isModelDownloaded()) {
+                        val messageClassifier = MessageClassifier.getInstance(context)
+                        messageClass = messageClassifier?.doClassification(smsMessage.messageBody)
+                    }
+
+                    val err = index.indexMessage(message, messageClass)
+                    if (err > 1) {
+                        Log.d(tag, "Failed to index message.")
+                    }
+                }
+
+                thread.start()
             }
         }
-
     }
 }

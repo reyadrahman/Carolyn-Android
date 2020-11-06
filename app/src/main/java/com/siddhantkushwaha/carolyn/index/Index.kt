@@ -28,7 +28,7 @@ class Index(val context: Context) {
                 arrMessage[2] == message.timestamp && arrMessage[3] == message.body
             }
 
-            if(result == null) {
+            if (result == null) {
                 Log.d(tag, "Message deleted: ${message.body}")
                 realm.executeTransaction {
                     message.deleteFromRealm()
@@ -39,7 +39,7 @@ class Index(val context: Context) {
 
         // delete threads with no messages
         realm.where(MessageThread::class.java).findAll().forEach { th ->
-            if(th.lastMessage == null) {
+            if (th.lastMessage == null) {
                 realm.executeTransaction {
                     th.deleteFromRealm()
                 }
@@ -49,7 +49,7 @@ class Index(val context: Context) {
         realm.close()
     }
 
-    public fun indexMessage(message: Array<Any>): Int {
+    public fun indexMessage(message: Array<Any>, messageClass: String? = null): Int {
         val subscriptions = subscriptions ?: return 1
 
         var user2DisplayName = message[1] as String
@@ -77,6 +77,7 @@ class Index(val context: Context) {
                 realmMessage.body = body
                 realmMessage.timestamp = timestamp
                 realmMessage.sent = sent
+                realmMessage.type = messageClass
                 realmMessage.buildId()
             }
 
