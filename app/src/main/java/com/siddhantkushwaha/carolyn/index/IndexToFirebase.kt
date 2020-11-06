@@ -10,7 +10,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.siddhantkushwaha.carolyn.common.FirebaseUtils
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.common.cleanText
-import com.siddhantkushwaha.carolyn.common.getAllContacts
 import com.siddhantkushwaha.carolyn.entity.Message
 
 class IndexToFirebase(private val context: Context) {
@@ -19,17 +18,15 @@ class IndexToFirebase(private val context: Context) {
     private val firebaseAuth = FirebaseAuth.getInstance()
 
     public fun upload() {
-        val contacts = getAllContacts(context) ?: return
 
         val realm = RealmUtil.getCustomRealmInstance(context)
-
         realm.where(Message::class.java).findAll().forEach { message ->
             val body = cleanText(message.body!!)
 
             // validate message body
             if (body.count { it == '#' } / body.length.toFloat() < 0.5) {
                 // if message is not in contacts
-                if (!contacts.containsKey(message.messageThread!!.user2!!)) {
+                if (message.messageThread?.classifyThread() == true) {
                     val data = HashMap<String, String>()
 
                     data["userId"] = firebaseAuth.currentUser?.email ?: "unknown"

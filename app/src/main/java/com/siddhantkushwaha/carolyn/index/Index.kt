@@ -101,11 +101,11 @@ class Index(val context: Context) {
             realmThread.user2DisplayName = user2DisplayName
             realmThread.inContacts = contactName != null
 
-            realmMessage.type = if (realmThread.classifyThread()) messageClass else null
-
             if (realmMessage.timestamp!! > realmThread.lastMessage?.timestamp ?: 0) {
                 realmThread.lastMessage = realmT.copyToRealm(realmMessage)
             }
+
+            realmThread.lastMessage?.type = if (realmThread.classifyThread()) messageClass else null
 
             realmMessage.messageThread = realmThread
 

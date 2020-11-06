@@ -1,6 +1,5 @@
 package com.siddhantkushwaha.carolyn.entity
 
-import com.siddhantkushwaha.carolyn.common.getHash
 import io.realm.RealmObject
 import io.realm.annotations.PrimaryKey
 
@@ -14,5 +13,5 @@ open class Message : RealmObject() {
     var sent: Boolean? = null
     var type: String? = null
 
-    var messageThread:MessageThread? = null
+    var messageThread: MessageThread? = null
 }
