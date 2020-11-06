@@ -105,7 +105,8 @@ class Index(val context: Context) {
                 realmThread.lastMessage = realmT.copyToRealm(realmMessage)
             }
 
-            realmThread.lastMessage?.type = if (realmThread.classifyThread()) messageClass else null
+            if (realmThread.classifyThread() && messageClass != null)
+                realmThread.lastMessage?.type = messageClass
 
             realmMessage.messageThread = realmThread
 
