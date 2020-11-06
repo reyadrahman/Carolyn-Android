@@ -56,6 +56,9 @@ class ActivityMessage : ActivityBase() {
 
     override fun onResume() {
         super.onResume()
+
+        // Update adapter for changes that were made while activity was paused
+        messageAdapter.notifyDataSetChanged()
         messages.addChangeListener(messagesChangeListener)
     }
 
@@ -75,7 +78,8 @@ class ActivityMessage : ActivityBase() {
             val mId = ml.id
             val mBody = ml.body
             val mType = ml.type
-            if (mId != null && mBody != null && mType == null)
+            val mSent = ml.sent
+            if (mId != null && mBody != null && mType == null && mSent == false)
                 messagesToClassify.add(Pair(mId, mBody))
         }
 

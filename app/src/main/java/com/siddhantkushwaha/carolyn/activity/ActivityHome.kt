@@ -68,6 +68,9 @@ class ActivityHome : ActivityBase() {
 
     override fun onResume() {
         super.onResume()
+
+        // Update adapter for changes that were made while activity was paused
+        threadsAdapter.notifyDataSetChanged()
         threads.addChangeListener(threadsChangeListener)
 
         timer = Timer()
@@ -118,7 +121,8 @@ class ActivityHome : ActivityBase() {
             val mId = mt.lastMessage?.id
             val mBody = mt.lastMessage?.body
             val mType = mt.lastMessage?.type
-            if (mId != null && mBody != null && mType == null) {
+            val mSent = mt.lastMessage?.sent
+            if (mId != null && mBody != null && mType == null && mSent == false) {
                 messagesToClassify.add(Pair(mId, mBody))
             }
         }

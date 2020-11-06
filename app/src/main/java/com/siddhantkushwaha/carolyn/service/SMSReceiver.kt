@@ -16,8 +16,6 @@ class SMSReceiver : BroadcastReceiver() {
 
         if (Telephony.Sms.Intents.SMS_RECEIVED_ACTION == intent.action) {
 
-            val index = Index(context)
-
             val subId =
                 if (intent.extras?.keySet()?.find { it == Telephony.Sms.SUBSCRIPTION_ID } != null) {
                     intent.extras?.getInt(Telephony.Sms.SUBSCRIPTION_ID) ?: -1
@@ -40,17 +38,29 @@ class SMSReceiver : BroadcastReceiver() {
                     Log.d(tag, "$it")
                 }
 
+                val thread = Thread {
 
-                var messageClass: String? = null
-                if (MessageClassifier.isModelDownloaded()) {
-                    val messageClassifier = MessageClassifier.getInstance(context)
-                    messageClass = messageClassifier?.doClassification(smsMessage.messageBody)
+                    var messageClass: String? = null
+
+                    Log.d(tag, "Checking if model exists.")
+                    if (MessageClassifier.isModelDownloaded()) {
+                        Log.d(tag, "Model exists, running classifier.")
+                        val messageClassifier = MessageClassifier.getInstance(context)
+                        messageClass = messageClassifier?.doClassification(smsMessage.messageBody)
+
+                        Log.d(tag, "Class is $messageClass")
+                    }
+
+                    Log.d(tag, "Running index logic.")
+                    val index = Index(context)
+                    val err = index.indexMessage(message, messageClass)
+                    if (err > 1) {
+                        Log.d(tag, "Failed to index message.")
+                    }
+
                 }
 
-                val err = index.indexMessage(message, messageClass)
-                if (err > 1) {
-                    Log.d(tag, "Failed to index message.")
-                }
+                thread.start()
             }
         }
     }
