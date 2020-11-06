@@ -40,21 +40,17 @@ class SMSReceiver : BroadcastReceiver() {
                     Log.d(tag, "$it")
                 }
 
-                val thread = Thread {
 
-                    var messageClass: String? = null
-                    if (MessageClassifier.isModelDownloaded()) {
-                        val messageClassifier = MessageClassifier.getInstance(context)
-                        messageClass = messageClassifier?.doClassification(smsMessage.messageBody)
-                    }
-
-                    val err = index.indexMessage(message, messageClass)
-                    if (err > 1) {
-                        Log.d(tag, "Failed to index message.")
-                    }
+                var messageClass: String? = null
+                if (MessageClassifier.isModelDownloaded()) {
+                    val messageClassifier = MessageClassifier.getInstance(context)
+                    messageClass = messageClassifier?.doClassification(smsMessage.messageBody)
                 }
 
-                thread.start()
+                val err = index.indexMessage(message, messageClass)
+                if (err > 1) {
+                    Log.d(tag, "Failed to index message.")
+                }
             }
         }
     }
