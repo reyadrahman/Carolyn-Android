@@ -15,8 +15,4 @@ open class Message : RealmObject() {
     var type: String? = null
 
     var messageThread:MessageThread? = null
-
-    public fun buildId() {
-        id = getHash("${timestamp!!}, ${body!!}, ${sent!!}")
-    }
 }

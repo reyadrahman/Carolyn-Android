@@ -79,7 +79,7 @@ class ActivityMessage : ActivityBase() {
             val mBody = ml.body
             val mType = ml.type
             val mSent = ml.sent
-            if (mId != null && mBody != null && mType == null && mSent == false)
+            if (thread.classifyThread() && mId != null && mBody != null && mType == null && mSent == false)
                 messagesToClassify.add(Pair(mId, mBody))
         }
 

@@ -11,16 +11,16 @@ public fun getHash(data: String, algorithm: String = "SHA-256"): String {
         .fold("", { str, it -> str + "%02x".format(it) })
 }
 
-public fun normalizePhoneNumber(number: String): String {
+public fun normalizePhoneNumber(number: String): String? {
     return try {
         val phoneNumberUtil = PhoneNumberUtil.getInstance()
         val parsedPhone = phoneNumberUtil.parse(number, "IN")
         phoneNumberUtil.format(parsedPhone, PhoneNumberUtil.PhoneNumberFormat.E164)
     } catch (exception: NumberParseException) {
-        number
+        null
     } catch (exception: Exception) {
         exception.printStackTrace()
-        number
+        null
     }
 }
 

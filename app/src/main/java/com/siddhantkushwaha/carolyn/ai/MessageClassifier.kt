@@ -140,7 +140,7 @@ class MessageClassifier private constructor(
         tokenToIndex.forEach { tokenVal -> input.putFloat(tokenVal) }
         interpreter.run(input, output)
 
-        val probabilities = FloatArray(4)
+        val probabilities = FloatArray(metaData.classes.size)
         output.rewind()
         output.asFloatBuffer().get(probabilities)
 

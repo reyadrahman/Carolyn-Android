@@ -6,6 +6,7 @@ import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
 import com.siddhantkushwaha.carolyn.ai.MessageClassifier
+import com.siddhantkushwaha.carolyn.common.getHash
 import com.siddhantkushwaha.carolyn.index.Index
 
 class SMSReceiver : BroadcastReceiver() {
@@ -42,7 +43,6 @@ class SMSReceiver : BroadcastReceiver() {
 
                     var messageClass: String? = null
 
-                    Log.d(tag, "Checking if model exists.")
                     if (MessageClassifier.isModelDownloaded()) {
                         Log.d(tag, "Model exists, running classifier.")
                         val messageClassifier = MessageClassifier.getInstance(context)
@@ -51,13 +51,15 @@ class SMSReceiver : BroadcastReceiver() {
                         Log.d(tag, "Class is $messageClass")
                     }
 
-                    Log.d(tag, "Running index logic.")
                     val index = Index(context)
                     val err = index.indexMessage(message, messageClass)
                     if (err > 1) {
                         Log.d(tag, "Failed to index message.")
                     }
 
+                    val id =
+                        getHash("${smsMessage.timestampMillis}, ${smsMessage.messageBody}, ${false}")
+                    // sendNotificationForMessage(id)
                 }
 
                 thread.start()

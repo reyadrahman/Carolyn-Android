@@ -122,7 +122,7 @@ class ActivityHome : ActivityBase() {
             val mBody = mt.lastMessage?.body
             val mType = mt.lastMessage?.type
             val mSent = mt.lastMessage?.sent
-            if (mId != null && mBody != null && mType == null && mSent == false) {
+            if (mt.classifyThread() && mId != null && mBody != null && mType == null && mSent == false) {
                 messagesToClassify.add(Pair(mId, mBody))
             }
         }

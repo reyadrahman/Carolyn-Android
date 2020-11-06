@@ -20,7 +20,8 @@ public fun getSubscriptions(context: Context): HashMap<Int, String>? {
         val subscriptionManager = context.getSystemService(SubscriptionManager::class.java)
         subscriptions = HashMap()
         subscriptionManager.activeSubscriptionInfoList.forEach {
-            subscriptions[it.subscriptionId] = normalizePhoneNumber(it.number ?: "Unknown")
+            subscriptions[it.subscriptionId] =
+                normalizePhoneNumber(it.number ?: "Unknown") ?: "Unknown"
         }
     }
     return subscriptions
@@ -103,7 +104,7 @@ public fun getAllContacts(
                     cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
                 val name: String =
                     cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
-                phoneNumber = normalizePhoneNumber(phoneNumber)
+                phoneNumber = normalizePhoneNumber(phoneNumber) ?: "Unknown"
                 contactsList[phoneNumber] = name
             }
             cursor.close()

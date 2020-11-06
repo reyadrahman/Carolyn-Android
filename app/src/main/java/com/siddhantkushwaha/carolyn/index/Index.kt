@@ -9,7 +9,8 @@ import com.siddhantkushwaha.carolyn.entity.MessageThread
 class Index(val context: Context) {
 
     private val tag: String = this::class.java.toString()
-    private var subscriptions: HashMap<Int, String>? = getSubscriptions(context)
+    private var subscriptions = getSubscriptions(context)
+    private var contacts = getAllContacts(context)
 
     public fun initIndex() {
         val messages = getAllSms(context)
@@ -36,7 +37,6 @@ class Index(val context: Context) {
             }
         }
 
-
         // delete threads with no messages
         realm.where(MessageThread::class.java).findAll().forEach { th ->
             if (th.lastMessage == null) {
@@ -51,8 +51,9 @@ class Index(val context: Context) {
 
     public fun indexMessage(message: Array<Any>, messageClass: String? = null): Int {
         val subscriptions = subscriptions ?: return 1
+        val contacts = contacts ?: return 1
 
-        var user2DisplayName = message[1] as String
+        val originatingAddress = message[1] as String
         val timestamp = message[2] as Long
         val body = message[3] as String
         val type = message[4] as Int
@@ -61,8 +62,17 @@ class Index(val context: Context) {
         val sent = type == 2
         val user1 = subscriptions[subId] ?: "unknown"
 
-        user2DisplayName = normalizePhoneNumber(user2DisplayName)
-        val user2 = user2DisplayName.toLowerCase()
+        val normalizedOriginatingAddress = normalizePhoneNumber(originatingAddress)
+
+        val user2 = normalizedOriginatingAddress ?: originatingAddress.toLowerCase()
+
+        var contactName: String? = null
+        val user2DisplayName = if (normalizedOriginatingAddress != null) {
+            contactName = contacts[normalizedOriginatingAddress]
+            contactName ?: normalizedOriginatingAddress
+        } else {
+            originatingAddress
+        }
 
         val id = getHash("$timestamp, $body, $sent")
 
@@ -74,11 +84,10 @@ class Index(val context: Context) {
             var realmMessage = realmT.where(Message::class.java).equalTo("id", id).findFirst()
             if (realmMessage == null) {
                 realmMessage = Message()
+                realmMessage.id = id
                 realmMessage.body = body
                 realmMessage.timestamp = timestamp
                 realmMessage.sent = sent
-                realmMessage.type = messageClass
-                realmMessage.buildId()
             }
 
             var realmThread =
@@ -90,6 +99,9 @@ class Index(val context: Context) {
 
             realmThread.user1 = user1
             realmThread.user2DisplayName = user2DisplayName
+            realmThread.inContacts = contactName != null
+
+            realmMessage.type = if (realmThread.classifyThread()) messageClass else null
 
             if (realmMessage.timestamp!! > realmThread.lastMessage?.timestamp ?: 0) {
                 realmThread.lastMessage = realmT.copyToRealm(realmMessage)
