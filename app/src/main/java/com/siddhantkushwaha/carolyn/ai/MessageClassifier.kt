@@ -1,7 +1,6 @@
 package com.siddhantkushwaha.carolyn.ai
 
 import android.content.Context
-import android.util.Log
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions
 import com.google.firebase.ml.common.modeldownload.FirebaseModelManager
@@ -12,6 +11,7 @@ import com.google.gson.JsonObject
 import com.siddhantkushwaha.carolyn.common.cleanText
 import org.tensorflow.lite.Interpreter
 import java.io.File
+import java.lang.Integer.min
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -131,7 +131,17 @@ class MessageClassifier {
 
                 tokens.forEachIndexed { index, token ->
                     if (index < metaData.maxLen) {
-                        tokenToIndex.add(metaData.index.getOrDefault(token, 0F))
+                        var idx = metaData.index.getOrDefault(token, 0F)
+
+                        /*
+                            ----- Hack Alert -----
+                            Model keeps crashing for higher values for reason
+                            We may have to live with this stupid hack
+                        */
+                        if(idx > 3000F)
+                            idx = 1F
+
+                        tokenToIndex.add(idx)
                     }
                 }
 
@@ -141,11 +151,12 @@ class MessageClassifier {
 
                 val input =
                     ByteBuffer.allocateDirect(metaData.maxLen * 4).order(ByteOrder.nativeOrder())
-                val output =
-                    ByteBuffer.allocateDirect(4 * 4)
-                        .order(ByteOrder.nativeOrder())
+                val output = ByteBuffer.allocateDirect(metaData.classes.size * 4)
+                    .order(ByteOrder.nativeOrder())
 
-                tokenToIndex.forEach { tokenVal -> input.putFloat(tokenVal) }
+                tokenToIndex.forEach { tokenVal ->
+                    input.putFloat(tokenVal)
+                }
 
                 interpreter.run(input, output)
                 interpreter.close()
@@ -163,9 +174,6 @@ class MessageClassifier {
 
             } catch (exception: Exception) {
                 exception.printStackTrace()
-            } catch (error: Error) {
-                Log.e("MessageClassifier", "There was an error.")
-                error.printStackTrace()
             }
 
             return null
