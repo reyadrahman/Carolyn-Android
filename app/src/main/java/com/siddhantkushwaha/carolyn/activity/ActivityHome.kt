@@ -6,7 +6,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.ThreadAdapter
-import com.siddhantkushwaha.carolyn.ai.ModelDownloadTask
 import com.siddhantkushwaha.carolyn.common.PermissionsUtil
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.common.RequestCodes
@@ -28,8 +27,7 @@ class ActivityHome : ActivityBase() {
     private lateinit var threadsChangeListener: OrderedRealmCollectionChangeListener<RealmResults<MessageThread>>
 
     private var timer: Timer? = null
-    private var timerTaskDownload: TimerTask? = null
-    private var timerTaskIndexing: TimerTask? = null
+    private var timerTask: TimerTask? = null
 
     private val taskInterval = 15 * 1000L
 
@@ -72,18 +70,13 @@ class ActivityHome : ActivityBase() {
         threads.addChangeListener(threadsChangeListener)
 
         timer = Timer()
-        timerTaskDownload = object : TimerTask() {
-            override fun run() {
-                ModelDownloadTask(this@ActivityHome).start()
-            }
-        }
-        timerTaskIndexing = object : TimerTask() {
+
+        timerTask = object : TimerTask() {
             override fun run() {
                 IndexTask(this@ActivityHome).start()
             }
         }
-        timer!!.scheduleAtFixedRate(timerTaskDownload!!, 1000, taskInterval * 5)
-        timer!!.scheduleAtFixedRate(timerTaskIndexing!!, 5000, taskInterval)
+        timer!!.scheduleAtFixedRate(timerTask!!, 0, taskInterval)
     }
 
     override fun onPause() {
@@ -105,7 +98,7 @@ class ActivityHome : ActivityBase() {
             RequestCodes.REQUEST_CODE_PERMISSION_BASIC,
             requestPermissionCallbacks
         ) {
-            IndexTask(this).start()
+            IndexTask(this@ActivityHome).start()
         }
     }
 }

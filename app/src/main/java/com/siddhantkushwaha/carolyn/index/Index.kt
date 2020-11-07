@@ -10,16 +10,21 @@ import com.siddhantkushwaha.carolyn.entity.MessageThread
 import io.realm.Realm
 import kotlin.Exception
 
-class Index(val context: Context) {
+class Index(private val context: Context) {
 
     private val tag: String = this::class.java.toString()
 
     private var subscriptions: HashMap<Int, String>? = null
     private var contacts: HashMap<String, String>? = null
-    private var messageClassifier: MessageClassifier? = null
 
     public fun run() {
-        refresh()
+        if (contacts == null) {
+            contacts = getAllContacts(context)
+        }
+
+        if (subscriptions == null) {
+            subscriptions = getSubscriptions(context)
+        }
 
         val realm = RealmUtil.getCustomRealmInstance(context)
 
@@ -29,25 +34,12 @@ class Index(val context: Context) {
         realm.close()
     }
 
-    private fun refresh() {
-        if (contacts == null || subscriptions == null || messageClassifier == null) {
-            subscriptions = getSubscriptions(context)
-            contacts = getAllContacts(context)
-            messageClassifier =
-                if (MessageClassifier.isAssetsDownloaded(context)) {
-                    MessageClassifier.getInstance(context)
-                } else {
-                    null
-                }
-        }
-    }
-
     private fun indexMessages(realm: Realm) {
         val messages = getAllSms(context)
 
         // add all new messages
         messages?.forEach { message ->
-            indexMessage(message)
+            indexMessage(realm, message)
         }
 
         // prune deleted messages
@@ -75,9 +67,7 @@ class Index(val context: Context) {
         }
     }
 
-    private fun indexMessage(message: Array<Any>): Int {
-        refresh()
-
+    private fun indexMessage(realm: Realm, message: Array<Any>): Int {
         val subscriptions = subscriptions ?: return 1
         val contacts = contacts ?: return 1
 
@@ -103,8 +93,6 @@ class Index(val context: Context) {
         }
 
         val id = getHash("$timestamp, $body, $sent")
-
-        val realm = RealmUtil.getCustomRealmInstance(context)
 
         Log.d(tag, "Saving message $id")
         realm.executeTransaction { realmT ->
@@ -134,7 +122,7 @@ class Index(val context: Context) {
             }
 
             if (realmThread.classifyThread() && realmMessage.sent == false) {
-                val messageClass = messageClassifier?.doClassification(realmMessage.body!!)
+                val messageClass = MessageClassifier.doClassification(context, body, false)
                 if (messageClass != null)
                     realmMessage.type = messageClass
             } else {
@@ -146,8 +134,6 @@ class Index(val context: Context) {
             realmT.insertOrUpdate(realmThread)
             realmT.insertOrUpdate(realmMessage)
         }
-
-        realm.close()
 
         return 0
     }

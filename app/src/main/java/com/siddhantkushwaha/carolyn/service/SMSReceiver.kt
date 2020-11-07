@@ -24,12 +24,7 @@ class SMSReceiver : BroadcastReceiver() {
 
                 // thread to classify and send notification
                 val thread = Thread {
-                    var messageClass: String? = null
-                    if (MessageClassifier.isModelDownloaded()) {
-                        val messageClassifier = MessageClassifier.getInstance(context)
-                        messageClass = messageClassifier?.doClassification(smsMessage.messageBody)
-                    }
-
+                    val messageClass: String? = MessageClassifier.doClassification(context, smsMessage.messageBody, true)
                     // TODO send message based on notification class
                     Log.d(tag, "$messageClass")
                 }

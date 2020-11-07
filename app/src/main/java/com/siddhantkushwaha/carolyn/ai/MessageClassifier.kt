@@ -1,6 +1,7 @@
 package com.siddhantkushwaha.carolyn.ai
 
 import android.content.Context
+import android.util.Log
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions
 import com.google.firebase.ml.common.modeldownload.FirebaseModelManager
@@ -14,10 +15,7 @@ import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class MessageClassifier private constructor(
-    private val interpreter: Interpreter,
-    private val metaData: Metadata
-) {
+class MessageClassifier {
 
     data class Metadata(
         val maxLen: Int,
@@ -31,22 +29,30 @@ class MessageClassifier private constructor(
 
         private val modelName = "message_classifier"
         private val metadataName = "meta.json"
-        private val remoteModel = FirebaseCustomRemoteModel.Builder(modelName).build()
+
 
         /* --------------------------- FirebaseML model functions -------------------------------- */
 
-        public fun downloadModel() {
+        private fun downloadModel() {
             val conditions = FirebaseModelDownloadConditions.Builder().build()
-            Tasks.await(FirebaseModelManager.getInstance().download(remoteModel, conditions))
+            Tasks.await(
+                FirebaseModelManager.getInstance()
+                    .download(FirebaseCustomRemoteModel.Builder(modelName).build(), conditions)
+            )
         }
 
-        public fun isModelDownloaded(): Boolean {
-            return Tasks.await(FirebaseModelManager.getInstance().isModelDownloaded(remoteModel))
+        private fun isModelDownloaded(): Boolean {
+            return Tasks.await(
+                FirebaseModelManager.getInstance()
+                    .isModelDownloaded(FirebaseCustomRemoteModel.Builder(modelName).build())
+            )
         }
 
         private fun getInterpreter(): Interpreter {
-            val modelFile =
-                Tasks.await(FirebaseModelManager.getInstance().getLatestModelFile(remoteModel))
+            val modelFile = Tasks.await(
+                FirebaseModelManager.getInstance()
+                    .getLatestModelFile(FirebaseCustomRemoteModel.Builder(modelName).build())
+            )
             return Interpreter(modelFile)
         }
 
@@ -61,14 +67,15 @@ class MessageClassifier private constructor(
 
         /* -------------------------------- Metadata functions ---------------------------------- */
 
-        public fun downloadMetadata(context: Context) {
+        private fun downloadMetadata(context: Context) {
             val firebaseStorage = FirebaseStorage.getInstance()
             val metaData = File(context.getExternalFilesDir(null), metadataName)
             Tasks.await(firebaseStorage.getReference(metadataName).getFile(metaData))
         }
 
-        public fun isMetadataDownloaded(context: Context): Boolean {
-            return File(context.getExternalFilesDir(null), metadataName).exists()
+        private fun isMetadataDownloaded(context: Context): Boolean {
+            val file = File(context.getExternalFilesDir(null), metadataName)
+            return file.exists()
         }
 
         private fun getMetaData(context: Context): Metadata {
@@ -79,7 +86,10 @@ class MessageClassifier private constructor(
 
             val gson = Gson()
             val metaDataFile = File(context.getExternalFilesDir(null), metadataName)
-            val metaJson = gson.fromJson(metaDataFile.bufferedReader(), JsonObject::class.java)
+            val buffReader = metaDataFile.bufferedReader()
+            val metaJson = gson.fromJson(buffReader, JsonObject::class.java)
+                ?: throw Exception("Couldn't parse meta-file.")
+            buffReader.close()
             val maxLen = metaJson.getAsJsonPrimitive(maxLenAttr).asInt
             val classes =
                 gson.fromJson(metaJson.getAsJsonArray(classesAttr), Array(0) { "" }.javaClass)
@@ -99,63 +109,66 @@ class MessageClassifier private constructor(
             }
         }
 
-        public fun isAssetsDownloaded(context: Context): Boolean {
-            return isModelDownloaded() && isMetadataDownloaded(context)
-        }
+        /* ------------------------------------ Classifier -------------------------------------- */
 
-        /* ----------------------------- get classifier object ---------------------------------- */
-
-        public fun getInstance(
+        public fun doClassification(
             context: Context,
-            forceDownload: Boolean = false
-        ): MessageClassifier? {
-            var messageClassifier: MessageClassifier? = null
+            uncleanedMessage: String,
+            skipIfNotDownloaded: Boolean = true
+        ): String? {
             try {
+                if (skipIfNotDownloaded && !(isModelDownloaded() && isMetadataDownloaded(context)))
+                    return null
 
-                val interpreter = loadModel(forceDownload)
-                val metaData = loadMetaData(context, forceDownload)
+                val interpreter = loadModel()
+                val metaData = loadMetaData(context)
 
-                messageClassifier = MessageClassifier(interpreter, metaData)
+                var body = cleanText(uncleanedMessage)
+                body = body.replace("#", "0")
+
+                val tokens = body.split(" ")
+                val tokenToIndex = ArrayList<Float>()
+
+                tokens.forEachIndexed { index, token ->
+                    if (index < metaData.maxLen) {
+                        tokenToIndex.add(metaData.index.getOrDefault(token, 0F))
+                    }
+                }
+
+                while (tokenToIndex.size < metaData.maxLen) {
+                    tokenToIndex.add(0F)
+                }
+
+                val input =
+                    ByteBuffer.allocateDirect(metaData.maxLen * 4).order(ByteOrder.nativeOrder())
+                val output =
+                    ByteBuffer.allocateDirect(4 * 4)
+                        .order(ByteOrder.nativeOrder())
+
+                tokenToIndex.forEach { tokenVal -> input.putFloat(tokenVal) }
+
+                interpreter.run(input, output)
+                interpreter.close()
+
+                val probabilities = FloatArray(metaData.classes.size)
+                output.rewind()
+                output.asFloatBuffer().get(probabilities)
+
+                var prediction = 0
+                for (i in probabilities.indices)
+                    if (probabilities[i] > probabilities[prediction])
+                        prediction = i
+
+                return metaData.classes[prediction]
+
             } catch (exception: Exception) {
                 exception.printStackTrace()
+            } catch (error: Error) {
+                Log.e("MessageClassifier", "There was an error.")
+                error.printStackTrace()
             }
-            return messageClassifier
+
+            return null
         }
-    }
-
-    public fun doClassification(uncleanedMessage: String): String {
-        var body = cleanText(uncleanedMessage)
-        body = body.replace("#", "0")
-
-        val tokens = body.split(" ")
-        val tokenToIndex = ArrayList<Float>()
-
-        tokens.forEachIndexed { index, token ->
-            if (index < metaData.maxLen) {
-                tokenToIndex.add(metaData.index.getOrDefault(token, 0F))
-            }
-        }
-
-        while (tokenToIndex.size < metaData.maxLen) {
-            tokenToIndex.add(0F)
-        }
-
-        val input = ByteBuffer.allocateDirect(metaData.maxLen * 4).order(ByteOrder.nativeOrder())
-        val output =
-            ByteBuffer.allocateDirect(metaData.classes.size * 4).order(ByteOrder.nativeOrder())
-
-        tokenToIndex.forEach { tokenVal -> input.putFloat(tokenVal) }
-        interpreter.run(input, output)
-
-        val probabilities = FloatArray(metaData.classes.size)
-        output.rewind()
-        output.asFloatBuffer().get(probabilities)
-
-        var prediction = 0
-        for (i in probabilities.indices)
-            if (probabilities[i] > probabilities[prediction])
-                prediction = i
-
-        return metaData.classes[prediction]
     }
 }

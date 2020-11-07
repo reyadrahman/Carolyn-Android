@@ -21,10 +21,11 @@ class IndexTask(private val context: Context) : Thread() {
 
         if (index == null)
             index = Index(context)
-        index?.run()
 
         if (indexToFirebase == null)
             indexToFirebase = IndexToFirebase(context)
+
+        index?.run()
         indexToFirebase?.upload()
 
         inProgress = false

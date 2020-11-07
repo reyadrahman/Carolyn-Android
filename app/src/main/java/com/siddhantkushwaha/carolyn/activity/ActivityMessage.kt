@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.MessageAdapter
+import com.siddhantkushwaha.carolyn.ai.MessageClassifier
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
@@ -26,7 +27,7 @@ class ActivityMessage : ActivityBase() {
     private lateinit var thread: MessageThread
 
     private var timer: Timer? = null
-    private var timerTaskIndexing: TimerTask? = null
+    private var timerTask: TimerTask? = null
     private val taskInterval = 15 * 1000L
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,12 +68,12 @@ class ActivityMessage : ActivityBase() {
         messages.addChangeListener(messagesChangeListener)
 
         timer = Timer()
-        timerTaskIndexing = object : TimerTask() {
+        timerTask = object : TimerTask() {
             override fun run() {
                 IndexTask(this@ActivityMessage).start()
             }
         }
-        timer!!.scheduleAtFixedRate(timerTaskIndexing!!, 5000, taskInterval)
+        timer!!.scheduleAtFixedRate(timerTask!!, 0, taskInterval)
     }
 
     override fun onPause() {
