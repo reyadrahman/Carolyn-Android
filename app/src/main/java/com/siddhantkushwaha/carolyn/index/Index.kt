@@ -2,17 +2,47 @@ package com.siddhantkushwaha.carolyn.index
 
 import android.content.Context
 import android.util.Log
+import com.siddhantkushwaha.carolyn.ai.MessageClassifier
 import com.siddhantkushwaha.carolyn.common.*
+import com.siddhantkushwaha.carolyn.entity.Contact
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
+import io.realm.Realm
+import kotlin.Exception
 
 class Index(val context: Context) {
 
     private val tag: String = this::class.java.toString()
-    private var subscriptions = getSubscriptions(context)
-    private var contacts = getAllContacts(context)
 
-    public fun initIndex() {
+    private var subscriptions: HashMap<Int, String>? = null
+    private var contacts: HashMap<String, String>? = null
+    private var messageClassifier: MessageClassifier? = null
+
+    public fun run() {
+        refresh()
+
+        val realm = RealmUtil.getCustomRealmInstance(context)
+
+        indexMessages(realm)
+        indexContacts(realm)
+
+        realm.close()
+    }
+
+    private fun refresh() {
+        if (contacts == null || subscriptions == null || messageClassifier == null) {
+            subscriptions = getSubscriptions(context)
+            contacts = getAllContacts(context)
+            messageClassifier =
+                if (MessageClassifier.isAssetsDownloaded(context)) {
+                    MessageClassifier.getInstance(context)
+                } else {
+                    null
+                }
+        }
+    }
+
+    private fun indexMessages(realm: Realm) {
         val messages = getAllSms(context)
 
         // add all new messages
@@ -20,9 +50,7 @@ class Index(val context: Context) {
             indexMessage(message)
         }
 
-        // remove deleted messages
-        val realm = RealmUtil.getCustomRealmInstance(context)
-
+        // prune deleted messages
         realm.where(Message::class.java).findAll().forEach { message ->
 
             val result = messages?.find { arrMessage ->
@@ -45,11 +73,11 @@ class Index(val context: Context) {
                 }
             }
         }
-
-        realm.close()
     }
 
-    public fun indexMessage(message: Array<Any>, messageClass: String? = null): Int {
+    private fun indexMessage(message: Array<Any>): Int {
+        refresh()
+
         val subscriptions = subscriptions ?: return 1
         val contacts = contacts ?: return 1
 
@@ -83,8 +111,8 @@ class Index(val context: Context) {
 
             var realmMessage = realmT.where(Message::class.java).equalTo("id", id).findFirst()
             if (realmMessage == null) {
-                realmMessage = Message()
-                realmMessage.id = id
+                realmMessage = realm.createObject(Message::class.java, id)
+                    ?: throw Exception("Could not create Message object.")
                 realmMessage.body = body
                 realmMessage.timestamp = timestamp
                 realmMessage.sent = sent
@@ -93,8 +121,8 @@ class Index(val context: Context) {
             var realmThread =
                 realmT.where(MessageThread::class.java).equalTo("user2", user2).findFirst()
             if (realmThread == null) {
-                realmThread = MessageThread()
-                realmThread.user2 = user2
+                realmThread = realm.createObject(MessageThread::class.java, user2)
+                    ?: throw Exception("Could not create Thread object.")
             }
 
             realmThread.user1 = user1
@@ -102,11 +130,12 @@ class Index(val context: Context) {
             realmThread.inContacts = contactName != null
 
             if (realmMessage.timestamp!! > realmThread.lastMessage?.timestamp ?: 0) {
-                realmThread.lastMessage = realmT.copyToRealm(realmMessage)
+                realmThread.lastMessage = realmMessage
             }
 
-            if (realmThread.classifyThread() && messageClass != null)
-                realmThread.lastMessage?.type = messageClass
+            if (realmThread.classifyThread() && realmMessage.sent == false) {
+                realmMessage.type = messageClassifier?.doClassification(body)
+            }
 
             realmMessage.messageThread = realmThread
 
@@ -119,4 +148,28 @@ class Index(val context: Context) {
         return 0
     }
 
+    private fun indexContacts(realm: Realm) {
+
+        contacts?.forEach { contact ->
+            realm.executeTransaction { rt ->
+                var realmContact =
+                    realm.where(Contact::class.java).equalTo("number", contact.key).findFirst()
+                if (realmContact == null) {
+                    realmContact = realm.createObject(Contact::class.java, contact.key)
+                        ?: throw Exception("Couldn't create contact object.")
+                }
+                realmContact.name = contact.value
+
+                rt.insertOrUpdate(realmContact)
+            }
+        }
+
+        realm.where(Contact::class.java).findAll().forEach { ct ->
+            if (contacts?.containsKey(ct.number) == false) {
+                realm.executeTransaction {
+                    ct.deleteFromRealm()
+                }
+            }
+        }
+    }
 }

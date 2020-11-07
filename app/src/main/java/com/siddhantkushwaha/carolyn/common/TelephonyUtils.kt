@@ -41,7 +41,6 @@ public fun getAllSms(context: Context): ArrayList<Array<Any>>? {
             totalSMS = c.count
             if (c.moveToFirst()) {
                 for (j in 0 until totalSMS) {
-
                     val threadId = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.THREAD_ID))
 
                     val user2: String = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))

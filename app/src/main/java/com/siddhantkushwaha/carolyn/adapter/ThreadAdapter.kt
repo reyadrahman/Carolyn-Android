@@ -49,7 +49,7 @@ class ThreadAdapter(
                 timestampTextView.visibility = View.GONE
             } else {
                 val date = Instant.ofEpochMilli(timestamp).atZone(timeZoneId)
-                val formattedDate = DateTimeFormatter.ofPattern("dd/mm/yy hh:mm a").format(date)
+                val formattedDate = DateTimeFormatter.ofPattern("dd/MM/yy hh:mm a").format(date)
                 timestampTextView.visibility = View.VISIBLE
                 timestampTextView.text = formattedDate
             }

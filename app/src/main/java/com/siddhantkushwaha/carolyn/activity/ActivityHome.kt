@@ -2,12 +2,11 @@ package com.siddhantkushwaha.carolyn.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.ThreadAdapter
-import com.siddhantkushwaha.carolyn.ai.MessageClassifierTask
+import com.siddhantkushwaha.carolyn.ai.ModelDownloadTask
 import com.siddhantkushwaha.carolyn.common.PermissionsUtil
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.common.RequestCodes
@@ -19,7 +18,6 @@ import io.realm.RealmResults
 import io.realm.Sort
 import kotlinx.android.synthetic.main.activity_home.*
 import java.util.*
-import kotlin.collections.ArrayList
 
 class ActivityHome : ActivityBase() {
 
@@ -30,7 +28,7 @@ class ActivityHome : ActivityBase() {
     private lateinit var threadsChangeListener: OrderedRealmCollectionChangeListener<RealmResults<MessageThread>>
 
     private var timer: Timer? = null
-    private var timerTaskClassify: TimerTask? = null
+    private var timerTaskDownload: TimerTask? = null
     private var timerTaskIndexing: TimerTask? = null
 
     private val taskInterval = 15 * 1000L
@@ -74,22 +72,18 @@ class ActivityHome : ActivityBase() {
         threads.addChangeListener(threadsChangeListener)
 
         timer = Timer()
-        timerTaskClassify = object : TimerTask() {
+        timerTaskDownload = object : TimerTask() {
             override fun run() {
-                Log.d(TAG, "MessageClassifierTask called.")
-                runOnUiThread {
-                    addMessagesToClassifier()
-                }
+                ModelDownloadTask(this@ActivityHome).start()
             }
         }
         timerTaskIndexing = object : TimerTask() {
             override fun run() {
-                Log.d(TAG, "IndexTask called.")
                 IndexTask(this@ActivityHome).start()
             }
         }
-        timer!!.scheduleAtFixedRate(timerTaskIndexing!!, taskInterval, taskInterval)
-        timer!!.scheduleAtFixedRate(timerTaskClassify!!, taskInterval + 5, taskInterval)
+        timer!!.scheduleAtFixedRate(timerTaskDownload!!, 0, taskInterval * 5)
+        timer!!.scheduleAtFixedRate(timerTaskIndexing!!, 0, taskInterval)
     }
 
     override fun onPause() {
@@ -112,23 +106,6 @@ class ActivityHome : ActivityBase() {
             requestPermissionCallbacks
         ) {
             IndexTask(this).start()
-        }
-    }
-
-    private fun addMessagesToClassifier() {
-        val messagesToClassify = ArrayList<Pair<String, String>>()
-        threads.forEach { mt ->
-            val mId = mt.lastMessage?.id
-            val mBody = mt.lastMessage?.body
-            val mType = mt.lastMessage?.type
-            val mSent = mt.lastMessage?.sent
-            if (mt.classifyThread() && mId != null && mBody != null && mType == null && mSent == false) {
-                messagesToClassify.add(Pair(mId, mBody))
-            }
-        }
-
-        if (messagesToClassify.size > 0) {
-            MessageClassifierTask(this, messagesToClassify).start()
         }
     }
 }

@@ -99,14 +99,21 @@ class MessageClassifier private constructor(
             }
         }
 
+        public fun isAssetsDownloaded(context: Context): Boolean {
+            return isModelDownloaded() && isMetadataDownloaded(context)
+        }
+
         /* ----------------------------- get classifier object ---------------------------------- */
 
-        public fun getInstance(context: Context): MessageClassifier? {
+        public fun getInstance(
+            context: Context,
+            forceDownload: Boolean = false
+        ): MessageClassifier? {
             var messageClassifier: MessageClassifier? = null
             try {
 
-                val interpreter = loadModel()
-                val metaData = loadMetaData(context)
+                val interpreter = loadModel(forceDownload)
+                val metaData = loadMetaData(context, forceDownload)
 
                 messageClassifier = MessageClassifier(interpreter, metaData)
             } catch (exception: Exception) {

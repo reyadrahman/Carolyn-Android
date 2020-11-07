@@ -6,8 +6,7 @@ import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
 import com.siddhantkushwaha.carolyn.ai.MessageClassifier
-import com.siddhantkushwaha.carolyn.common.getHash
-import com.siddhantkushwaha.carolyn.index.Index
+import com.siddhantkushwaha.carolyn.index.IndexTask
 
 class SMSReceiver : BroadcastReceiver() {
 
@@ -17,31 +16,17 @@ class SMSReceiver : BroadcastReceiver() {
 
         if (Telephony.Sms.Intents.SMS_RECEIVED_ACTION == intent.action) {
 
-            val subId =
-                if (intent.extras?.keySet()?.find { it == Telephony.Sms.SUBSCRIPTION_ID } != null) {
-                    intent.extras?.getInt(Telephony.Sms.SUBSCRIPTION_ID) ?: -1
-                } else {
-                    intent.extras?.getInt("sim_id") ?: -1
-                }
+            // save new messages in local database
+            IndexTask(context).start()
 
             for (smsMessage in Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
 
-                val message = Array<Any>(6) { 0 }
-                message[0] = -1
-                message[1] = smsMessage.displayOriginatingAddress ?: ""
-                message[2] = smsMessage.timestampMillis
-                message[3] = smsMessage.messageBody
-                message[4] = 1
-                message[5] = subId
+                val user2 = smsMessage.originatingAddress?.replace("-", "") ?: continue
 
-                Log.d(tag, "Received new message -")
-                message.forEach {
-                    Log.d(tag, "$it")
-                }
-
+                // thread to classify and send notification
                 val thread = Thread {
 
-                    var messageClass: String? = null
+                    val messageClass: String?
 
                     if (MessageClassifier.isModelDownloaded()) {
                         Log.d(tag, "Model exists, running classifier.")
@@ -51,15 +36,7 @@ class SMSReceiver : BroadcastReceiver() {
                         Log.d(tag, "Class is $messageClass")
                     }
 
-                    val index = Index(context)
-                    val err = index.indexMessage(message, messageClass)
-                    if (err > 1) {
-                        Log.d(tag, "Failed to index message.")
-                    }
-
-                    val id =
-                        getHash("${smsMessage.timestampMillis}, ${smsMessage.messageBody}, ${false}")
-                    // sendNotificationForMessage(id)
+                    // TODO send message based on notification class
                 }
 
                 thread.start()
