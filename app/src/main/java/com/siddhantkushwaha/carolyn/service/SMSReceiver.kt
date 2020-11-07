@@ -20,23 +20,18 @@ class SMSReceiver : BroadcastReceiver() {
             IndexTask(context).start()
 
             for (smsMessage in Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
-
                 val user2 = smsMessage.originatingAddress?.replace("-", "") ?: continue
 
                 // thread to classify and send notification
                 val thread = Thread {
-
-                    val messageClass: String?
-
+                    var messageClass: String? = null
                     if (MessageClassifier.isModelDownloaded()) {
-                        Log.d(tag, "Model exists, running classifier.")
                         val messageClassifier = MessageClassifier.getInstance(context)
                         messageClass = messageClassifier?.doClassification(smsMessage.messageBody)
-
-                        Log.d(tag, "Class is $messageClass")
                     }
 
                     // TODO send message based on notification class
+                    Log.d(tag, "$messageClass")
                 }
 
                 thread.start()

@@ -78,6 +78,8 @@ class ActivityMessage : ActivityBase() {
     override fun onPause() {
         super.onPause()
         messages.removeAllChangeListeners()
+
+        timer!!.cancel()
     }
 
     override fun onSupportNavigateUp(): Boolean {

@@ -23,8 +23,8 @@ open class ActivityBase : AppCompatActivity() {
         mAuth = FirebaseAuth.getInstance()
     }
 
-    override fun onStart() {
-        super.onStart()
+    override fun onResume() {
+        super.onResume()
         if (mAuth.currentUser == null) {
             moveToLoginActivity()
         }
