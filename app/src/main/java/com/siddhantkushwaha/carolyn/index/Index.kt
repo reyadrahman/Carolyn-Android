@@ -121,7 +121,7 @@ class Index(private val context: Context) {
                 realmThread.lastMessage = realmMessage
             }
 
-            if (realmThread.classifyThread() && realmMessage.sent == false && realmMessage.type == null) {
+            if (realmThread.classifyThread() && realmMessage.sent == false) {
                 val messageClass = MessageClassifier.doClassification(context, body, false)
                 if (messageClass != null)
                     realmMessage.type = messageClass
