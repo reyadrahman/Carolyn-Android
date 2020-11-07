@@ -28,7 +28,7 @@ class SMSReceiver : BroadcastReceiver() {
 
                 val message = Array<Any>(6) { 0 }
                 message[0] = -1
-                message[1] = smsMessage.originatingAddress ?: ""
+                message[1] = smsMessage.displayOriginatingAddress ?: ""
                 message[2] = smsMessage.timestampMillis
                 message[3] = smsMessage.messageBody
                 message[4] = 1

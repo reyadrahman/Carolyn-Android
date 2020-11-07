@@ -1,6 +1,7 @@
 package com.siddhantkushwaha.carolyn.activity
 
 import android.os.Bundle
+import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.MessageAdapter
@@ -8,11 +9,14 @@ import com.siddhantkushwaha.carolyn.ai.MessageClassifierTask
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
+import com.siddhantkushwaha.carolyn.index.IndexTask
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.Realm
 import io.realm.RealmResults
 import io.realm.Sort
 import kotlinx.android.synthetic.main.activity_message.*
+import java.util.*
+import kotlin.collections.ArrayList
 
 class ActivityMessage : ActivityBase() {
 
@@ -23,6 +27,12 @@ class ActivityMessage : ActivityBase() {
     private lateinit var messagesChangeListener: OrderedRealmCollectionChangeListener<RealmResults<Message>>
 
     private lateinit var thread: MessageThread
+
+    private var timer: Timer? = null
+    private var timerTaskClassify: TimerTask? = null
+    private var timerTaskIndexing: TimerTask? = null
+
+    private val taskInterval = 15 * 1000L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +70,24 @@ class ActivityMessage : ActivityBase() {
         // Update adapter for changes that were made while activity was paused
         messageAdapter.notifyDataSetChanged()
         messages.addChangeListener(messagesChangeListener)
+
+        timer = Timer()
+        timerTaskClassify = object : TimerTask() {
+            override fun run() {
+                Log.d(TAG, "MessageClassifierTask called.")
+                runOnUiThread {
+                    addMessagesToClassifier()
+                }
+            }
+        }
+        timerTaskIndexing = object : TimerTask() {
+            override fun run() {
+                Log.d(TAG, "IndexTask called.")
+                IndexTask(this@ActivityMessage).start()
+            }
+        }
+        timer!!.scheduleAtFixedRate(timerTaskIndexing!!, taskInterval, taskInterval)
+        timer!!.scheduleAtFixedRate(timerTaskClassify!!, taskInterval + 5, taskInterval)
     }
 
     override fun onPause() {
