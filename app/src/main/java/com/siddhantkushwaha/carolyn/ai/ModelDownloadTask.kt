@@ -17,7 +17,7 @@ class ModelDownloadTask(private val activity: Activity) : Thread() {
         inProgress = true
 
         if (!MessageClassifier.isAssetsDownloaded(activity))
-            MessageClassifier.getInstance(activity, forceDownload = true)
+            MessageClassifier.getInstance(activity)
 
         inProgress = false
     }

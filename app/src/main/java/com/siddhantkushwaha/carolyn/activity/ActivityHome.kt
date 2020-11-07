@@ -82,8 +82,8 @@ class ActivityHome : ActivityBase() {
                 IndexTask(this@ActivityHome).start()
             }
         }
-        timer!!.scheduleAtFixedRate(timerTaskDownload!!, 0, taskInterval * 5)
-        timer!!.scheduleAtFixedRate(timerTaskIndexing!!, 0, taskInterval)
+        timer!!.scheduleAtFixedRate(timerTaskDownload!!, 1000, taskInterval * 5)
+        timer!!.scheduleAtFixedRate(timerTaskIndexing!!, 5000, taskInterval)
     }
 
     override fun onPause() {

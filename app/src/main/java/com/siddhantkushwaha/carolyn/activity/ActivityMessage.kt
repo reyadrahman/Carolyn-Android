@@ -72,7 +72,7 @@ class ActivityMessage : ActivityBase() {
                 IndexTask(this@ActivityMessage).start()
             }
         }
-        timer!!.scheduleAtFixedRate(timerTaskIndexing!!, 0, taskInterval)
+        timer!!.scheduleAtFixedRate(timerTaskIndexing!!, 5000, taskInterval)
     }
 
     override fun onPause() {
