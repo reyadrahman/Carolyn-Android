@@ -74,7 +74,10 @@ class MessageAdapter(
         fun bind(message: Message) {
             val messageBodyTextView = itemView.findViewById<TextView>(R.id.textview_message_text)
             val messageClassIcon = itemView.findViewById<ImageView>(R.id.image_view_message_class)
-            val messageTimestampTextView = itemView.findViewById<TextView>(R.id.textview_message_timestamp)
+            val messageTimestampTextView =
+                itemView.findViewById<TextView>(R.id.textview_message_timestamp)
+            val receivedOnNumberTextView =
+                itemView.findViewById<TextView>(R.id.textview_message_subscription)
 
             messageBodyTextView.text = message.body
             if (message.type == null) {
@@ -93,7 +96,9 @@ class MessageAdapter(
             val timeZoneId = TimeZone.getDefault().toZoneId()
             val date = Instant.ofEpochMilli(message.timestamp!!).atZone(timeZoneId)
             val formattedDate = DateTimeFormatter.ofPattern("dd/MM/yy hh:mm a").format(date)
-            messageTimestampTextView.text = message.timestamp.toString()
+            messageTimestampTextView.text = formattedDate
+
+            receivedOnNumberTextView.text = message.messageThread?.user1 ?: ""
         }
     }
 }
