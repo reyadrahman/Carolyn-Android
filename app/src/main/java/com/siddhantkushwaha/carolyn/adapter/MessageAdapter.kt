@@ -65,7 +65,19 @@ class MessageAdapter(
         RecyclerView.ViewHolder(itemView) {
         fun bind(message: Message) {
             val messageBodyTextView = itemView.findViewById<TextView>(R.id.textview_message_text)
+            val messageTimestampTextView =
+                itemView.findViewById<TextView>(R.id.textview_message_timestamp)
+            val sentViaSubscription =
+                itemView.findViewById<TextView>(R.id.textview_message_subscription)
+
             messageBodyTextView.text = message.body
+
+            val timeZoneId = TimeZone.getDefault().toZoneId()
+            val date = Instant.ofEpochMilli(message.timestamp!!).atZone(timeZoneId)
+            val formattedDate = DateTimeFormatter.ofPattern("dd/MM/yy hh:mm a").format(date)
+            messageTimestampTextView.text = formattedDate
+
+            sentViaSubscription.text = message.messageThread?.user1 ?: ""
         }
     }
 
@@ -80,17 +92,11 @@ class MessageAdapter(
                 itemView.findViewById<TextView>(R.id.textview_message_subscription)
 
             messageBodyTextView.text = message.body
-            if (message.type == null) {
-                messageClassIcon.visibility = View.GONE
-            } else {
-                messageClassIcon.visibility = View.VISIBLE
-                when (message.type) {
-                    "otp" -> messageClassIcon.setImageResource(R.drawable.icon_message_otp)
-                    "transaction" -> messageClassIcon.setImageResource(R.drawable.icon_message_transaction)
-                    "update" -> messageClassIcon.setImageResource(R.drawable.icon_message_update)
-                    "spam" -> messageClassIcon.setImageResource(R.drawable.icon_message_spam)
-                    else -> messageClassIcon.visibility = View.GONE
-                }
+            when (message.type) {
+                "otp" -> messageClassIcon.setImageResource(R.drawable.icon_message_otp)
+                "transaction" -> messageClassIcon.setImageResource(R.drawable.icon_message_transaction)
+                "update" -> messageClassIcon.setImageResource(R.drawable.icon_message_update)
+                "spam" -> messageClassIcon.setImageResource(R.drawable.icon_message_spam)
             }
 
             val timeZoneId = TimeZone.getDefault().toZoneId()
@@ -99,6 +105,13 @@ class MessageAdapter(
             messageTimestampTextView.text = formattedDate
 
             receivedOnNumberTextView.text = message.messageThread?.user1 ?: ""
+
+            itemView.setOnClickListener {
+                when (messageClassIcon.visibility) {
+                    View.GONE -> messageClassIcon.visibility = View.VISIBLE
+                    View.VISIBLE -> messageClassIcon.visibility = View.GONE
+                }
+            }
         }
     }
 }
