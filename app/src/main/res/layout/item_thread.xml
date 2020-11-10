@@ -59,20 +59,9 @@
         android:lines="1"
         android:text="Monday"
         android:textColor="@android:color/secondary_text_dark"
-        android:textSize="8sp"
+        android:textSize="10sp"
+        app:layout_constraintBottom_toBottomOf="@+id/text_message"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/text_thread" />
-
-    <ImageView
-        android:id="@+id/image_view_thread_class"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginTop="4dp"
-        android:contentDescription="To signify class of thread."
-        android:src="@drawable/icon_message_spam"
-        android:visibility="visible"
-        app:layout_constraintEnd_toEndOf="@+id/text_timestamp"
-        app:layout_constraintStart_toStartOf="@+id/text_timestamp"
-        app:layout_constraintTop_toBottomOf="@+id/text_timestamp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

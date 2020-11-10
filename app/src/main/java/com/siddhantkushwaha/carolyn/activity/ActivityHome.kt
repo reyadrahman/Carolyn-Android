@@ -29,7 +29,8 @@ class ActivityHome : ActivityBase() {
     private var timer: Timer? = null
     private var timerTask: TimerTask? = null
 
-    private val taskInterval = 15 * 1000L
+    private val delay = 1 * 1000L
+    private val taskInterval = 60 * 1000L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,7 +46,7 @@ class ActivityHome : ActivityBase() {
         threads = realm.where(MessageThread::class.java).isNotNull("lastMessage")
             .sort("lastMessage.timestamp", Sort.DESCENDING).findAllAsync()
 
-        threadsAdapter = ThreadAdapter(threads, true, itemClickListener = { _, th ->
+        threadsAdapter = ThreadAdapter(this, threads, true, itemClickListener = { _, th ->
             val messageActivityIntent = Intent(this, ActivityMessage::class.java)
             messageActivityIntent.putExtra("user2", th.user2)
             startActivity(messageActivityIntent)
@@ -76,7 +77,7 @@ class ActivityHome : ActivityBase() {
                 IndexTask(this@ActivityHome).start()
             }
         }
-        timer!!.scheduleAtFixedRate(timerTask!!, 0, taskInterval)
+        timer!!.scheduleAtFixedRate(timerTask!!, delay, taskInterval)
     }
 
     override fun onPause() {

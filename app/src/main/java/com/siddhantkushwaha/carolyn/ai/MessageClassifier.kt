@@ -11,7 +11,6 @@ import com.google.gson.JsonObject
 import com.siddhantkushwaha.carolyn.common.cleanText
 import org.tensorflow.lite.Interpreter
 import java.io.File
-import java.lang.Integer.min
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 

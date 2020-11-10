@@ -8,7 +8,6 @@ import com.siddhantkushwaha.carolyn.entity.Contact
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import io.realm.Realm
-import kotlin.Exception
 
 class Index(private val context: Context) {
 
@@ -67,7 +66,11 @@ class Index(private val context: Context) {
         }
     }
 
-    private fun indexMessage(realm: Realm, message: Array<Any>): Int {
+    private fun indexMessage(
+        realm: Realm,
+        message: Array<Any>,
+        forceClassify: Boolean = false
+    ): Int {
         val subscriptions = subscriptions ?: return 1
         val contacts = contacts ?: return 1
 
@@ -122,9 +125,13 @@ class Index(private val context: Context) {
             }
 
             if (realmThread.classifyThread() && realmMessage.sent == false) {
-                val messageClass = MessageClassifier.doClassification(context, body, false)
-                if (messageClass != null)
-                    realmMessage.type = messageClass
+
+                if (realmMessage.type == null || forceClassify) {
+                    val messageClass = MessageClassifier.doClassification(context, body, false)
+                    if (messageClass != null)
+                        realmMessage.type = messageClass
+                }
+
             } else {
                 realmMessage.type = null
             }

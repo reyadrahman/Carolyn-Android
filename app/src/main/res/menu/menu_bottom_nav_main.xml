@@ -1,0 +1,27 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/personal"
+        android:enabled="true"
+        android:icon="@drawable/icon_message_primary"
+        android:title="Primary" />
+    <item
+        android:id="@+id/otp"
+        android:enabled="true"
+        android:icon="@drawable/icon_message_otp"
+        android:title="OTP" />
+    <item
+        android:id="@+id/transaction"
+        android:enabled="true"
+        android:icon="@drawable/icon_message_transaction"
+        android:title="Transaction" />
+    <item
+        android:id="@+id/update"
+        android:enabled="true"
+        android:icon="@drawable/icon_message_update"
+        android:title="Update" />
+    <item
+        android:id="@+id/spam"
+        android:enabled="true"
+        android:icon="@drawable/icon_message_spam"
+        android:title="Spam" />
+</menu>
