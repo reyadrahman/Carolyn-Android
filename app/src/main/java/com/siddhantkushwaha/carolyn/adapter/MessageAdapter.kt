@@ -106,12 +106,12 @@ class MessageAdapter(
 
             receivedOnNumberTextView.text = message.messageThread?.user1 ?: ""
 
-            itemView.setOnClickListener {
+            /*itemView.setOnClickListener {
                 when (messageClassIcon.visibility) {
                     View.GONE -> messageClassIcon.visibility = View.VISIBLE
                     View.VISIBLE -> messageClassIcon.visibility = View.GONE
                 }
-            }
+            }*/
         }
     }
 }
