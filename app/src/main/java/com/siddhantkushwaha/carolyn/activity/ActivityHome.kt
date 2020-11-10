@@ -18,6 +18,7 @@ import io.realm.Sort
 import kotlinx.android.synthetic.main.activity_home.*
 import java.util.*
 
+
 class ActivityHome : ActivityBase() {
 
     private lateinit var realm: Realm
@@ -27,8 +28,6 @@ class ActivityHome : ActivityBase() {
     private lateinit var threadsChangeListener: OrderedRealmCollectionChangeListener<RealmResults<MessageThread>>
 
     private var timer: Timer? = null
-    private var timerTask: TimerTask? = null
-
     private val delay = 1 * 1000L
     private val taskInterval = 60 * 1000L
 
@@ -43,8 +42,22 @@ class ActivityHome : ActivityBase() {
 
         realm = RealmUtil.getCustomRealmInstance(this)
 
-        threads = realm.where(MessageThread::class.java).isNotNull("lastMessage")
-            .sort("lastMessage.timestamp", Sort.DESCENDING).findAllAsync()
+        when (savedInstanceState?.getInt("selected_view")) {
+            R.id.personal ->
+                threads = getPersonalThreadsQuery()
+            R.id.otp ->
+                threads = getThreadsForTypeQuery("otp")
+            R.id.transaction ->
+                threads = getThreadsForTypeQuery("transaction")
+            R.id.update ->
+                threads = getThreadsForTypeQuery("update")
+            R.id.spam ->
+                threads = getThreadsForTypeQuery("spam")
+            null -> {
+                threads = getThreadsForTypeQuery("otp")
+                bottom_nav_filter.selectedItemId = R.id.otp
+            }
+        }
 
         threadsAdapter = ThreadAdapter(this, threads, true, itemClickListener = { _, th ->
             val messageActivityIntent = Intent(this, ActivityMessage::class.java)
@@ -61,30 +74,58 @@ class ActivityHome : ActivityBase() {
 
         recycler_view_threads.layoutManager = layoutManager
         recycler_view_threads.adapter = threadsAdapter
+
+        bottom_nav_filter.setOnNavigationItemSelectedListener {
+            when (it.itemId) {
+                R.id.personal -> {
+                    threads = getPersonalThreadsQuery()
+                    updateUI(1)
+                }
+                R.id.otp -> {
+                    threads = getThreadsForTypeQuery("otp")
+                    updateUI(1)
+                }
+                R.id.transaction -> {
+                    threads = getThreadsForTypeQuery("transaction")
+                    updateUI(1)
+                }
+                R.id.update -> {
+                    threads = getThreadsForTypeQuery("update")
+                    updateUI(1)
+                }
+                R.id.spam -> {
+                    threads = getThreadsForTypeQuery("spam")
+                    updateUI(1)
+                }
+            }
+            true
+        }
     }
 
     override fun onResume() {
         super.onResume()
 
-        // Update adapter for changes that were made while activity was paused
-        threadsAdapter.notifyDataSetChanged()
-        threads.addChangeListener(threadsChangeListener)
+        updateUI(2)
 
         timer = Timer()
-
-        timerTask = object : TimerTask() {
+        val timerTask = object : TimerTask() {
             override fun run() {
                 IndexTask(this@ActivityHome).start()
             }
         }
-        timer!!.scheduleAtFixedRate(timerTask!!, delay, taskInterval)
+        timer?.scheduleAtFixedRate(timerTask, delay, taskInterval)
     }
 
     override fun onPause() {
         super.onPause()
         threads.removeAllChangeListeners()
 
-        timer!!.cancel()
+        timer?.cancel()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("selected_view", bottom_nav_filter.selectedItemId)
     }
 
     private fun checkPermissions() {
@@ -101,5 +142,29 @@ class ActivityHome : ActivityBase() {
         ) {
             IndexTask(this@ActivityHome).start()
         }
+    }
+
+    private fun getPersonalThreadsQuery(): RealmResults<MessageThread> {
+        return realm
+            .where(MessageThread::class.java)
+            .isNotNull("lastMessage")
+            .isNull("lastMessage.type")
+            .sort("lastMessage.timestamp", Sort.DESCENDING).findAllAsync()
+    }
+
+    private fun getThreadsForTypeQuery(type: String): RealmResults<MessageThread> {
+        return realm
+            .where(MessageThread::class.java)
+            .isNotNull("lastMessage")
+            .equalTo("lastMessage.type", type)
+            .sort("lastMessage.timestamp", Sort.DESCENDING).findAllAsync()
+    }
+
+    private fun updateUI(flag: Int) {
+        when (flag) {
+            1 -> threadsAdapter.updateData(threads)
+            2 -> threadsAdapter.notifyDataSetChanged()
+        }
+        threads.addChangeListener(threadsChangeListener)
     }
 }

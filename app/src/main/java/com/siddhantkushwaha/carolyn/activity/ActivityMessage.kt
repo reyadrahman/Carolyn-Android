@@ -26,8 +26,6 @@ class ActivityMessage : ActivityBase() {
     private lateinit var thread: MessageThread
 
     private var timer: Timer? = null
-    private var timerTask: TimerTask? = null
-
     private val delay = 1 * 1000L
     private val taskInterval = 60 * 1000L
 
@@ -69,19 +67,19 @@ class ActivityMessage : ActivityBase() {
         messages.addChangeListener(messagesChangeListener)
 
         timer = Timer()
-        timerTask = object : TimerTask() {
+        val timerTask = object : TimerTask() {
             override fun run() {
                 IndexTask(this@ActivityMessage).start()
             }
         }
-        timer!!.scheduleAtFixedRate(timerTask!!, delay, taskInterval)
+        timer?.scheduleAtFixedRate(timerTask, delay, taskInterval)
     }
 
     override fun onPause() {
         super.onPause()
         messages.removeAllChangeListeners()
 
-        timer!!.cancel()
+        timer?.cancel()
     }
 
     override fun onSupportNavigateUp(): Boolean {
