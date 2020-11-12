@@ -96,8 +96,6 @@ class Index(private val context: Context) {
         }
 
         val id = getHash("$timestamp, $body, $sent")
-
-        Log.d(tag, "Saving message $id")
         realm.executeTransaction { realmT ->
 
             var realmMessage = realmT.where(Message::class.java).equalTo("id", id).findFirst()
@@ -116,7 +114,8 @@ class Index(private val context: Context) {
                     ?: throw Exception("Could not create Thread object.")
             }
 
-            realmThread.user1 = user1
+            if (realmThread.user1 == null)
+                realmThread.user1 = user1
             realmThread.user2DisplayName = user2DisplayName
             realmThread.inContacts = contactName != null
 
@@ -125,13 +124,11 @@ class Index(private val context: Context) {
             }
 
             if (realmThread.classifyThread() && realmMessage.sent == false) {
-
                 if (realmMessage.type == null || forceClassify) {
                     val messageClass = MessageClassifier.doClassification(context, body, false)
                     if (messageClass != null)
                         realmMessage.type = messageClass
                 }
-
             } else {
                 realmMessage.type = null
             }
