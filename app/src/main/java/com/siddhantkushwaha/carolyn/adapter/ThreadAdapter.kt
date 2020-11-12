@@ -8,10 +8,10 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.siddhantkushwaha.carolyn.R
+import com.siddhantkushwaha.carolyn.common.getStringForTimestamp
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import io.realm.OrderedRealmCollection
 import io.realm.RealmRecyclerViewAdapter
-import java.util.*
 
 
 class ThreadAdapter(
@@ -44,13 +44,13 @@ class ThreadAdapter(
             threadTitleTextView.text = messageThread.user2DisplayName
             lastMessageTextView.text = messageThread.lastMessage?.body ?: "No messages."
 
-            val timeZoneId = TimeZone.getDefault().toZoneId()
+
             val timestamp = messageThread.lastMessage?.timestamp
             if (timestamp == null) {
                 timestampTextView.visibility = View.GONE
             } else {
                 timestampTextView.visibility = View.VISIBLE
-                timestampTextView.text  = "Broken"
+                timestampTextView.text  = getStringForTimestamp(timestamp)
             }
 
             itemView.setOnClickListener { view ->

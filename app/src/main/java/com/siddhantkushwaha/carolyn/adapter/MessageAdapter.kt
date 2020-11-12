@@ -7,12 +7,10 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.siddhantkushwaha.carolyn.R
+import com.siddhantkushwaha.carolyn.common.formatTimestamp
 import com.siddhantkushwaha.carolyn.entity.Message
 import io.realm.OrderedRealmCollection
 import io.realm.RealmRecyclerViewAdapter
-import java.time.Instant
-import java.time.format.DateTimeFormatter
-import java.util.*
 
 class MessageAdapter(
     data: OrderedRealmCollection<Message>,
@@ -72,10 +70,7 @@ class MessageAdapter(
 
             messageBodyTextView.text = message.body
 
-            val timeZoneId = TimeZone.getDefault().toZoneId()
-            val date = Instant.ofEpochMilli(message.timestamp!!).atZone(timeZoneId)
-            val formattedDate = DateTimeFormatter.ofPattern("dd/MM/yy hh:mm a").format(date)
-            messageTimestampTextView.text = formattedDate
+            messageTimestampTextView.text = formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
 
             sentViaSubscription.text = message.messageThread?.user1 ?: ""
         }
@@ -99,10 +94,7 @@ class MessageAdapter(
                 "spam" -> messageClassIcon.setImageResource(R.drawable.icon_message_spam)
             }
 
-            val timeZoneId = TimeZone.getDefault().toZoneId()
-            val date = Instant.ofEpochMilli(message.timestamp!!).atZone(timeZoneId)
-            val formattedDate = DateTimeFormatter.ofPattern("dd/MM/yy hh:mm a").format(date)
-            messageTimestampTextView.text = formattedDate
+            messageTimestampTextView.text = formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
 
             receivedOnNumberTextView.text = message.messageThread?.user1 ?: ""
 

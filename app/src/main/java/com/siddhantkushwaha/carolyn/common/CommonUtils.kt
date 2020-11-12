@@ -1,10 +1,11 @@
 package com.siddhantkushwaha.carolyn.common
 
-import android.app.Activity
 import com.google.i18n.phonenumbers.NumberParseException
 import com.google.i18n.phonenumbers.PhoneNumberUtil
-import java.io.File
 import java.security.MessageDigest
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 public fun getHash(data: String, algorithm: String = "SHA-256"): String {
     return MessageDigest.getInstance(algorithm).digest(data.toByteArray())
@@ -72,7 +73,30 @@ public fun cleanText(text: String): String {
     return textBuilder2.toString().trim()
 }
 
-public fun getExternalFilesDir(activity: Activity): File {
-    return activity.getExternalFilesDir(null)
-        ?: throw Exception("Couldn't create file object.")
+public fun formatTimestamp(timestamp: Long, format: String): String {
+    val timeZoneId = TimeZone.getDefault().toZoneId()
+    val date = Instant.ofEpochMilli(timestamp).atZone(timeZoneId)
+    return DateTimeFormatter.ofPattern(format).format(date)
+}
+
+public fun getStringForTimestamp(timestamp: Long): String {
+    val currTimestamp = Instant.now().toEpochMilli()
+
+    return when ((currTimestamp - timestamp) / (24 * 3600000)) {
+        0L -> {
+            formatTimestamp(timestamp, "hh:mm a")
+        }
+
+        1L -> {
+            "Yesterday"
+        }
+
+        2L, 3L, 4L, 5L, 6L, 7L -> {
+            formatTimestamp(timestamp, "EEE")
+        }
+
+        else -> {
+            formatTimestamp(timestamp, "dd/MM/yy")
+        }
+    }
 }
