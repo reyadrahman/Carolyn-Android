@@ -2,7 +2,7 @@ package com.siddhantkushwaha.carolyn.index
 
 import android.content.Context
 
-class IndexTask(private val context: Context) : Thread() {
+class IndexTask(private val context: Context, private val breakpoint: Long = -1) : Thread() {
 
     companion object {
         @JvmStatic
@@ -25,7 +25,7 @@ class IndexTask(private val context: Context) : Thread() {
         if (indexToFirebase == null)
             indexToFirebase = IndexToFirebase(context)
 
-        index?.run()
+        index?.run(breakpoint)
         indexToFirebase?.upload()
 
         inProgress = false

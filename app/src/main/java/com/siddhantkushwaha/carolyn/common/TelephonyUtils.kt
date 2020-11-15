@@ -9,6 +9,14 @@ import android.provider.ContactsContract
 import android.provider.Telephony
 import android.telephony.SubscriptionManager
 
+data class SMSMessage(
+    val user2: String,
+    val timestamp: Long,
+    val body: String,
+    val sent: Boolean,
+    val subId: Int
+)
+
 @SuppressLint("MissingPermission")
 public fun getSubscriptions(context: Context): HashMap<Int, String>? {
     var subscriptions: HashMap<Int, String>? = null
@@ -28,21 +36,19 @@ public fun getSubscriptions(context: Context): HashMap<Int, String>? {
 }
 
 @SuppressLint("MissingPermission")
-public fun getAllSms(context: Context): ArrayList<Array<Any>>? {
-    var messages: ArrayList<Array<Any>>? = null
-    if (PermissionsUtil.checkPermissions(context, arrayOf(android.Manifest.permission.READ_SMS))
-            .isEmpty()
+public fun getAllSms(context: Context): ArrayList<SMSMessage>? {
+    var messages: ArrayList<SMSMessage>? = null
+    if (PermissionsUtil.checkPermissions(
+            context,
+            arrayOf(android.Manifest.permission.READ_SMS)
+        ).isEmpty()
     ) {
         messages = ArrayList()
-        val c =
-            context.contentResolver.query(Telephony.Sms.CONTENT_URI, null, null, null, null)
-        val totalSMS: Int
+        val c = context.contentResolver.query(Telephony.Sms.CONTENT_URI, null, null, null, null)
         if (c != null) {
-            totalSMS = c.count
+            val totalSMS = c.count
             if (c.moveToFirst()) {
                 for (j in 0 until totalSMS) {
-                    val threadId = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.THREAD_ID))
-
                     val user2: String = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
 
                     val body: String = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.BODY))
@@ -58,20 +64,22 @@ public fun getAllSms(context: Context): ArrayList<Array<Any>>? {
                     */
                     val type: Int = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.TYPE))
 
-                    val subId: Int =
+                    val subId =
                         if (c.columnNames.find { it == Telephony.Sms.SUBSCRIPTION_ID } != null) {
                             c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.SUBSCRIPTION_ID))
                         } else {
                             c.getInt(c.getColumnIndex("sim_id"))
                         }
 
-                    val message = Array<Any>(6) { 0 }
-                    message[0] = threadId
-                    message[1] = user2
-                    message[2] = date
-                    message[3] = body
-                    message[4] = type
-                    message[5] = subId
+                    val message = SMSMessage(
+                        user2 = user2,
+                        timestamp = date,
+                        body = body,
+                        sent = type == 2,
+                        subId = subId
+                    )
+
+                    // this list will have latest messages at the top
                     messages.add(message)
 
                     c.moveToNext()

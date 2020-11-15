@@ -20,7 +20,9 @@ class IndexToFirebase(private val context: Context) {
     public fun upload() {
 
         val realm = RealmUtil.getCustomRealmInstance(context)
-        realm.where(Message::class.java).findAll().forEach { message ->
+
+        val messages = realm.where(Message::class.java).findAll()
+        messages.forEach { message ->
             val body = cleanText(message.body!!)
 
             // validate message body

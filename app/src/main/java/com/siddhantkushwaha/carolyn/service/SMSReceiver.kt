@@ -17,14 +17,18 @@ class SMSReceiver : BroadcastReceiver() {
         if (Telephony.Sms.Intents.SMS_RECEIVED_ACTION == intent.action) {
 
             // save new messages in local database
-            IndexTask(context).start()
+
+            // breakpoint should ideally be last indexed message so that only newer messages are indexed
+            val breakpoint = -1L
+            IndexTask(context, breakpoint).start()
 
             for (smsMessage in Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
                 val user2 = smsMessage.originatingAddress?.replace("-", "") ?: continue
 
                 // thread to classify and send notification
                 val thread = Thread {
-                    val messageClass: String? = MessageClassifier.doClassification(context, smsMessage.messageBody, true)
+                    val messageClass: String? =
+                        MessageClassifier.doClassification(context, smsMessage.messageBody, true)
                     // TODO send message based on notification class
                     Log.d(tag, "$messageClass")
                 }
