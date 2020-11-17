@@ -2,6 +2,7 @@ package com.siddhantkushwaha.carolyn.common;
 
 import com.google.firebase.database.FirebaseDatabase;
 
+
 public class FirebaseUtils {
 
     private static FirebaseDatabase firebaseDatabase;

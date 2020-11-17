@@ -15,6 +15,7 @@ import io.realm.Sort
 import kotlinx.android.synthetic.main.activity_message.*
 import java.util.*
 
+
 class ActivityMessage : ActivityBase() {
 
     private lateinit var realm: Realm

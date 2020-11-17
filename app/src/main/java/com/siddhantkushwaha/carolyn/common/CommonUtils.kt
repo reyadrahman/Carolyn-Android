@@ -7,6 +7,7 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+
 public fun getHash(data: String, algorithm: String = "SHA-256"): String {
     return MessageDigest.getInstance(algorithm).digest(data.toByteArray())
         .fold("", { str, it -> str + "%02x".format(it) })

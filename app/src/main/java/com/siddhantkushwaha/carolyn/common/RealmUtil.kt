@@ -4,6 +4,7 @@ import android.content.Context
 import io.realm.Realm
 import io.realm.RealmConfiguration
 
+
 object RealmUtil {
 
     public fun getCustomRealmInstance(context: Context): Realm {

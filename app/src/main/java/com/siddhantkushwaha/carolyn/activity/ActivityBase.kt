@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 
+
 open class ActivityBase : AppCompatActivity() {
 
     lateinit var TAG: String

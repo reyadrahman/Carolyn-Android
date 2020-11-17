@@ -2,34 +2,32 @@ package com.siddhantkushwaha.carolyn.index
 
 import android.content.Context
 import android.util.Log
-import com.siddhantkushwaha.carolyn.ai.MessageClassifier
+import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import com.siddhantkushwaha.carolyn.common.*
 import com.siddhantkushwaha.carolyn.entity.Contact
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import io.realm.Realm
+import io.realm.Sort
+import java.util.*
+import kotlin.collections.HashMap
 
 
-class Index(private val context: Context) {
+class Index(
+    private val context: Context,
+    private val optimized: Boolean = false
+) {
 
     private val tag: String = this::class.java.toString()
 
     private var subscriptions: HashMap<Int, String>? = null
     private var contacts: HashMap<String, String>? = null
 
-    /*
-        The whole idea of adding breakpoint feature is to make the task run faster when it inits via
-        SMSReceiver class
-
-        We can use breakpoint value to decide
-            a - If Pruning should be done
-            b - Where should contacts be fetched from (from db will be faster hopefully) AND if they should be indexed
-            c - If only newer messages should be indexed
-    */
-    public fun run(breakpoint: Long = -1) {
+    public fun run() {
         val realm = RealmUtil.getCustomRealmInstance(context)
 
         if (contacts == null) {
+            // TODO - if optimized, get contacts from DB instead
             contacts = getAllContacts(context)
         }
 
@@ -37,17 +35,20 @@ class Index(private val context: Context) {
             subscriptions = getSubscriptions(context)
         }
 
-        indexMessages(realm, breakpoint)
-        indexContacts(realm)
+        indexMessages(realm)
+
+        if (!optimized) {
+            indexContacts(realm)
+        }
 
         realm.close()
     }
 
-    private fun indexMessages(realm: Realm, breakpoint: Long = -1) {
+    private fun indexMessages(realm: Realm) {
         val messages = getAllSms(context)
 
         // prune deleted messages
-        if (breakpoint == -1L) {
+        if (!optimized) {
             val allMessages = realm.where(Message::class.java).findAll()
             allMessages.forEach { indexedMessage ->
 
@@ -56,7 +57,7 @@ class Index(private val context: Context) {
                 }
 
                 if (result == null) {
-                    Log.d(tag, "Message deleted: ${indexedMessage.body}")
+                    Log.d(tag, "Deleting message: ${indexedMessage.body}")
                     realm.executeTransaction {
                         indexedMessage.deleteFromRealm()
                     }
@@ -65,17 +66,26 @@ class Index(private val context: Context) {
         }
 
         // add all new messages
+        val breakpoint =
+            if (optimized) {
+                realm.where(Message::class.java).sort("timestamp", Sort.DESCENDING)
+                    .findFirst()?.timestamp ?: -1
+            } else {
+                -1
+            }
+
         if (messages != null) {
             for (message in messages) {
                 if (message.timestamp < breakpoint) {
                     break
                 }
-                indexMessage(realm, message, false, breakpoint > -1L)
+                Log.d(tag, "Indexing message: ${message.body}")
+                indexMessage(realm, message)
             }
         }
 
         // delete threads with no messages
-        if (breakpoint == -1L) {
+        if (!optimized) {
             val allThreads = realm.where(MessageThread::class.java).findAll()
             allThreads.forEach { th ->
                 if (th.lastMessage == null) {
@@ -89,9 +99,7 @@ class Index(private val context: Context) {
 
     private fun indexMessage(
         realm: Realm,
-        message: SMSMessage,
-        forceClassify: Boolean = false,
-        skipIfNotDownloaded: Boolean = false
+        message: SMSMessage
     ): Int {
         val subscriptions = subscriptions ?: return 1
         val contacts = contacts ?: return 1
@@ -99,7 +107,7 @@ class Index(private val context: Context) {
         val user1 = subscriptions[message.subId] ?: "unknown"
 
         val normalizedOriginatingAddress = normalizePhoneNumber(message.user2)
-        val user2 = normalizedOriginatingAddress ?: message.user2.toLowerCase()
+        val user2 = normalizedOriginatingAddress ?: message.user2.toLowerCase(Locale.getDefault())
 
         var contactName: String? = null
         val user2DisplayName = if (normalizedOriginatingAddress != null) {
@@ -139,12 +147,12 @@ class Index(private val context: Context) {
             }
 
             if (realmThread.classifyThread() && realmMessage.sent == false) {
-                if (realmMessage.type == null || forceClassify) {
+                if (realmMessage.type == null) {
                     val messageClass =
                         MessageClassifier.doClassification(
                             context,
                             message.body,
-                            skipIfNotDownloaded
+                            skipIfNotDownloaded = optimized
                         )
                     if (messageClass != null)
                         realmMessage.type = messageClass

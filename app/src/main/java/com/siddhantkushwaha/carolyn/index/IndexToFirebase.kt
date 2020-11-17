@@ -12,6 +12,7 @@ import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.common.cleanText
 import com.siddhantkushwaha.carolyn.entity.Message
 
+
 class IndexToFirebase(private val context: Context) {
 
     private val firebaseDatabase = FirebaseUtils.getRealtimeDb(false)

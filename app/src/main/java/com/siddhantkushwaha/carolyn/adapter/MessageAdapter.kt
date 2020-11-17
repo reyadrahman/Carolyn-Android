@@ -12,6 +12,7 @@ import com.siddhantkushwaha.carolyn.entity.Message
 import io.realm.OrderedRealmCollection
 import io.realm.RealmRecyclerViewAdapter
 
+
 class MessageAdapter(
     data: OrderedRealmCollection<Message>,
     autoUpdate: Boolean

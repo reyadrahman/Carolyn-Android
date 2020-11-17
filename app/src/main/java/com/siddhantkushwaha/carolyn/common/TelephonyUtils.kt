@@ -9,6 +9,7 @@ import android.provider.ContactsContract
 import android.provider.Telephony
 import android.telephony.SubscriptionManager
 
+
 data class SMSMessage(
     val user2: String,
     val timestamp: Long,

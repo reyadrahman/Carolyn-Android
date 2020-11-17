@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
-import com.siddhantkushwaha.carolyn.ai.MessageClassifier
+import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import com.siddhantkushwaha.carolyn.index.IndexTask
 
 class SMSReceiver : BroadcastReceiver() {
@@ -18,9 +18,7 @@ class SMSReceiver : BroadcastReceiver() {
 
             // save new messages in local database
 
-            // breakpoint should ideally be last indexed message so that only newer messages are indexed
-            val breakpoint = -1L
-            IndexTask(context, breakpoint).start()
+            IndexTask(context, true).start()
 
             for (smsMessage in Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
                 val user2 = smsMessage.originatingAddress?.replace("-", "") ?: continue

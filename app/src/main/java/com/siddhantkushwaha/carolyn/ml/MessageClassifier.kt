@@ -1,4 +1,4 @@
-package com.siddhantkushwaha.carolyn.ai
+package com.siddhantkushwaha.carolyn.ml
 
 import android.content.Context
 import com.google.android.gms.tasks.Tasks
@@ -13,6 +13,7 @@ import org.tensorflow.lite.Interpreter
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+
 
 class MessageClassifier {
 
