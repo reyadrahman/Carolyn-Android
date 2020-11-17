@@ -23,24 +23,30 @@ class IndexToFirebase(private val context: Context) {
         val realm = RealmUtil.getCustomRealmInstance(context)
 
         val messages = realm.where(Message::class.java).findAll()
-        messages.forEach { message ->
-            val body = cleanText(message.body!!)
+        for (message in messages) {
 
-            // validate message body
-            if (body.count { it == '#' } / body.length.toFloat() < 0.5) {
-                // if message is not in contacts
-                if (message.messageThread?.classifyThread() == true) {
-                    val data = HashMap<String, String>()
+            val messageBody = message.body
+            if (messageBody == null || message.language != "en")
+                continue
 
-                    data["userId"] = firebaseAuth.currentUser?.email ?: "unknown"
-                    data["messageId"] = message.id!!
-                    data["user1"] = message.messageThread!!.user1!!
-                    data["user2"] = message.messageThread!!.user2!!
-                    data["timestamp"] = "${message.timestamp!!}"
-                    data["body"] = body
+            val body = cleanText(messageBody)
 
-                    firebaseDatabase.getReference("messages/${message.id!!}").setValue(data)
-                }
+            val hashRatio = body.count { it == '#' } / body.length.toFloat()
+            if (hashRatio < 0.5) {
+
+                if (message.messageThread?.classifyThread() != true)
+                    continue
+
+                val data = HashMap<String, String>()
+
+                data["userId"] = firebaseAuth.currentUser?.email ?: "unknown"
+                data["messageId"] = message.id!!
+                data["user1"] = message.messageThread!!.user1!!
+                data["user2"] = message.messageThread!!.user2!!
+                data["timestamp"] = "${message.timestamp!!}"
+                data["body"] = body
+
+                firebaseDatabase.getReference("messages/${message.id!!}").setValue(data)
             }
         }
 

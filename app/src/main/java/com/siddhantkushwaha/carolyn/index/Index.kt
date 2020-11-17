@@ -7,6 +7,7 @@ import com.siddhantkushwaha.carolyn.common.*
 import com.siddhantkushwaha.carolyn.entity.Contact
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
+import com.siddhantkushwaha.carolyn.ml.LanguageId
 import io.realm.Realm
 import io.realm.Sort
 import java.util.*
@@ -79,7 +80,10 @@ class Index(
                 if (message.timestamp < breakpoint) {
                     break
                 }
-                Log.d(tag, "Indexing message: ${message.body}")
+                Log.d(
+                    tag,
+                    "Indexing message: ${message.body} ${LanguageId.getLanguage(message.body)}"
+                )
                 indexMessage(realm, message)
             }
         }
@@ -120,15 +124,6 @@ class Index(
         val id = getHash("${message.timestamp}, ${message.body}, ${message.sent}")
         realm.executeTransaction { realmT ->
 
-            var realmMessage = realmT.where(Message::class.java).equalTo("id", id).findFirst()
-            if (realmMessage == null) {
-                realmMessage = realm.createObject(Message::class.java, id)
-                    ?: throw Exception("Could not create Message object.")
-                realmMessage.body = message.body
-                realmMessage.timestamp = message.timestamp
-                realmMessage.sent = message.sent
-            }
-
             var realmThread =
                 realmT.where(MessageThread::class.java).equalTo("user2", user2).findFirst()
             if (realmThread == null) {
@@ -142,6 +137,16 @@ class Index(
             realmThread.user2DisplayName = user2DisplayName
             realmThread.inContacts = contactName != null
 
+            var realmMessage = realmT.where(Message::class.java).equalTo("id", id).findFirst()
+            if (realmMessage == null) {
+                realmMessage = realm.createObject(Message::class.java, id)
+                    ?: throw Exception("Could not create Message object.")
+                realmMessage.body = message.body
+                realmMessage.timestamp = message.timestamp
+                realmMessage.sent = message.sent
+                realmMessage.language = LanguageId.getLanguage(message.body)
+            }
+
             if (message.timestamp > realmThread.lastMessage?.timestamp ?: 0) {
                 realmThread.lastMessage = realmMessage
             }
@@ -149,13 +154,13 @@ class Index(
             if (realmThread.classifyThread() && realmMessage.sent == false) {
                 if (realmMessage.type == null) {
                     val messageClass =
-                        MessageClassifier.doClassification(
-                            context,
-                            message.body,
-                            skipIfNotDownloaded = optimized
-                        )
+                        MessageClassifier.doClassification(context, message.body, optimized)
                     if (messageClass != null)
                         realmMessage.type = messageClass
+                } else {
+                    if (realmMessage.language != "en") {
+                        realmMessage.type = "spam"
+                    }
                 }
             } else {
                 realmMessage.type = null

@@ -14,5 +14,7 @@ open class Message : RealmObject() {
     var sent: Boolean? = null
     var type: String? = null
 
+    var language: String? = null
+
     var messageThread: MessageThread? = null
 }

@@ -98,13 +98,6 @@ class MessageAdapter(
             messageTimestampTextView.text = formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
 
             receivedOnNumberTextView.text = message.messageThread?.user1 ?: ""
-
-            /*itemView.setOnClickListener {
-                when (messageClassIcon.visibility) {
-                    View.GONE -> messageClassIcon.visibility = View.VISIBLE
-                    View.VISIBLE -> messageClassIcon.visibility = View.GONE
-                }
-            }*/
         }
     }
 }

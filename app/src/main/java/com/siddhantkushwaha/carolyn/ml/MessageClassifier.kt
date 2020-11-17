@@ -138,7 +138,7 @@ class MessageClassifier {
                             Model keeps crashing for higher values for reason
                             We may have to live with this stupid hack
                         */
-                        if(idx > 3000F)
+                        if (idx > 3000F)
                             idx = 1F
 
                         tokenToIndex.add(idx)
