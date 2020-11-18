@@ -100,6 +100,10 @@ class ActivityHome : ActivityBase() {
             }
             true
         }
+
+        button_send_message.setOnClickListener {
+
+        }
     }
 
     override fun onResume() {
