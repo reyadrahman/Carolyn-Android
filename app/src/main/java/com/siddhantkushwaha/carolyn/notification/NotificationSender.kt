@@ -3,6 +3,7 @@ package com.siddhantkushwaha.carolyn.notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.graphics.Color
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
@@ -38,6 +39,14 @@ class NotificationSender(val context: Context) {
         "personal" to NotificationManager.IMPORTANCE_HIGH
     )
 
+    private val channelToColor = hashMapOf(
+        "otp" to NotificationManager.IMPORTANCE_HIGH,
+        "transaction" to NotificationManager.IMPORTANCE_HIGH,
+        "update" to NotificationManager.IMPORTANCE_DEFAULT,
+        "spam" to NotificationManager.IMPORTANCE_NONE,
+        "personal" to NotificationManager.IMPORTANCE_HIGH
+    )
+
     init {
         channelToDescription.keys.forEach {
             getNotificationChannel(it)
@@ -56,9 +65,18 @@ class NotificationSender(val context: Context) {
         val channel = NotificationChannel(channelId, name, importance)
         channel.description = description
 
+        channel.enableLights(true)
+        channel.lightColor = Color.argb(255, 255, 0, 0)
+
         notificationManager.createNotificationChannel(channel)
 
         return channel
+    }
+
+    public fun clearChannels() {
+        channelToName.keys.forEach {
+            notificationManager.deleteNotificationChannel(it)
+        }
     }
 
     public fun sendNotification(user2: String, subject: String, body: String, type: String?) {
@@ -74,6 +92,7 @@ class NotificationSender(val context: Context) {
             .setContentText(body)
             .setLargeIcon(notificationIcon)
             .setStyle(notificationStyle)
+            .setLights(Color.argb(255, 255, 0, 0), 500, 500)
             .build()
 
         notificationManager.notify(1, notification)

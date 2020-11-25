@@ -2,7 +2,6 @@ package com.siddhantkushwaha.carolyn.ml
 
 import com.google.android.gms.tasks.Tasks
 import com.google.mlkit.nl.languageid.LanguageIdentification
-import kotlin.Exception
 
 
 class LanguageId {

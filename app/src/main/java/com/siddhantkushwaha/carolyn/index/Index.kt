@@ -2,16 +2,15 @@ package com.siddhantkushwaha.carolyn.index
 
 import android.content.Context
 import android.util.Log
-import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import com.siddhantkushwaha.carolyn.common.*
 import com.siddhantkushwaha.carolyn.entity.Contact
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.ml.LanguageId
+import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import io.realm.Realm
 import io.realm.Sort
 import java.util.*
-import kotlin.collections.HashMap
 
 
 class Index(

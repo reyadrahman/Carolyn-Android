@@ -5,8 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
-import com.siddhantkushwaha.carolyn.ml.MessageClassifier
+import com.siddhantkushwaha.carolyn.common.RealmUtil
+import com.siddhantkushwaha.carolyn.entity.Contact
 import com.siddhantkushwaha.carolyn.index.IndexTask
+import com.siddhantkushwaha.carolyn.ml.MessageClassifier
+import com.siddhantkushwaha.carolyn.notification.NotificationSender
 
 class SMSReceiver : BroadcastReceiver() {
 
@@ -27,8 +30,22 @@ class SMSReceiver : BroadcastReceiver() {
                 val thread = Thread {
                     val messageClass: String? =
                         MessageClassifier.doClassification(context, smsMessage.messageBody, true)
-                    // TODO send message based on notification class
-                    Log.d(tag, "$messageClass")
+
+                    Log.d(tag, "${smsMessage.messageBody} - $messageClass")
+
+                    val realm = RealmUtil.getCustomRealmInstance(context)
+                    val user2DisplayName =
+                        realm.where(Contact::class.java).equalTo("number", user2).findFirst()?.name
+                            ?: user2
+                    realm.close()
+
+                    val notificationSender = NotificationSender(context)
+                    notificationSender.sendNotification(
+                        user2,
+                        user2DisplayName,
+                        smsMessage.messageBody,
+                        messageClass
+                    )
                 }
 
                 thread.start()
