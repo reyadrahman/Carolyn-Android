@@ -80,7 +80,7 @@ class MessageClassifier {
 
         private fun getMetaData(context: Context): Metadata {
 
-            val maxLenAttr = "maxlen"
+            val maxLenAttr = "max_len"
             val classesAttr = "classes"
             val indexAttr = "index"
 
@@ -131,16 +131,7 @@ class MessageClassifier {
 
                 tokens.forEachIndexed { index, token ->
                     if (index < metaData.maxLen) {
-                        var idx = metaData.index.getOrDefault(token, 0F)
-
-                        /*
-                            ----- Hack Alert -----
-                            Model keeps crashing for higher values for reason
-                            We may have to live with this stupid hack
-                        */
-                        if (idx > 3000F)
-                            idx = 1F
-
+                        val idx = metaData.index.getOrDefault(token, 0F)
                         tokenToIndex.add(idx)
                     }
                 }
