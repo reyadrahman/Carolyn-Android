@@ -70,7 +70,7 @@ class ActivityMessage : ActivityBase() {
         timer = Timer()
         val timerTask = object : TimerTask() {
             override fun run() {
-                IndexTask(this@ActivityMessage).start()
+                IndexTask(this@ActivityMessage, false).start()
             }
         }
         timer?.scheduleAtFixedRate(timerTask, delay, taskInterval)
