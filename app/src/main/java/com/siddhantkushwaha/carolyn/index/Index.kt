@@ -13,112 +13,90 @@ import io.realm.Sort
 import java.util.*
 
 
-class Index(
-    private val context: Context,
-    private val optimized: Boolean = false
-) {
+class Index(private val context: Context, private val optimized: Boolean) {
 
     private val tag: String = this::class.java.toString()
 
-    private var subscriptions: HashMap<Int, String>? = null
-    private var contacts: HashMap<String, String>? = null
-
     public fun run() {
         val realm = RealmUtil.getCustomRealmInstance(context)
-
-        if (contacts == null) {
-            // TODO - if optimized, get contacts from DB instead
-            contacts = getAllContacts(context)
-        }
-
-        if (subscriptions == null) {
-            subscriptions = getSubscriptions(context)
-        }
-
-        indexMessages(realm)
 
         if (!optimized) {
             indexContacts(realm)
         }
 
+        indexMessages(realm)
+
         realm.close()
     }
 
     private fun indexMessages(realm: Realm) {
+
         val messages = getAllSms(context)
+        val subscriptions = getSubscriptions(context)
 
-        // prune deleted messages
+        if (messages == null || subscriptions == null)
+            return
+
         if (!optimized) {
-            val allMessages = realm.where(Message::class.java).findAll()
-            allMessages.forEach { indexedMessage ->
+            pruneMessages(realm, messages)
+        }
 
-                val result = messages?.find { message ->
-                    message.timestamp == indexedMessage.timestamp && message.body == indexedMessage.body
-                }
+        addMessages(realm, messages, subscriptions)
 
-                if (result == null) {
-                    Log.d(tag, "Deleting message: ${indexedMessage.body}")
-                    realm.executeTransaction {
-                        indexedMessage.deleteFromRealm()
-                    }
+        if (!optimized) {
+            pruneThreads(realm)
+        }
+    }
+
+
+    private fun pruneMessages(realm: Realm, messages: ArrayList<SMSMessage>) {
+        val allMessages = realm.where(Message::class.java).findAll()
+        allMessages.forEach { indexedMessage ->
+            val result = messages.find { message ->
+                val id = getHash("${message.timestamp}, ${message.body}, ${message.sent}")
+                indexedMessage.id == id
+            }
+
+            if (result == null) {
+                Log.d(tag, "Deleting message: ${indexedMessage.body}")
+                realm.executeTransaction {
+                    indexedMessage.deleteFromRealm()
                 }
             }
         }
+    }
 
-        // add all new messages
-        val breakpoint =
-            if (optimized) {
-                realm.where(Message::class.java).sort("timestamp", Sort.DESCENDING)
-                    .findFirst()?.timestamp ?: -1
-            } else {
-                -1
-            }
-
-        if (messages != null) {
-            for (message in messages) {
-                if (message.timestamp < breakpoint) {
-                    break
-                }
-                Log.d(
-                    tag,
-                    "Indexing message: ${message.body} ${LanguageId.getLanguage(message.body)}"
-                )
-                indexMessage(realm, message)
-            }
+    private fun addMessages(
+        realm: Realm,
+        messages: ArrayList<SMSMessage>,
+        subscriptions: HashMap<Int, String>
+    ) {
+        val breakpoint = if (optimized) {
+            realm.where(Message::class.java).sort("timestamp", Sort.DESCENDING)
+                .findFirst()?.timestamp ?: -1
+        } else {
+            -1
         }
 
-        // delete threads with no messages
-        if (!optimized) {
-            val allThreads = realm.where(MessageThread::class.java).findAll()
-            allThreads.forEach { th ->
-                if (th.lastMessage == null) {
-                    realm.executeTransaction {
-                        th.deleteFromRealm()
-                    }
-                }
+        for (message in messages) {
+            if (message.timestamp < breakpoint) {
+                break
             }
+
+            indexMessage(realm, message, subscriptions)
         }
     }
 
     private fun indexMessage(
         realm: Realm,
-        message: SMSMessage
+        message: SMSMessage,
+        subscriptions: HashMap<Int, String>
     ): Int {
-        val subscriptions = subscriptions ?: return 1
-        val contacts = contacts ?: return 1
 
         val user1 = subscriptions[message.subId] ?: "unknown"
 
-        val normalizedOriginatingAddress = normalizePhoneNumber(message.user2)
-        val user2 = normalizedOriginatingAddress ?: message.user2.toLowerCase(Locale.getDefault())
-
-        var contactName: String? = null
-        val user2DisplayName = if (normalizedOriginatingAddress != null) {
-            contactName = contacts[normalizedOriginatingAddress]
-            contactName ?: normalizedOriginatingAddress
-        } else {
-            message.user2
-        }
+        val user2 =
+            normalizePhoneNumber(message.user2) ?: message.user2.toLowerCase(Locale.getDefault())
 
         val id = getHash("${message.timestamp}, ${message.body}, ${message.sent}")
         realm.executeTransaction { realmT ->
@@ -130,11 +108,16 @@ class Index(
                     ?: throw Exception("Could not create Thread object.")
             }
 
-            if (realmThread.user1 == null)
+            if (realmThread.user1 == null) {
                 realmThread.user1 = user1
+            }
 
-            realmThread.user2DisplayName = user2DisplayName
-            realmThread.inContacts = contactName != null
+            if (realmThread.contact == null) {
+                realmThread.contact =
+                    realm.where(Contact::class.java).equalTo("number", user2).findFirst()
+            }
+
+            realmThread.user2DisplayName = message.user2
 
             var realmMessage = realmT.where(Message::class.java).equalTo("id", id).findFirst()
             if (realmMessage == null) {
@@ -174,7 +157,20 @@ class Index(
         return 0
     }
 
+    private fun pruneThreads(realm: Realm) {
+        val allThreads = realm.where(MessageThread::class.java).findAll()
+        allThreads.forEach { th ->
+            if (th.lastMessage == null) {
+                realm.executeTransaction {
+                    th.deleteFromRealm()
+                }
+            }
+        }
+    }
+
     private fun indexContacts(realm: Realm) {
+
+        val contacts = getAllContacts(context)
 
         contacts?.forEach { contact ->
             realm.executeTransaction { rt ->

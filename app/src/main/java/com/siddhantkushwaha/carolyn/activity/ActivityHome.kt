@@ -114,7 +114,7 @@ class ActivityHome : ActivityBase() {
         timer = Timer()
         val timerTask = object : TimerTask() {
             override fun run() {
-                IndexTask(this@ActivityHome).start()
+                IndexTask(this@ActivityHome, false).start()
             }
         }
         timer?.scheduleAtFixedRate(timerTask, delay, taskInterval)
@@ -144,7 +144,7 @@ class ActivityHome : ActivityBase() {
             RequestCodes.REQUEST_CODE_PERMISSION_BASIC,
             requestPermissionCallbacks
         ) {
-            IndexTask(this@ActivityHome).start()
+            IndexTask(this@ActivityHome, false).start()
         }
     }
 

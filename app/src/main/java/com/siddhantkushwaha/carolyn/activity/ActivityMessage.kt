@@ -45,7 +45,7 @@ class ActivityMessage : ActivityBase() {
 
         thread = realm.where(MessageThread::class.java).equalTo("user2", user2).findFirst()!!
 
-        header_title.text = thread.user2DisplayName
+        header_title.text = thread.getDisplayName()
 
         messageAdapter = MessageAdapter(messages, true)
 

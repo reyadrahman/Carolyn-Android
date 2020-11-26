@@ -41,16 +41,15 @@ class ThreadAdapter(
             val timestampTextView = itemView.findViewById<TextView>(R.id.text_timestamp)
             //val threadClassImageView = itemView.findViewById<ImageView>(R.id.image_view_thread_class)
 
-            threadTitleTextView.text = messageThread.user2DisplayName
+            threadTitleTextView.text = messageThread.getDisplayName()
             lastMessageTextView.text = messageThread.lastMessage?.body ?: "No messages."
-
 
             val timestamp = messageThread.lastMessage?.timestamp
             if (timestamp == null) {
                 timestampTextView.visibility = View.GONE
             } else {
                 timestampTextView.visibility = View.VISIBLE
-                timestampTextView.text  = getStringForTimestamp(timestamp)
+                timestampTextView.text = getStringForTimestamp(timestamp)
             }
 
             itemView.setOnClickListener { view ->

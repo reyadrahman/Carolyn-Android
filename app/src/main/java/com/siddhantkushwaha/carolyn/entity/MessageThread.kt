@@ -12,11 +12,16 @@ open class MessageThread : RealmObject() {
     var user2: String? = null
 
     var lastMessage: Message? = null
+
     var user2DisplayName: String? = null
 
-    var inContacts: Boolean? = null
+    var contact: Contact? = null
 
     fun classifyThread(): Boolean {
-        return inContacts == false
+        return contact == null;
+    }
+
+    fun getDisplayName(): String {
+        return contact?.name ?: contact?.number ?: user2DisplayName ?: "Anonymous"
     }
 }

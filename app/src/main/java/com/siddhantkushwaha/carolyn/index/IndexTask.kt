@@ -3,7 +3,7 @@ package com.siddhantkushwaha.carolyn.index
 import android.content.Context
 
 
-class IndexTask(private val context: Context, private val optimized: Boolean = false) : Thread() {
+class IndexTask(private val context: Context, private val optimized: Boolean) : Thread() {
 
     companion object {
         @JvmStatic
