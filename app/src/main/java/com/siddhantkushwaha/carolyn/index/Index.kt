@@ -20,11 +20,11 @@ class Index(private val context: Context, private val optimized: Boolean) {
     public fun run() {
         val realm = RealmUtil.getCustomRealmInstance(context)
 
+        indexMessages(realm)
+
         if (!optimized) {
             indexContacts(realm)
         }
-
-        indexMessages(realm)
 
         realm.close()
     }
