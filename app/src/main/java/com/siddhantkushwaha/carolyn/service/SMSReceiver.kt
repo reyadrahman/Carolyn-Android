@@ -49,6 +49,7 @@ class SMSReceiver : BroadcastReceiver() {
                         user2,
                         user2DisplayName,
                         smsMessage.messageBody,
+                        contact?.photoUri,
                         messageClass
                     )
                 }

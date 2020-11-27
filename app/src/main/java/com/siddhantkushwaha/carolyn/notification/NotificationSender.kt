@@ -3,7 +3,9 @@ package com.siddhantkushwaha.carolyn.notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.net.Uri
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
@@ -79,11 +81,21 @@ class NotificationSender(val context: Context) {
         }
     }
 
-    public fun sendNotification(user2: String, subject: String, body: String, type: String?) {
+    public fun sendNotification(
+        user2: String,
+        subject: String,
+        body: String,
+        iconUri: String?,
+        type: String?
+    ) {
 
         val channelId = type ?: "personal"
 
-        val notificationIcon = ContextCompat.getDrawable(context, R.drawable.icon_user)?.toBitmap()
+        var notificationIcon = ContextCompat.getDrawable(context, R.drawable.icon_user)?.toBitmap()
+        if (iconUri != null) {
+            notificationIcon = BitmapFactory.decodeFile(Uri.parse(iconUri).path)
+        }
+
         val notificationStyle = NotificationCompat.BigTextStyle().bigText(body)
 
         val notification = NotificationCompat.Builder(context, channelId)

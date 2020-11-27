@@ -11,4 +11,6 @@ open class Contact : RealmObject() {
 
     var contactId:Long? = null
     var name: String? = null
+
+    var photoUri: String? = null
 }

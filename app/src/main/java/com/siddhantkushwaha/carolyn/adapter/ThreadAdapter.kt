@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.common.getStringForTimestamp
 import com.siddhantkushwaha.carolyn.entity.MessageThread
@@ -39,7 +40,7 @@ class ThreadAdapter(
             val threadTitleTextView = itemView.findViewById<TextView>(R.id.text_thread)
             val lastMessageTextView = itemView.findViewById<TextView>(R.id.text_message)
             val timestampTextView = itemView.findViewById<TextView>(R.id.text_timestamp)
-            //val threadClassImageView = itemView.findViewById<ImageView>(R.id.image_view_thread_class)
+            // val threadClassImageView = itemView.findViewById<ImageView>(R.id.image_view_thread_class)
 
             threadTitleTextView.text = messageThread.getDisplayName()
             lastMessageTextView.text = messageThread.lastMessage?.body ?: "No messages."
@@ -55,6 +56,13 @@ class ThreadAdapter(
             itemView.setOnClickListener { view ->
                 itemClickListener(view, messageThread)
             }
+
+            val photoUri = messageThread.contact?.photoUri
+            if (photoUri != null) {
+                Glide.with(context).load(photoUri).circleCrop()
+                    .into(threadImageView)
+            } else
+                threadImageView.setImageResource(R.drawable.icon_user)
         }
     }
 }

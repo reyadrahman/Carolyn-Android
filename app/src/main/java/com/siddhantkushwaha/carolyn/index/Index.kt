@@ -10,6 +10,7 @@ import com.siddhantkushwaha.carolyn.ml.LanguageId
 import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import io.realm.Realm
 import io.realm.Sort
+import java.io.File
 import java.util.*
 
 
@@ -182,6 +183,28 @@ class Index(private val context: Context, private val optimized: Boolean) {
                 }
                 realmContact.name = info.name
                 realmContact.contactId = info.id
+
+                rt.insertOrUpdate(realmContact)
+
+                val photoInputStream = openContactPhoto(context, info.id, true)
+                if (photoInputStream != null) {
+
+                    val photoBytes = photoInputStream.readBytes()
+                    photoInputStream.close()
+                    val photoId = info.id
+
+                    val externalStorage = context.getExternalFilesDir(null)
+
+                    if (externalStorage != null) {
+                        val file = File(externalStorage, "$photoId.jpg")
+                        file.writeBytes(photoBytes)
+
+                        realmContact.photoUri = file.toURI().toString()
+                    }
+                }
+                else {
+                    realmContact.photoUri = null
+                }
 
                 rt.insertOrUpdate(realmContact)
             }

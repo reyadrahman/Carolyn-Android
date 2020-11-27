@@ -2,12 +2,14 @@ package com.siddhantkushwaha.carolyn.common
 
 import android.annotation.SuppressLint
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import android.provider.ContactsContract
 import android.provider.Telephony
 import android.telephony.SubscriptionManager
+import java.io.InputStream
 
 
 data class SMSMessage(
@@ -114,8 +116,8 @@ public fun getAllContacts(
         val cursor: Cursor? = contentResolver.query(uri, null, null, null, null)
         if (cursor != null) {
             while (cursor.moveToNext()) {
-                var contactId =
-                    cursor.getLong(cursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup._ID))
+                val contactId =
+                    cursor.getLong(cursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup.CONTACT_ID))
                 var phoneNumber: String =
                     cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
                 val name: String =
@@ -128,3 +130,13 @@ public fun getAllContacts(
     }
     return contactsList
 }
+
+public fun openContactPhoto(context: Context, contactId: Long, preferHighRes: Boolean): InputStream? {
+    val contactUri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId)
+    return ContactsContract.Contacts.openContactPhotoInputStream(
+        context.contentResolver,
+        contactUri,
+        true
+    )
+}
+
