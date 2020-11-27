@@ -172,15 +172,16 @@ class Index(private val context: Context, private val optimized: Boolean) {
 
         val contacts = getAllContacts(context)
 
-        contacts?.forEach { contact ->
+        contacts?.forEach { (number, info) ->
             realm.executeTransaction { rt ->
                 var realmContact =
-                    realm.where(Contact::class.java).equalTo("number", contact.key).findFirst()
+                    realm.where(Contact::class.java).equalTo("number", number).findFirst()
                 if (realmContact == null) {
-                    realmContact = realm.createObject(Contact::class.java, contact.key)
+                    realmContact = realm.createObject(Contact::class.java, number)
                         ?: throw Exception("Couldn't create contact object.")
                 }
-                realmContact.name = contact.value
+                realmContact.name = info.name
+                realmContact.contactId = info.id
 
                 rt.insertOrUpdate(realmContact)
             }

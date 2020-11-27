@@ -18,6 +18,12 @@ data class SMSMessage(
     val subId: Int
 )
 
+data class ContactInfo(
+    val id: Long,
+    val number: String,
+    val name: String
+)
+
 @SuppressLint("MissingPermission")
 public fun getSubscriptions(context: Context): HashMap<Int, String>? {
     var subscriptions: HashMap<Int, String>? = null
@@ -95,8 +101,8 @@ public fun getAllSms(context: Context): ArrayList<SMSMessage>? {
 @SuppressLint("MissingPermission")
 public fun getAllContacts(
     context: Context,
-): HashMap<String, String>? {
-    var contactsList: HashMap<String, String>? = null
+): HashMap<String, ContactInfo>? {
+    var contactsList: HashMap<String, ContactInfo>? = null
     if (PermissionsUtil.checkPermissions(
             context,
             arrayOf(android.Manifest.permission.READ_CONTACTS)
@@ -108,12 +114,14 @@ public fun getAllContacts(
         val cursor: Cursor? = contentResolver.query(uri, null, null, null, null)
         if (cursor != null) {
             while (cursor.moveToNext()) {
+                var contactId =
+                    cursor.getLong(cursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup._ID))
                 var phoneNumber: String =
                     cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
                 val name: String =
                     cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
                 phoneNumber = normalizePhoneNumber(phoneNumber) ?: "Unknown"
-                contactsList[phoneNumber] = name
+                contactsList[phoneNumber] = ContactInfo(contactId, phoneNumber, name)
             }
             cursor.close()
         }

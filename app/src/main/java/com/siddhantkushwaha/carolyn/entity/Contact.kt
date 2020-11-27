@@ -9,5 +9,6 @@ open class Contact : RealmObject() {
     @PrimaryKey
     var number: String? = null
 
+    var contactId:Long? = null
     var name: String? = null
 }
