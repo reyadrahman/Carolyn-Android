@@ -2,7 +2,6 @@ package com.siddhantkushwaha.carolyn.index
 
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
 
 
 class IndexTask(private val context: Context, private val optimized: Boolean) : Thread() {

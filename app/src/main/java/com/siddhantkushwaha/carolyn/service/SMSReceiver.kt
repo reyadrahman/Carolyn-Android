@@ -34,22 +34,24 @@ class SMSReceiver : BroadcastReceiver() {
                     val contact =
                         realm.where(Contact::class.java).equalTo("number", user2).findFirst()
 
-                    val messageClass: String? = if (contact == null)
+                    val contactExists = contact != null
+                    val photoUri = contact?.photoUri
+                    val user2DisplayName = contact?.name ?: user2
+
+                    realm.close()
+
+                    val messageClass: String? = if (!contactExists)
                         MessageClassifier.doClassification(context, smsMessage.messageBody, true)
                     else null
 
-                    val user2DisplayName = contact?.name ?: user2
-
                     Log.d(tag, "${smsMessage.messageBody} - $messageClass")
-
-                    realm.close()
 
                     val notificationSender = NotificationSender(context)
                     notificationSender.sendNotification(
                         user2,
                         user2DisplayName,
                         smsMessage.messageBody,
-                        contact?.photoUri,
+                        photoUri,
                         messageClass
                     )
                 }

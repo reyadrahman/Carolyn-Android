@@ -58,11 +58,17 @@ class ThreadAdapter(
             }
 
             val photoUri = messageThread.contact?.photoUri
+
             if (photoUri != null) {
-                Glide.with(context).load(photoUri).circleCrop()
+                Glide
+                    .with(context)
+                    .load(photoUri)
+                    .error(R.drawable.icon_user)
+                    .circleCrop()
                     .into(threadImageView)
-            } else
+            } else {
                 threadImageView.setImageResource(R.drawable.icon_user)
+            }
         }
     }
 }

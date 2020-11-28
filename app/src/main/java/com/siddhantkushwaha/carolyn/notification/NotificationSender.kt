@@ -3,12 +3,11 @@ package com.siddhantkushwaha.carolyn.notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.net.Uri
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
+import com.bumptech.glide.Glide
 import com.siddhantkushwaha.carolyn.R
 
 
@@ -91,9 +90,16 @@ class NotificationSender(val context: Context) {
 
         val channelId = type ?: "personal"
 
-        var notificationIcon = ContextCompat.getDrawable(context, R.drawable.icon_user)?.toBitmap()
-        if (iconUri != null) {
-            notificationIcon = BitmapFactory.decodeFile(Uri.parse(iconUri).path)
+        val notificationIcon = if (iconUri != null) {
+            Glide.with(context)
+                .asBitmap()
+                .load(iconUri)
+                .error(R.drawable.icon_user)
+                .circleCrop()
+                .submit()
+                .get()
+        } else {
+            ContextCompat.getDrawable(context, R.drawable.icon_user)?.toBitmap()
         }
 
         val notificationStyle = NotificationCompat.BigTextStyle().bigText(body)
