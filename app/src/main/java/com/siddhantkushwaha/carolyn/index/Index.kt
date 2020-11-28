@@ -184,9 +184,7 @@ class Index(private val context: Context, private val optimized: Boolean) {
                 }
                 realmContact.name = info.name
                 realmContact.contactId = info.id
-
-                rt.insertOrUpdate(realmContact)
-
+                
                 val photoInputStream = openContactPhoto(context, info.id, true)
                 if (photoInputStream != null) {
 
