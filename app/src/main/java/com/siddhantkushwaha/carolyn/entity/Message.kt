@@ -9,6 +9,8 @@ open class Message : RealmObject() {
     @PrimaryKey
     var id: String? = null
 
+    var smsId: Int? = null
+
     var timestamp: Long? = null
     var body: String? = null
     var sent: Boolean? = null

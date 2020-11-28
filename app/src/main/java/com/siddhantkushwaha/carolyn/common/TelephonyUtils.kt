@@ -13,6 +13,7 @@ import java.io.InputStream
 
 
 data class SMSMessage(
+    val id: Int,
     val user2: String,
     val timestamp: Long,
     val body: String,
@@ -59,6 +60,9 @@ public fun getAllSms(context: Context): ArrayList<SMSMessage>? {
             val totalSMS = c.count
             if (c.moveToFirst()) {
                 for (j in 0 until totalSMS) {
+
+                    var smsId = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms._ID))
+
                     val user2: String = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
 
                     val body: String = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.BODY))
@@ -84,6 +88,7 @@ public fun getAllSms(context: Context): ArrayList<SMSMessage>? {
                         }
 
                     val message = SMSMessage(
+                        id = smsId,
                         user2 = user2,
                         timestamp = date,
                         body = body,
@@ -144,7 +149,15 @@ public fun openContactPhoto(
     return ContactsContract.Contacts.openContactPhotoInputStream(
         context.contentResolver,
         contactUri,
-        true
+        preferHighRes
     )
 }
 
+public fun deleteSMS(context: Context, smsId: Int): Boolean {
+    try {
+        context.contentResolver.delete(Uri.parse("${Telephony.Sms.CONTENT_URI}/$smsId"), null, null)
+    } catch (exception: Exception) {
+        exception.printStackTrace()
+    }
+    return false;
+}

@@ -103,6 +103,15 @@ class ActivityHome : ActivityBase() {
 
         button_send_message.setOnClickListener {
 
+            // Testing delete SMS and OTP feature :D
+
+            /*realm.where(Message::class.java).findAll().forEach { m ->
+                val smsId = m.smsId
+                if ((m.type == "spam" || m.type == "otp") && smsId != null) {
+                    deleteSMS(this, smsId)
+                }
+            }*/
+
         }
     }
 

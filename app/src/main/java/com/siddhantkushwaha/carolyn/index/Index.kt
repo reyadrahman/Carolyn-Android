@@ -131,6 +131,8 @@ class Index(private val context: Context, private val optimized: Boolean) {
                 realmMessage.language = LanguageId.getLanguage(message.body)
             }
 
+            realmMessage.smsId = message.id
+
             if (message.timestamp > realmThread.lastMessage?.timestamp ?: 0) {
                 realmThread.lastMessage = realmMessage
             }
