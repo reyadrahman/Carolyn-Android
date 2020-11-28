@@ -1,6 +1,8 @@
 package com.siddhantkushwaha.carolyn.index
 
 import android.content.Context
+import android.util.Log
+import android.widget.Toast
 
 
 class IndexTask(private val context: Context, private val optimized: Boolean) : Thread() {
@@ -26,7 +28,15 @@ class IndexTask(private val context: Context, private val optimized: Boolean) : 
         if (indexToFirebase == null)
             indexToFirebase = IndexToFirebase(context)
 
+        val startTime = System.nanoTime()
+
         index?.run()
+
+        val endTime = System.nanoTime()
+        val duration = endTime - startTime
+
+        Log.d("IndexTask", "Indexing took ${duration / 1000000} ms.")
+
         indexToFirebase?.upload()
 
         inProgress = false

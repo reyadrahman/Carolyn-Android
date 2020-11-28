@@ -21,11 +21,11 @@ class Index(private val context: Context, private val optimized: Boolean) {
     public fun run() {
         val realm = RealmUtil.getCustomRealmInstance(context)
 
-        indexMessages(realm)
-
         if (!optimized) {
             indexContacts(realm)
         }
+
+        indexMessages(realm)
 
         realm.close()
     }
@@ -52,13 +52,14 @@ class Index(private val context: Context, private val optimized: Boolean) {
 
     private fun pruneMessages(realm: Realm, messages: ArrayList<SMSMessage>) {
         val allMessages = realm.where(Message::class.java).findAll()
-        allMessages.forEach { indexedMessage ->
-            val result = messages.find { message ->
-                val id = getHash("${message.timestamp}, ${message.body}, ${message.sent}")
-                indexedMessage.id == id
-            }
 
-            if (result == null) {
+        val messageIds =
+            messages.map { message ->
+                getHash("${message.timestamp}, ${message.body}, ${message.sent}")
+            }.toHashSet()
+
+        allMessages.forEach { indexedMessage ->
+            if (!messageIds.contains(indexedMessage.id)) {
                 Log.d(tag, "Deleting message: ${indexedMessage.body}")
                 realm.executeTransaction {
                     indexedMessage.deleteFromRealm()
@@ -201,8 +202,7 @@ class Index(private val context: Context, private val optimized: Boolean) {
 
                         realmContact.photoUri = file.toURI().toString()
                     }
-                }
-                else {
+                } else {
                     realmContact.photoUri = null
                 }
 
