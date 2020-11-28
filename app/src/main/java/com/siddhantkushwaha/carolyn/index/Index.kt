@@ -135,6 +135,13 @@ class Index(private val context: Context, private val optimized: Boolean) {
                 realmThread.lastMessage = realmMessage
             }
 
+            if (realmMessage.sent == false) {
+                // don't change from read to not-read
+                if (realmMessage.status != "read") {
+                    realmMessage.status = if (message.isRead) "read" else "not-read"
+                }
+            }
+
             if (realmThread.classifyThread() && realmMessage.sent == false) {
                 if (realmMessage.type == null) {
                     val messageClass =
@@ -184,7 +191,7 @@ class Index(private val context: Context, private val optimized: Boolean) {
                 }
                 realmContact.name = info.name
                 realmContact.contactId = info.id
-                
+
                 val photoInputStream = openContactPhoto(context, info.id, true)
                 if (photoInputStream != null) {
 

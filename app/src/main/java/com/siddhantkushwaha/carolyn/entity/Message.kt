@@ -12,8 +12,17 @@ open class Message : RealmObject() {
     var timestamp: Long? = null
     var body: String? = null
     var sent: Boolean? = null
-    var type: String? = null
 
+    /*
+    * Accepted values -
+    *   not-sent
+    *   sent
+    *   not-read
+    *   read
+    * */
+    var status: String? = null
+
+    var type: String? = null
     var language: String? = null
 
     var messageThread: MessageThread? = null

@@ -17,7 +17,8 @@ data class SMSMessage(
     val timestamp: Long,
     val body: String,
     val sent: Boolean,
-    val subId: Int
+    val subId: Int,
+    val isRead: Boolean
 )
 
 data class ContactInfo(
@@ -73,6 +74,8 @@ public fun getAllSms(context: Context): ArrayList<SMSMessage>? {
                     */
                     val type: Int = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.TYPE))
 
+                    val isRead = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.READ))
+
                     val subId =
                         if (c.columnNames.find { it == Telephony.Sms.SUBSCRIPTION_ID } != null) {
                             c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.SUBSCRIPTION_ID))
@@ -85,7 +88,8 @@ public fun getAllSms(context: Context): ArrayList<SMSMessage>? {
                         timestamp = date,
                         body = body,
                         sent = type == 2,
-                        subId = subId
+                        subId = subId,
+                        isRead = isRead == 1
                     )
 
                     // this list will have latest messages at the top
@@ -131,7 +135,11 @@ public fun getAllContacts(
     return contactsList
 }
 
-public fun openContactPhoto(context: Context, contactId: Long, preferHighRes: Boolean): InputStream? {
+public fun openContactPhoto(
+    context: Context,
+    contactId: Long,
+    preferHighRes: Boolean
+): InputStream? {
     val contactUri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId)
     return ContactsContract.Contacts.openContactPhotoInputStream(
         context.contentResolver,

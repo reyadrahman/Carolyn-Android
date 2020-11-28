@@ -1,11 +1,14 @@
 package com.siddhantkushwaha.carolyn.adapter
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.siddhantkushwaha.carolyn.R
@@ -68,6 +71,22 @@ class ThreadAdapter(
                     .into(threadImageView)
             } else {
                 threadImageView.setImageResource(R.drawable.icon_user)
+            }
+
+            if (messageThread.lastMessage?.sent == false && messageThread.lastMessage?.status == "not-read") {
+                threadTitleTextView.setTypeface(null, Typeface.BOLD)
+                lastMessageTextView.setTypeface(null, Typeface.BOLD)
+                lastMessageTextView.setTextColor(Color.WHITE)
+            } else {
+                threadTitleTextView.setTypeface(null, Typeface.NORMAL)
+                lastMessageTextView.setTypeface(null, Typeface.NORMAL)
+                lastMessageTextView.setTextColor(
+                    ContextCompat.getColor(
+                        context,
+                        android.R.color.secondary_text_dark
+                    )
+                )
+
             }
         }
     }
