@@ -102,12 +102,14 @@ class NotificationSender(val context: Context) {
             ContextCompat.getDrawable(context, R.drawable.icon_user)?.toBitmap()
         }
 
-        val notificationStyle = NotificationCompat.BigTextStyle().bigText(body)
+        val cleanedBody = body.trim().replace("\\s+".toRegex(), " ")
+
+        val notificationStyle = NotificationCompat.BigTextStyle().bigText(cleanedBody)
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.logo_caroyln)
             .setContentTitle(subject)
-            .setContentText(body)
+            .setContentText(cleanedBody)
             .setLargeIcon(notificationIcon)
             .setStyle(notificationStyle)
             .setLights(Color.argb(255, 255, 0, 0), 500, 500)

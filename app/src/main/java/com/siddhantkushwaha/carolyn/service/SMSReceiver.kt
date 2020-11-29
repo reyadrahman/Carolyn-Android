@@ -50,7 +50,7 @@ class SMSReceiver : BroadcastReceiver() {
                     notificationSender.sendNotification(
                         user2,
                         user2DisplayName,
-                        smsMessage.messageBody,
+                        "${smsMessage.messageBody.substring(0, 200)}...",
                         photoUri,
                         messageClass
                     )
