@@ -46,11 +46,17 @@ class SMSReceiver : BroadcastReceiver() {
 
                     Log.d(tag, "${smsMessage.messageBody} - $messageClass")
 
+                    val trimmedMessage =
+                        if (smsMessage.messageBody.length > 300)
+                            "${smsMessage.messageBody.substring(0, 300)}..."
+                        else
+                            smsMessage.messageBody
+
                     val notificationSender = NotificationSender(context)
                     notificationSender.sendNotification(
                         user2,
                         user2DisplayName,
-                        "${smsMessage.messageBody.substring(0, 200)}...",
+                        trimmedMessage,
                         photoUri,
                         messageClass
                     )
