@@ -7,9 +7,11 @@ import android.provider.Telephony
 import android.util.Log
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.Contact
+import com.siddhantkushwaha.carolyn.entity.LogMessage
 import com.siddhantkushwaha.carolyn.index.IndexTask
 import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import com.siddhantkushwaha.carolyn.notification.NotificationSender
+import java.time.Instant
 
 class SMSReceiver : BroadcastReceiver() {
 
@@ -38,6 +40,21 @@ class SMSReceiver : BroadcastReceiver() {
                     val photoUri = contact?.photoUri
                     val user2DisplayName = contact?.name ?: user2
 
+                    val trimmedMessage =
+                        if (smsMessage.messageBody.length > 300)
+                            "${smsMessage.messageBody.substring(0, 300)}..."
+                        else
+                            smsMessage.messageBody
+
+                    val notificationLog = LogMessage()
+                    notificationLog.log =
+                        "originalMessage=${smsMessage.messageBody};trimmedMessage=$trimmedMessage"
+                    notificationLog.timestamp = Instant.now().toEpochMilli()
+
+                    realm.executeTransaction {
+                        it.insertOrUpdate(notificationLog)
+                    }
+
                     realm.close()
 
                     val messageClass: String? = if (!contactExists)
@@ -45,12 +62,6 @@ class SMSReceiver : BroadcastReceiver() {
                     else null
 
                     Log.d(tag, "${smsMessage.messageBody} - $messageClass")
-
-                    val trimmedMessage =
-                        if (smsMessage.messageBody.length > 300)
-                            "${smsMessage.messageBody.substring(0, 300)}..."
-                        else
-                            smsMessage.messageBody
 
                     val notificationSender = NotificationSender(context)
                     notificationSender.sendNotification(
