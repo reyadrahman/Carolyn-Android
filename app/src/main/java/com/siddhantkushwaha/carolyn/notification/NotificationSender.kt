@@ -95,6 +95,7 @@ class NotificationSender(val context: Context) {
     }
 
     public fun sendNotification(
+        notificationId: Int,
         user2: String,
         subject: String,
         body: String,
@@ -128,6 +129,6 @@ class NotificationSender(val context: Context) {
             .setStyle(notificationStyle)
             .build()
 
-        notificationManager.notify(1, notification)
+        notificationManager.notify(user2, notificationId, notification)
     }
 }

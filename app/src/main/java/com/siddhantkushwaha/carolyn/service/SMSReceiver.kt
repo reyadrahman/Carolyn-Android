@@ -63,8 +63,12 @@ class SMSReceiver : BroadcastReceiver() {
 
                     Log.d(tag, "${smsMessage.messageBody} - $messageClass")
 
+                    // This workaround should do for now
+                    val notificationId = smsMessage.timestampMillis.toInt()
+
                     val notificationSender = NotificationSender(context)
                     notificationSender.sendNotification(
+                        notificationId,
                         user2,
                         user2DisplayName,
                         trimmedMessage,
