@@ -4,7 +4,9 @@ import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.MessageAdapter
+import com.siddhantkushwaha.carolyn.common.MessageStatus
 import com.siddhantkushwaha.carolyn.common.RealmUtil
+import com.siddhantkushwaha.carolyn.common.Task
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.index.IndexTask
@@ -51,6 +53,26 @@ class ActivityMessage : ActivityBase() {
 
         messagesChangeListener = OrderedRealmCollectionChangeListener { _, _ ->
             messageAdapter.notifyDataSetChanged()
+
+
+            val markAsRead = Task {
+                val realmLocal = RealmUtil.getCustomRealmInstance(this)
+
+                realmLocal.executeTransaction { realmT ->
+                    val messagesForThread =
+                        realmT.where(Message::class.java).equalTo("messageThread.user2", user2)
+                            .findAll()
+                    messagesForThread.forEach { message ->
+                        if (message.sent == false && message.status == MessageStatus.notRead) {
+                            message.status = MessageStatus.read
+                            realmT.insertOrUpdate(message)
+                        }
+                    }
+                }
+
+                realmLocal.close()
+            }
+            markAsRead.start()
         }
 
         val layoutManager = LinearLayoutManager(this)

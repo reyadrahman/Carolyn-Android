@@ -23,8 +23,6 @@ class MessageClassifier {
         val index: HashMap<String, Float>
     )
 
-    private val tag = "MessageClassifier"
-
     companion object {
 
         private val modelName = "message_classifier"
@@ -34,11 +32,11 @@ class MessageClassifier {
         /* --------------------------- FirebaseML model functions -------------------------------- */
 
         private fun downloadModel() {
+            val model = FirebaseCustomRemoteModel.Builder(modelName).build()
+            val firebaseModelManager = FirebaseModelManager.getInstance()
             val conditions = FirebaseModelDownloadConditions.Builder().build()
-            Tasks.await(
-                FirebaseModelManager.getInstance()
-                    .download(FirebaseCustomRemoteModel.Builder(modelName).build(), conditions)
-            )
+            Tasks.await(firebaseModelManager.deleteDownloadedModel(model))
+            Tasks.await(firebaseModelManager.download(model, conditions))
         }
 
         private fun isModelDownloaded(): Boolean {
@@ -68,8 +66,11 @@ class MessageClassifier {
         /* -------------------------------- Metadata functions ---------------------------------- */
 
         private fun downloadMetadata(context: Context) {
-            val firebaseStorage = FirebaseStorage.getInstance()
             val metaData = File(context.getExternalFilesDir(null), metadataName)
+            val firebaseStorage = FirebaseStorage.getInstance()
+            if (metaData.exists()) {
+                metaData.delete()
+            }
             Tasks.await(firebaseStorage.getReference(metadataName).getFile(metaData))
         }
 

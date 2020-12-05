@@ -21,6 +21,8 @@ class IndexTask(private val context: Context, private val optimized: Boolean) : 
         if (inProgress)
             return
 
+        inProgress = true
+
         if (index == null)
             index = Index(context, optimized)
 
