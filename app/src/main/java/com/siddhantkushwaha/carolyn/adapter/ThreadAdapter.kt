@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.siddhantkushwaha.carolyn.R
+import com.siddhantkushwaha.carolyn.common.MessageStatus
 import com.siddhantkushwaha.carolyn.common.getStringForTimestamp
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import io.realm.OrderedRealmCollection
@@ -73,7 +74,7 @@ class ThreadAdapter(
                 threadImageView.setImageResource(R.drawable.icon_user)
             }
 
-            if (messageThread.lastMessage?.sent == false && messageThread.lastMessage?.status == "not-read") {
+            if (messageThread.lastMessage?.sent == false && messageThread.lastMessage?.status == MessageStatus.notRead) {
                 threadTitleTextView.setTypeface(null, Typeface.BOLD)
                 lastMessageTextView.setTypeface(null, Typeface.BOLD)
                 lastMessageTextView.setTextColor(Color.WHITE)

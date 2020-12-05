@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.ThreadAdapter
+import com.siddhantkushwaha.carolyn.common.MessageType
 import com.siddhantkushwaha.carolyn.common.PermissionsUtil
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.common.RequestCodes
@@ -46,15 +47,15 @@ class ActivityHome : ActivityBase() {
             R.id.personal ->
                 threads = getPersonalThreadsQuery()
             R.id.otp ->
-                threads = getThreadsForTypeQuery("otp")
+                threads = getThreadsForTypeQuery(MessageType.otp)
             R.id.transaction ->
-                threads = getThreadsForTypeQuery("transaction")
+                threads = getThreadsForTypeQuery(MessageType.transaction)
             R.id.update ->
-                threads = getThreadsForTypeQuery("update")
+                threads = getThreadsForTypeQuery(MessageType.update)
             R.id.spam ->
-                threads = getThreadsForTypeQuery("spam")
+                threads = getThreadsForTypeQuery(MessageType.spam)
             null -> {
-                threads = getThreadsForTypeQuery("otp")
+                threads = getThreadsForTypeQuery(MessageType.otp)
                 bottom_nav_filter.selectedItemId = R.id.otp
             }
         }
@@ -82,19 +83,19 @@ class ActivityHome : ActivityBase() {
                     updateUI(1)
                 }
                 R.id.otp -> {
-                    threads = getThreadsForTypeQuery("otp")
+                    threads = getThreadsForTypeQuery(MessageType.otp)
                     updateUI(1)
                 }
                 R.id.transaction -> {
-                    threads = getThreadsForTypeQuery("transaction")
+                    threads = getThreadsForTypeQuery(MessageType.transaction)
                     updateUI(1)
                 }
                 R.id.update -> {
-                    threads = getThreadsForTypeQuery("update")
+                    threads = getThreadsForTypeQuery(MessageType.update)
                     updateUI(1)
                 }
                 R.id.spam -> {
-                    threads = getThreadsForTypeQuery("spam")
+                    threads = getThreadsForTypeQuery(MessageType.spam)
                     updateUI(1)
                 }
             }
@@ -164,6 +165,7 @@ class ActivityHome : ActivityBase() {
             .isNull("lastMessage.type")
             .sort("lastMessage.timestamp", Sort.DESCENDING).findAllAsync()
     }
+
 
     private fun getThreadsForTypeQuery(type: String): RealmResults<MessageThread> {
         return realm

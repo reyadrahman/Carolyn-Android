@@ -14,7 +14,10 @@ import java.io.File
 import java.util.*
 
 
-class Index(private val context: Context, private val optimized: Boolean) {
+class Index(
+    private val context: Context,
+    private val optimized: Boolean
+) {
 
     private val tag: String = this::class.java.toString()
 
@@ -139,25 +142,59 @@ class Index(private val context: Context, private val optimized: Boolean) {
 
             if (realmMessage.sent == false) {
                 // don't update status of read messages
-                if (realmMessage.status != "read") {
-                    realmMessage.status = if (message.isRead) "read" else "not-read"
+                if (realmMessage.status != MessageStatus.read) {
+                    realmMessage.status =
+                        if (message.isRead) MessageStatus.read else MessageStatus.notRead
                 }
             }
 
-            if (realmThread.classifyThread() && realmMessage.sent == false) {
-                if (realmMessage.type == null) {
-                    val messageClass =
-                        MessageClassifier.doClassification(context, message.body, optimized)
-                    if (messageClass != null)
-                        realmMessage.type = messageClass
+            /******************************** This is the real deal *******************************/
+
+            // If message is in contacts, always treat all messages as personal
+            if (realmThread.contact != null) {
+                realmMessage.type = null
+                realmMessage.classificationSource = SourceType.contact
+
+            }
+
+            // If number has 10 digits, we have decided to mark the message as personal
+            else if (realmThread.user2?.length == 13) {
+                realmMessage.type = null
+                realmMessage.classificationSource = SourceType.numberLen
+            }
+
+            // If user is not in rules, or not in contacts, check if it is a sent message, if yes, mark as personal
+            else if (realmMessage.sent == true) {
+                realmMessage.type = null
+                realmMessage.classificationSource = SourceType.sentMessage
+            }
+
+            // If prediction needs to be applied
+            else {
+                // If language is not english, mark it spam
+                if (realmMessage.language != LanguageType.en) {
+                    realmMessage.type = MessageType.spam
+                    realmMessage.classificationSource = SourceType.model
                 } else {
-                    if (realmMessage.language != "en") {
-                        realmMessage.type = "spam"
+
+                    // Only try to run prediction if new message or this messages was not classified via a model last time
+                    if (realmMessage.type == null || realmMessage.classificationSource != SourceType.model) {
+                        val messageType = MessageClassifier.doClassification(
+                            context,
+                            message.body,
+                            skipIfNotDownloaded = optimized
+                        )
+
+                        // messageType could be null if model was not downloaded yet and skipIfNotDownloaded was set to true
+                        if (messageType != null) {
+                            realmMessage.type = messageType
+                            realmMessage.classificationSource = SourceType.model
+                        }
                     }
                 }
-            } else {
-                realmMessage.type = null
             }
+
+            /******************************** ********************* *******************************/
 
             realmMessage.messageThread = realmThread
 

@@ -15,17 +15,12 @@ open class Message : RealmObject() {
     var body: String? = null
     var sent: Boolean? = null
 
-    /*
-    * Accepted values -
-    *   not-sent
-    *   sent
-    *   not-read
-    *   read
-    * */
     var status: String? = null
 
     var type: String? = null
     var language: String? = null
 
     var messageThread: MessageThread? = null
+
+    var classificationSource: String? = null
 }

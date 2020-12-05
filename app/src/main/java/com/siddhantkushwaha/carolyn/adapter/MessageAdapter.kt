@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.siddhantkushwaha.carolyn.R
+import com.siddhantkushwaha.carolyn.common.MessageType
 import com.siddhantkushwaha.carolyn.common.formatTimestamp
 import com.siddhantkushwaha.carolyn.entity.Message
 import io.realm.OrderedRealmCollection
@@ -89,10 +90,11 @@ class MessageAdapter(
 
             messageBodyTextView.text = message.body
             when (message.type) {
-                "otp" -> messageClassIcon.setImageResource(R.drawable.icon_message_otp)
-                "transaction" -> messageClassIcon.setImageResource(R.drawable.icon_message_transaction)
-                "update" -> messageClassIcon.setImageResource(R.drawable.icon_message_update)
-                "spam" -> messageClassIcon.setImageResource(R.drawable.icon_message_spam)
+                MessageType.otp -> messageClassIcon.setImageResource(R.drawable.icon_message_otp)
+                MessageType.transaction -> messageClassIcon.setImageResource(R.drawable.icon_message_transaction)
+                MessageType.update -> messageClassIcon.setImageResource(R.drawable.icon_message_update)
+                MessageType.spam -> messageClassIcon.setImageResource(R.drawable.icon_message_spam)
+                null -> messageClassIcon.setImageResource(R.drawable.icon_message_personal)
             }
 
             messageTimestampTextView.text = formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
