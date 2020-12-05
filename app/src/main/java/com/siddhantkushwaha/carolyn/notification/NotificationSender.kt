@@ -19,6 +19,8 @@ class NotificationSender(val context: Context) {
     private val notificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
+    private val notificationColor = Color.argb(255, 204, 0, 102)
+
     private val channelToName = hashMapOf(
         "otp" to "One Time Password",
         "transaction" to "Transaction",
@@ -51,14 +53,6 @@ class NotificationSender(val context: Context) {
         "personal" to R.raw.personal
     )
 
-    private val channelToColor = hashMapOf(
-        "otp" to Color.argb(255, 204, 0, 102),
-        "transaction" to Color.argb(255, 255, 102, 0),
-        "update" to Color.argb(255, 255, 255, 0),
-        "spam" to Color.argb(255, 255, 255, 255),
-        "personal" to Color.argb(255, 153, 51, 255)
-    )
-
     init {
         channelToDescription.keys.forEach {
             getNotificationChannel(it)
@@ -77,11 +71,8 @@ class NotificationSender(val context: Context) {
         val channel = NotificationChannel(channelId, name, importance)
         channel.description = description
 
-        val channelColor = channelToColor[channelId]
-        if (channelColor != null) {
-            channel.enableLights(true)
-            channel.lightColor = channelColor
-        }
+        channel.enableLights(true)
+        channel.lightColor = notificationColor
 
         val soundUri =
             Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.applicationContext.packageName}/raw/${channelToSound[channelId]}")

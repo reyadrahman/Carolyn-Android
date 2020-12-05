@@ -138,7 +138,7 @@ class Index(private val context: Context, private val optimized: Boolean) {
             }
 
             if (realmMessage.sent == false) {
-                // don't change from read to not-read
+                // don't update status of read messages
                 if (realmMessage.status != "read") {
                     realmMessage.status = if (message.isRead) "read" else "not-read"
                 }
