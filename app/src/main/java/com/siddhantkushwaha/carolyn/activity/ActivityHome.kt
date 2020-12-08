@@ -2,14 +2,13 @@ package com.siddhantkushwaha.carolyn.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.ThreadAdapter
-import com.siddhantkushwaha.carolyn.common.MessageType
-import com.siddhantkushwaha.carolyn.common.PermissionsUtil
-import com.siddhantkushwaha.carolyn.common.RealmUtil
-import com.siddhantkushwaha.carolyn.common.RequestCodes
+import com.siddhantkushwaha.carolyn.common.*
+import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.index.IndexTask
 import io.realm.OrderedRealmCollectionChangeListener
@@ -102,17 +101,32 @@ class ActivityHome : ActivityBase() {
             true
         }
 
-        button_send_message.setOnClickListener {
+        button_send_message.setOnLongClickListener {
 
+            // ****** Experimental *******
             // Testing delete SMS and OTP feature :D
 
-            /*realm.where(Message::class.java).findAll().forEach { m ->
-                val smsId = m.smsId
-                if ((m.type == "spam" || m.type == "otp") && smsId != null) {
-                    deleteSMS(this, smsId)
-                }
-            }*/
+            Toast.makeText(this, "Clearing all OTPs and Spam.", Toast.LENGTH_LONG).show()
 
+            val clearAllMessages = Task {
+
+                // clear all
+                val realmL = RealmUtil.getCustomRealmInstance(this)
+                realmL.where(Message::class.java).findAll().forEach { m ->
+                    val smsId = m.smsId
+                    if ((m.type == "spam" || m.type == "otp") && smsId != null) {
+                        deleteSMS(this, smsId)
+                    }
+                }
+                realmL.close()
+
+                // re-index
+                IndexTask(this, false).start()
+            }
+
+            clearAllMessages.start()
+
+            true
         }
     }
 
