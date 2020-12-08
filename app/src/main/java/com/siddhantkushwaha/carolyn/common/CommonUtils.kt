@@ -1,5 +1,7 @@
 package com.siddhantkushwaha.carolyn.common
 
+import android.content.Context
+import android.provider.Settings
 import com.google.i18n.phonenumbers.NumberParseException
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import java.security.MessageDigest
@@ -7,6 +9,10 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+
+fun getDeviceId(context: Context): String {
+    return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+}
 
 public fun getHash(data: String, algorithm: String = "SHA-256"): String {
     return MessageDigest.getInstance(algorithm).digest(data.toByteArray())

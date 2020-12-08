@@ -9,12 +9,10 @@ import com.siddhantkushwaha.carolyn.common.LanguageType
 import com.siddhantkushwaha.carolyn.common.MessageType
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.Contact
-import com.siddhantkushwaha.carolyn.entity.LogMessage
 import com.siddhantkushwaha.carolyn.index.IndexTask
 import com.siddhantkushwaha.carolyn.ml.LanguageId
 import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import com.siddhantkushwaha.carolyn.notification.NotificationSender
-import java.time.Instant
 
 class SMSReceiver : BroadcastReceiver() {
 
@@ -104,15 +102,6 @@ class SMSReceiver : BroadcastReceiver() {
                     "${messageBody.substring(0, 300)}..."
                 else
                     messageBody
-
-            // This is to capture a mysterious bug, some notifications have trimmed text
-            val notificationLog = LogMessage()
-            notificationLog.log =
-                "originalMessage=${messageBody};trimmedMessage=$trimmedMessage"
-            notificationLog.timestamp = Instant.now().toEpochMilli()
-            realm.executeTransaction {
-                it.insertOrUpdate(notificationLog)
-            }
 
             realm.close()
 
