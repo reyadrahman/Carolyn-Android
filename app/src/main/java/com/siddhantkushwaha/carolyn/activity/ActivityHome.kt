@@ -108,7 +108,7 @@ class ActivityHome : ActivityBase() {
 
             Toast.makeText(this, "Clearing all OTPs and Spam.", Toast.LENGTH_LONG).show()
 
-            val clearAllMessages = Task {
+            val clearAllMessages = Thread {
 
                 // clear all
                 val realmL = RealmUtil.getCustomRealmInstance(this)
