@@ -42,5 +42,72 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.appcompat.widget.Toolbar>
 
+    <RadioGroup
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:checkedButton="@id/button_type_default"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+
+        <RadioButton
+            android:id="@+id/button_type_default"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false"
+            android:text="Default"
+            android:textColor="#AFAFAF"
+            android:textSize="20sp" />
+
+        <RadioButton
+            android:id="@+id/button_type_personal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:checked="false"
+            android:text="Personal"
+            android:textColor="#AFAFAF"
+            android:textSize="20sp" />
+
+        <RadioButton
+            android:id="@+id/button_type_otp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false"
+            android:text="One Time Password"
+            android:textColor="#AFAFAF"
+            android:textSize="20sp" />
+
+        <RadioButton
+            android:id="@+id/button_type_transaction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false"
+            android:text="Transaction"
+            android:textColor="#AFAFAF"
+            android:textSize="20sp" />
+
+        <RadioButton
+            android:id="@+id/button_type_update"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false"
+            android:text="Update"
+            android:textColor="#AFAFAF"
+            android:textSize="20sp" />
+
+        <RadioButton
+            android:id="@+id/button_type_spam"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false"
+            android:text="Spam"
+            android:textColor="#AFAFAF"
+            android:textSize="20sp" />
+
+    </RadioGroup>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
