@@ -42,15 +42,26 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.appcompat.widget.Toolbar>
 
+    <TextView
+        android:id="@+id/textview_class_type_headline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="Carolyn will always classify messages for this sender based on below setting."
+        android:textColor="#AFAFAF"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar"
+        tools:layout_editor_absoluteX="16dp" />
+
     <RadioGroup
+        android:id="@+id/group_message_type"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
         android:checkedButton="@id/button_type_default"
+        android:paddingLeft="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+        app:layout_constraintTop_toBottomOf="@+id/textview_class_type_headline">
 
         <RadioButton
             android:id="@+id/button_type_default"

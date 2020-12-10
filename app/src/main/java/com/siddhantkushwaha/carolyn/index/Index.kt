@@ -6,6 +6,7 @@ import com.siddhantkushwaha.carolyn.common.*
 import com.siddhantkushwaha.carolyn.entity.Contact
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
+import com.siddhantkushwaha.carolyn.entity.Rule
 import com.siddhantkushwaha.carolyn.ml.LanguageId
 import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import io.realm.Realm
@@ -150,11 +151,17 @@ class Index(
 
             /******************************** This is the real deal *******************************/
 
+            // find the rule
+            val rule = realm.where(Rule::class.java).equalTo("user2", user2).findFirst()
+            if (rule != null) {
+                realmMessage.type = rule.type
+                realmMessage.classificationSource = SourceType.rule
+            }
+
             // If message is in contacts, always treat all messages as personal
-            if (realmThread.contact != null) {
+            else if (realmThread.contact != null) {
                 realmMessage.type = null
                 realmMessage.classificationSource = SourceType.contact
-
             }
 
             // If number has 10 digits, we have decided to mark the message as personal

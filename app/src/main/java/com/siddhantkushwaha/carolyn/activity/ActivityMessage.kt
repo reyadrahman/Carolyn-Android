@@ -1,5 +1,6 @@
 package com.siddhantkushwaha.carolyn.activity
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
@@ -41,7 +42,8 @@ class ActivityMessage : ActivityBase() {
 
         realm = RealmUtil.getCustomRealmInstance(this)
 
-        val user2 = intent.getStringExtra("user2")!!
+        val user2 = intent.getStringExtra("user2")
+            ?: throw Exception("This activity requires user2 field in intent extras.")
         messages = realm.where(Message::class.java).equalTo("messageThread.user2", user2)
             .sort("timestamp", Sort.ASCENDING).findAllAsync()
 
@@ -80,6 +82,12 @@ class ActivityMessage : ActivityBase() {
 
         recycler_view_messages.layoutManager = layoutManager
         recycler_view_messages.adapter = messageAdapter
+
+        header_title.setOnClickListener {
+            val intent = Intent(this, ActivityProfile::class.java)
+            intent.putExtra("user2", user2)
+            startActivity(intent)
+        }
     }
 
     override fun onResume() {

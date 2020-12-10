@@ -8,11 +8,14 @@ import android.util.Log
 import com.siddhantkushwaha.carolyn.common.LanguageType
 import com.siddhantkushwaha.carolyn.common.MessageType
 import com.siddhantkushwaha.carolyn.common.RealmUtil
+import com.siddhantkushwaha.carolyn.common.normalizePhoneNumber
 import com.siddhantkushwaha.carolyn.entity.Contact
+import com.siddhantkushwaha.carolyn.entity.Rule
 import com.siddhantkushwaha.carolyn.index.IndexTask
 import com.siddhantkushwaha.carolyn.ml.LanguageId
 import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import com.siddhantkushwaha.carolyn.notification.NotificationSender
+import java.util.*
 
 class SMSReceiver : BroadcastReceiver() {
 
@@ -52,7 +55,7 @@ class SMSReceiver : BroadcastReceiver() {
 
     private fun processMessage(
         context: Context,
-        user2: String,
+        user2NotNormalized: String,
         messageBody: String,
         timestampMillis: Long
     ) {
@@ -61,13 +64,21 @@ class SMSReceiver : BroadcastReceiver() {
 
             val realm = RealmUtil.getCustomRealmInstance(context)
 
-            val contact =
-                realm.where(Contact::class.java).equalTo("number", user2).findFirst()
+            val user2 = normalizePhoneNumber(user2NotNormalized)
+                ?: user2NotNormalized.toLowerCase(Locale.getDefault())
+
+            val contact = realm.where(Contact::class.java).equalTo("number", user2).findFirst()
+            val rule = realm.where(Rule::class.java).equalTo("user2", user2).findFirst()
 
             val messageClass =
 
+                // rule has the highest priority
+                if (rule != null) {
+                    rule.type
+                }
+
                 // If message is in contacts, always treat all messages as personal
-                if (contact != null) {
+                else if (contact != null) {
                     null
                 }
 
