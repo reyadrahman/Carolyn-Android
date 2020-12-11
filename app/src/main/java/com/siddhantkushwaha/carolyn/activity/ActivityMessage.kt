@@ -47,7 +47,8 @@ class ActivityMessage : ActivityBase() {
         messages = realm.where(Message::class.java).equalTo("messageThread.user2", user2)
             .sort("timestamp", Sort.ASCENDING).findAllAsync()
 
-        thread = realm.where(MessageThread::class.java).equalTo("user2", user2).findFirst()!!
+        thread = realm.where(MessageThread::class.java).equalTo("user2", user2).findFirst()
+            ?: throw Exception("Thread not found for given user.")
 
         header_title.text = thread.getDisplayName()
 

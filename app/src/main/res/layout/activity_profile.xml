@@ -70,7 +70,7 @@
             android:checked="false"
             android:text="Default"
             android:textColor="#AFAFAF"
-            android:textSize="20sp" />
+            android:textSize="18sp" />
 
         <RadioButton
             android:id="@+id/button_type_personal"
@@ -80,7 +80,7 @@
             android:checked="false"
             android:text="Personal"
             android:textColor="#AFAFAF"
-            android:textSize="20sp" />
+            android:textSize="18sp" />
 
         <RadioButton
             android:id="@+id/button_type_otp"
@@ -89,7 +89,7 @@
             android:checked="false"
             android:text="One Time Password"
             android:textColor="#AFAFAF"
-            android:textSize="20sp" />
+            android:textSize="18sp" />
 
         <RadioButton
             android:id="@+id/button_type_transaction"
@@ -98,7 +98,7 @@
             android:checked="false"
             android:text="Transaction"
             android:textColor="#AFAFAF"
-            android:textSize="20sp" />
+            android:textSize="18sp" />
 
         <RadioButton
             android:id="@+id/button_type_update"
@@ -107,7 +107,7 @@
             android:checked="false"
             android:text="Update"
             android:textColor="#AFAFAF"
-            android:textSize="20sp" />
+            android:textSize="18sp" />
 
         <RadioButton
             android:id="@+id/button_type_spam"
@@ -116,7 +116,7 @@
             android:checked="false"
             android:text="Spam"
             android:textColor="#AFAFAF"
-            android:textSize="20sp" />
+            android:textSize="18sp" />
 
     </RadioGroup>
 

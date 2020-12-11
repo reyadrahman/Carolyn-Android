@@ -6,6 +6,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.common.MessageType
 import com.siddhantkushwaha.carolyn.common.RealmUtil
+import com.siddhantkushwaha.carolyn.entity.Contact
+import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.entity.Rule
 import io.realm.Realm
 import kotlinx.android.synthetic.main.activity_profile.*
@@ -26,6 +28,13 @@ class ActivityProfile : AppCompatActivity() {
             ?: throw Exception("This activity requires user2 field in intent extras.")
 
         realm = RealmUtil.getCustomRealmInstance(this)
+
+        val thread = realm.where(MessageThread::class.java).equalTo("user2", user2).findFirst()
+        val contact = realm.where(Contact::class.java).equalTo("number", user2).findFirst()
+
+        // thread could be null if no message exists for this user
+        // so fetch contact and check
+        header_title.text = thread?.getDisplayName() ?: contact?.name ?: contact?.number ?: user2
 
         val rule = realm.where(Rule::class.java).equalTo("user2", user2).findFirst()
         Log.d("ActivityProfile", "Rule fetched for $user2: ${rule?.type}")
