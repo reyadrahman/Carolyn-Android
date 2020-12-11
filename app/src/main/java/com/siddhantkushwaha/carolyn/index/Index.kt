@@ -123,7 +123,7 @@ class Index(
                     realm.where(Contact::class.java).equalTo("number", user2).findFirst()
             }
 
-            realmThread.user2DisplayName = message.user2
+            realmThread.user2DisplayName = normalizePhoneNumber(message.user2) ?: message.user2
 
             var realmMessage = realmT.where(Message::class.java).equalTo("id", id).findFirst()
             if (realmMessage == null) {

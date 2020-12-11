@@ -107,7 +107,9 @@ class SMSReceiver : BroadcastReceiver() {
 
             // Details required for sending notification
             val photoUri = contact?.photoUri
-            val user2DisplayName = contact?.name ?: user2
+            val user2DisplayName =
+                contact?.name ?: contact?.number ?: normalizePhoneNumber(user2NotNormalized)
+                ?: user2NotNormalized
             val trimmedMessage =
                 if (messageBody.length > 300)
                     "${messageBody.substring(0, 300)}..."
