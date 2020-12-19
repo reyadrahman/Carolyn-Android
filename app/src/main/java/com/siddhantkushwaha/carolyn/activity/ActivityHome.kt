@@ -103,7 +103,7 @@ class ActivityHome : ActivityBase() {
 
         button_send_message.setOnLongClickListener {
 
-            // ****** Experimental *******
+            /*// ****** Experimental *******
             // Testing delete SMS and OTP feature :D
 
             Toast.makeText(this, "Clearing all OTPs and Spam.", Toast.LENGTH_LONG).show()
@@ -124,7 +124,9 @@ class ActivityHome : ActivityBase() {
                 IndexTask(this, false).start()
             }
 
-            clearAllMessages.start()
+            clearAllMessages.start()*/
+
+            startActivity(Intent(this, ActivitySettings::class.java))
 
             true
         }
