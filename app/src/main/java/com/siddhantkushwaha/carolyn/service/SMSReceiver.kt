@@ -83,9 +83,9 @@ class SMSReceiver : BroadcastReceiver() {
                 }
 
                 // If number has 10 digits, we have decided to mark the message as personal
-                else if (user2.length == 13) {
+                /*else if (user2.length == 13) {
                     null
-                }
+                }*/
 
                 // If prediction needs to be applied
                 else {
@@ -107,9 +107,7 @@ class SMSReceiver : BroadcastReceiver() {
 
             // Details required for sending notification
             val photoUri = contact?.photoUri
-            val user2DisplayName =
-                contact?.name ?: contact?.number ?: normalizePhoneNumber(user2NotNormalized)
-                ?: user2NotNormalized
+            val user2DisplayName = contact?.name ?: contact?.number ?: user2NotNormalized
             val trimmedMessage =
                 if (messageBody.length > 300)
                     "${messageBody.substring(0, 300)}..."

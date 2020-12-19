@@ -18,8 +18,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
-        <!--  *******************  Activities  *******************  -->
+        <!-- *******************  Activities  ******************* -->
         <activity
             android:name=".activity.ActivityLogin"
             android:screenOrientation="portrait">
@@ -47,7 +46,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".activity.ActivityProfile" />
-        <!--  *******************  Receivers  *******************  -->
+        <activity android:name=".activity.ActivitySettings" />
+        <!-- *******************  Receivers  ******************* -->
         <receiver
             android:name=".service.SMSReceiver"
             android:permission="android.permission.BROADCAST_SMS">
@@ -65,7 +65,7 @@
                 <data android:mimeType="application/vnd.wap.mms-message" />
             </intent-filter>
         </receiver>
-        <!--  *******************  Services  *******************  -->
+        <!-- *******************  Services  ******************* -->
         <service
             android:name=".service.SendMessageService"
             android:exported="true"

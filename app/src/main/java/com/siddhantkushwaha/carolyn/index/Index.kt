@@ -123,7 +123,7 @@ class Index(
                     realm.where(Contact::class.java).equalTo("number", user2).findFirst()
             }
 
-            realmThread.user2DisplayName = normalizePhoneNumber(message.user2) ?: message.user2
+            realmThread.user2DisplayName = message.user2
 
             var realmMessage = realmT.where(Message::class.java).equalTo("id", id).findFirst()
             if (realmMessage == null) {
@@ -165,10 +165,10 @@ class Index(
             }
 
             // If number has 10 digits, we have decided to mark the message as personal
-            else if (realmThread.user2?.length == 13) {
+            /*else if (realmThread.user2?.length == 13) {
                 realmMessage.type = null
                 realmMessage.classificationSource = SourceType.numberLen
-            }
+            }*/
 
             // If user is not in rules, or not in contacts, check if it is a sent message, if yes, mark as personal
             else if (realmMessage.sent == true) {
