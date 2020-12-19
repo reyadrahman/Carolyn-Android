@@ -60,5 +60,4 @@
         app:layout_constraintStart_toStartOf="@+id/textview_message_text"
         app:layout_constraintTop_toBottomOf="@+id/textview_message_timestamp"
         app:tint="#B1B1B1" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

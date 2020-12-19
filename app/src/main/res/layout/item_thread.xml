@@ -63,5 +63,4 @@
         app:layout_constraintBottom_toBottomOf="@+id/text_message"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/text_thread" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

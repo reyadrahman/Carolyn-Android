@@ -46,5 +46,4 @@
         android:textSize="10sp"
         app:layout_constraintEnd_toEndOf="@+id/textview_message_text"
         app:layout_constraintTop_toBottomOf="@+id/textview_message_text" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

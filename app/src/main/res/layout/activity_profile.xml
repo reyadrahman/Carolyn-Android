@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorPrimaryDark"
     android:clipToPadding="false"
+    android:orientation="vertical"
     tools:context=".activity.ActivityProfile">
 
     <androidx.appcompat.widget.Toolbar
@@ -13,10 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:contentInsetStart="0dp"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -38,87 +37,104 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.appcompat.widget.Toolbar>
 
-    <TextView
-        android:id="@+id/textview_class_type_headline"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:text="Carolyn will always classify messages for this sender based on below setting."
-        android:textColor="#AFAFAF"
-        android:textSize="14sp"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar"
-        tools:layout_editor_absoluteX="16dp" />
+        android:layout_height="match_parent">
 
-    <RadioGroup
-        android:id="@+id/group_message_type"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:checkedButton="@id/button_type_default"
-        android:paddingLeft="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textview_class_type_headline">
-
-        <RadioButton
-            android:id="@+id/button_type_default"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:checked="false"
-            android:text="Default"
-            android:textColor="#AFAFAF"
-            android:textSize="18sp" />
+            android:orientation="vertical">
 
-        <RadioButton
-            android:id="@+id/button_type_personal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:baselineAligned="false"
-            android:checked="false"
-            android:text="Personal"
-            android:textColor="#AFAFAF"
-            android:textSize="18sp" />
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="12dp"
+                android:elevation="4dp"
+                app:cardBackgroundColor="#303030"
+                app:cardCornerRadius="16dp">
 
-        <RadioButton
-            android:id="@+id/button_type_otp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="false"
-            android:text="One Time Password"
-            android:textColor="#AFAFAF"
-            android:textSize="18sp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:paddingBottom="8dp">
 
-        <RadioButton
-            android:id="@+id/button_type_transaction"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="false"
-            android:text="Transaction"
-            android:textColor="#AFAFAF"
-            android:textSize="18sp" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="16dp"
+                        android:text="Carolyn will always classify messages for this sender based on below setting."
+                        android:textColor="#AFAFAF"
+                        android:textSize="14sp" />
 
-        <RadioButton
-            android:id="@+id/button_type_update"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="false"
-            android:text="Update"
-            android:textColor="#AFAFAF"
-            android:textSize="18sp" />
+                    <RadioGroup
+                        android:id="@+id/group_message_type"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:checkedButton="@id/button_type_default"
+                        android:paddingLeft="16dp">
 
-        <RadioButton
-            android:id="@+id/button_type_spam"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="false"
-            android:text="Spam"
-            android:textColor="#AFAFAF"
-            android:textSize="18sp" />
+                        <RadioButton
+                            android:id="@+id/button_type_default"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="false"
+                            android:text="Default"
+                            android:textColor="#AFAFAF"
+                            android:textSize="18sp" />
 
-    </RadioGroup>
+                        <RadioButton
+                            android:id="@+id/button_type_personal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:baselineAligned="false"
+                            android:checked="false"
+                            android:text="Personal"
+                            android:textColor="#AFAFAF"
+                            android:textSize="18sp" />
 
+                        <RadioButton
+                            android:id="@+id/button_type_otp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="false"
+                            android:text="One Time Password"
+                            android:textColor="#AFAFAF"
+                            android:textSize="18sp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+                        <RadioButton
+                            android:id="@+id/button_type_transaction"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="false"
+                            android:text="Transaction"
+                            android:textColor="#AFAFAF"
+                            android:textSize="18sp" />
+
+                        <RadioButton
+                            android:id="@+id/button_type_update"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="false"
+                            android:text="Update"
+                            android:textColor="#AFAFAF"
+                            android:textSize="18sp" />
+
+                        <RadioButton
+                            android:id="@+id/button_type_spam"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="false"
+                            android:text="Spam"
+                            android:textColor="#AFAFAF"
+                            android:textSize="18sp" />
+                    </RadioGroup>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
