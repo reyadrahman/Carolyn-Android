@@ -161,3 +161,7 @@ public fun deleteSMS(context: Context, smsId: Int): Boolean {
     }
     return false;
 }
+
+public fun isDefaultSmsApp(context: Context): Boolean {
+    return context.packageName == Telephony.Sms.getDefaultSmsPackage(context)
+}

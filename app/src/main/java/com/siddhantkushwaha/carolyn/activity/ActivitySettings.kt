@@ -3,6 +3,7 @@ package com.siddhantkushwaha.carolyn.activity
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import androidx.core.content.ContextCompat
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.PieData
@@ -51,7 +52,7 @@ class ActivitySettings : AppCompatActivity() {
                 ContextCompat.getColor(this, R.color.colorDist2),
                 ContextCompat.getColor(this, R.color.colorDist3),
                 ContextCompat.getColor(this, R.color.colorDist4),
-                ContextCompat.getColor(this, R.color.colorDist4)
+                ContextCompat.getColor(this, R.color.colorDist5)
             )
 
             val data = PieData(dataSet)
@@ -70,6 +71,7 @@ class ActivitySettings : AppCompatActivity() {
             pie_chart_type_distribution.description.isEnabled = false
 
             pie_chart_type_distribution.setDrawEntryLabels(false)
+            pie_chart_type_distribution.setTransparentCircleAlpha(0)
 
             realm.close()
         }
