@@ -1,21 +1,25 @@
 package com.siddhantkushwaha.carolyn.activity
 
 import android.graphics.Color
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.bumptech.glide.Glide
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.storage.FirebaseStorage
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.common.RealmUtil
+import com.siddhantkushwaha.carolyn.entity.GlobalParam
 import com.siddhantkushwaha.carolyn.entity.Message
-import io.realm.Realm
 import kotlinx.android.synthetic.main.activity_settings.*
 
 class ActivitySettings : AppCompatActivity() {
+
+    private lateinit var firebaseStorage: FirebaseStorage
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,7 +28,10 @@ class ActivitySettings : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+        firebaseStorage = FirebaseStorage.getInstance()
+
         populatePie()
+        populateContributors()
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -74,6 +81,66 @@ class ActivitySettings : AppCompatActivity() {
             pie_chart_type_distribution.setTransparentCircleAlpha(0)
 
             realm.close()
+        }
+        th.start()
+    }
+
+    private fun populateContributors() {
+        val th = Thread {
+            try {
+                val realm = RealmUtil.getCustomRealmInstance(this)
+                realm.executeTransaction {
+                    val ayuRef = "contributors/ayushi.jpg"
+                    var ayuGP =
+                        realm.where(GlobalParam::class.java).equalTo("attrName", ayuRef).findFirst()
+                    val sidRef = "contributors/sid.jpg"
+                    var sidGP =
+                        realm.where(GlobalParam::class.java).equalTo("attrName", sidRef).findFirst()
+
+                    var ayuUri = ayuGP?.attrVal
+                    var sidUri = sidGP?.attrVal
+                    runOnUiThread {
+                        Glide.with(this).load(ayuUri).error(R.drawable.icon_user)
+                            .circleCrop()
+                            .into(c5)
+                        Glide.with(this).load(sidUri).error(R.drawable.icon_user)
+                            .circleCrop()
+                            .into(c6)
+                    }
+
+
+                    if (ayuGP == null) {
+                        ayuGP = realm.createObject(GlobalParam::class.java, ayuRef)
+                            ?: throw Exception("Error")
+                    }
+                    if (sidGP == null) {
+                        sidGP = realm.createObject(GlobalParam::class.java, sidRef)
+                            ?: throw Exception("Error")
+                    }
+
+                    ayuGP.attrVal =
+                        Tasks.await(firebaseStorage.getReference(ayuRef).downloadUrl)?.toString()
+                    sidGP.attrVal =
+                        Tasks.await(firebaseStorage.getReference(sidRef).downloadUrl)?.toString()
+
+                    ayuUri = ayuGP.attrVal
+                    sidUri = sidGP.attrVal
+                    runOnUiThread {
+                        Glide.with(this).load(ayuUri).error(R.drawable.icon_user)
+                            .circleCrop()
+                            .into(c5)
+                        Glide.with(this).load(sidUri).error(R.drawable.icon_user)
+                            .circleCrop()
+                            .into(c6)
+                    }
+
+                    realm.insertOrUpdate(ayuGP)
+                    realm.insertOrUpdate(sidGP)
+                }
+                realm.close()
+            } catch (exception: Exception) {
+                exception.printStackTrace()
+            }
         }
         th.start()
     }

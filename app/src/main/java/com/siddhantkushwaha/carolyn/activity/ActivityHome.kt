@@ -2,13 +2,11 @@ package com.siddhantkushwaha.carolyn.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.ThreadAdapter
 import com.siddhantkushwaha.carolyn.common.*
-import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.index.IndexTask
 import io.realm.OrderedRealmCollectionChangeListener
