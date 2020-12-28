@@ -3,7 +3,6 @@ package com.siddhantkushwaha.carolyn.activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 
@@ -38,10 +37,9 @@ open class ActivityBase : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         val callback = requestPermissionCallbacks[requestCode]
-        if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-            Log.i(TAG, "invoking callback")
+        if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED))
             callback?.invoke(true)
-        } else
+        else
             callback?.invoke(false)
     }
 

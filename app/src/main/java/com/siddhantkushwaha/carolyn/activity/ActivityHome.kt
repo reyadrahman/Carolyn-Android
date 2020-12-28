@@ -1,7 +1,10 @@
 package com.siddhantkushwaha.carolyn.activity
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.siddhantkushwaha.carolyn.R
@@ -128,6 +131,8 @@ class ActivityHome : ActivityBase() {
 
             true
         }
+
+        requestDisableBatteryOptimization()
     }
 
     override fun onResume() {
@@ -156,6 +161,13 @@ class ActivityHome : ActivityBase() {
         outState.putInt("selected_view", bottom_nav_filter.selectedItemId)
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == RequestCodes.REQUEST_CODE_DISABLE_BATTERY_OPTIMIZATION) {
+            IndexTask(this@ActivityHome, false).start()
+        }
+    }
+
     private fun checkPermissions() {
         PermissionsUtil.requestPermissions(
             this,
@@ -180,7 +192,6 @@ class ActivityHome : ActivityBase() {
             .sort("lastMessage.timestamp", Sort.DESCENDING).findAllAsync()
     }
 
-
     private fun getThreadsForTypeQuery(type: String): RealmResults<MessageThread> {
         return realm
             .where(MessageThread::class.java)
@@ -195,5 +206,19 @@ class ActivityHome : ActivityBase() {
             2 -> threadsAdapter.notifyDataSetChanged()
         }
         threads.addChangeListener(threadsChangeListener)
+    }
+
+    /*
+        Firebase model doesn't download and SMS receiver notifications don't work without
+        this exemption on certain OEMs such as SAMSUNG and XIAOMI
+    */
+    private fun requestDisableBatteryOptimization() {
+        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+        if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+            val intent = Intent()
+            intent.action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+            intent.data = Uri.parse("package:$packageName")
+            startActivityForResult(intent, RequestCodes.REQUEST_CODE_DISABLE_BATTERY_OPTIMIZATION)
+        }
     }
 }

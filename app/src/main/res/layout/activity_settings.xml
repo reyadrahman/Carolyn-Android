@@ -199,7 +199,7 @@
                 android:layout_marginEnd="12dp"
                 android:layout_marginBottom="12dp"
                 android:elevation="4dp"
-                app:cardBackgroundColor="#535353"
+                app:cardBackgroundColor="#373737"
                 app:cardCornerRadius="16dp">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
