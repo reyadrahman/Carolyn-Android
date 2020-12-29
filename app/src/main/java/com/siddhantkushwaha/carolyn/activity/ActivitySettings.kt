@@ -2,6 +2,7 @@ package com.siddhantkushwaha.carolyn.activity
 
 import android.graphics.Color
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
@@ -15,6 +16,7 @@ import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.GlobalParam
 import com.siddhantkushwaha.carolyn.entity.Message
+import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import kotlinx.android.synthetic.main.activity_settings.*
 
 class ActivitySettings : AppCompatActivity() {
@@ -29,6 +31,10 @@ class ActivitySettings : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         firebaseStorage = FirebaseStorage.getInstance()
+
+        button_download_assets.setOnClickListener {
+            downloadAssetsAndUpdateUi()
+        }
 
         populatePie()
         populateContributors()
@@ -143,5 +149,19 @@ class ActivitySettings : AppCompatActivity() {
             }
         }
         th.start()
+    }
+
+    private fun downloadAssetsAndUpdateUi() {
+        MessageClassifier.refreshAssets(this) { status ->
+            val message =
+                if (status)
+                    "Assets download succeeded."
+                else
+                    "Download failed."
+            runOnUiThread {
+                val toast = Toast.makeText(this, message, Toast.LENGTH_LONG)
+                toast.show()
+            }
+        }
     }
 }

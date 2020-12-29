@@ -28,6 +28,21 @@ class MessageClassifier {
         private val modelName = "message_classifier"
         private val metadataName = "meta.json"
 
+        public fun refreshAssets(context: Context, callback: (status: Boolean) -> Unit) {
+            val th = Thread {
+                try {
+                    // load methods will also try to parse the assets, so we'll know if files were
+                    // properly downloaded
+                    loadModel(forceDownload = true)
+                    loadMetaData(context, forceDownload = true)
+                    callback(true)
+                } catch (exception: Exception) {
+                    exception.printStackTrace()
+                    callback(false)
+                }
+            }
+            th.start()
+        }
 
         /* --------------------------- FirebaseML model functions -------------------------------- */
 
@@ -35,7 +50,6 @@ class MessageClassifier {
             val model = FirebaseCustomRemoteModel.Builder(modelName).build()
             val firebaseModelManager = FirebaseModelManager.getInstance()
             val conditions = FirebaseModelDownloadConditions.Builder().build()
-            Tasks.await(firebaseModelManager.deleteDownloadedModel(model))
             Tasks.await(firebaseModelManager.download(model, conditions))
         }
 
@@ -68,9 +82,6 @@ class MessageClassifier {
         private fun downloadMetadata(context: Context) {
             val metaData = File(context.getExternalFilesDir(null), metadataName)
             val firebaseStorage = FirebaseStorage.getInstance()
-            if (metaData.exists()) {
-                metaData.delete()
-            }
             Tasks.await(firebaseStorage.getReference(metadataName).getFile(metaData))
         }
 
