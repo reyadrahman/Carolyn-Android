@@ -30,26 +30,27 @@ class SMSReceiver : BroadcastReceiver() {
             // save new messages in local database
             IndexTask(context, true).start()
 
-            var user2 = ""
-            var messageBody = ""
-            var timestampMillis = -1L
-            for (smsMessage in Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
-                if (timestampMillis == -1L || timestampMillis != smsMessage.timestampMillis) {
-                    if (timestampMillis > -1L)
-                        processMessage(context, user2, messageBody, timestampMillis)
+            val messagesMap = HashMap<String, Pair<String, Long>>()
 
-                    // resetting all the values
-                    user2 = smsMessage.originatingAddress?.replace("-", "") ?: continue
-                    messageBody = smsMessage.messageBody
-                    timestampMillis = smsMessage.timestampMillis
+            for (smsMessage in Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
+                val originatingAddress = smsMessage.originatingAddress!!
+                if (messagesMap.containsKey(originatingAddress)) {
+                    val messageDetails = Pair(smsMessage.messageBody, smsMessage.timestampMillis)
+                    messagesMap[originatingAddress] = messageDetails
                 } else {
-                    // SmsMessage is f***ing buggy, this is a workaround
-                    messageBody += smsMessage.messageBody
+                    val oldMessageDetails = messagesMap[originatingAddress]
+                        ?: throw Exception("Old message details not found.")
+                    val newMessageDetails = Pair(
+                        oldMessageDetails.first + smsMessage.messageBody,
+                        oldMessageDetails.second
+                    )
+                    messagesMap[originatingAddress] = newMessageDetails
                 }
             }
 
-            if (timestampMillis > -1L)
-                processMessage(context, user2, messageBody, timestampMillis)
+            messagesMap.forEach { (originatingAddress, details) ->
+                processMessage(context, originatingAddress, details.first, details.second)
+            }
         }
     }
 
