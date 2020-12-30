@@ -34,7 +34,7 @@ class SMSReceiver : BroadcastReceiver() {
 
             for (smsMessage in Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
                 val originatingAddress = smsMessage.originatingAddress!!
-                if (messagesMap.containsKey(originatingAddress)) {
+                if (!messagesMap.containsKey(originatingAddress)) {
                     val messageDetails = Pair(smsMessage.messageBody, smsMessage.timestampMillis)
                     messagesMap[originatingAddress] = messageDetails
                 } else {
