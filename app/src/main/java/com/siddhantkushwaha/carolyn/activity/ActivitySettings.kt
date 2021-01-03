@@ -14,8 +14,11 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.storage.FirebaseStorage
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.common.RealmUtil
+import com.siddhantkushwaha.carolyn.common.deleteSMS
+import com.siddhantkushwaha.carolyn.common.isDefaultSmsApp
 import com.siddhantkushwaha.carolyn.entity.GlobalParam
 import com.siddhantkushwaha.carolyn.entity.Message
+import com.siddhantkushwaha.carolyn.index.IndexTask
 import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import kotlinx.android.synthetic.main.activity_settings.*
 
@@ -33,7 +36,11 @@ class ActivitySettings : AppCompatActivity() {
         firebaseStorage = FirebaseStorage.getInstance()
 
         button_download_assets.setOnClickListener {
-            downloadAssetsAndUpdateUi()
+            downloadAssetsUpdateUi()
+        }
+
+        button_delete_spam_otp.setOnClickListener {
+            deleteSpamOtpUpdateUi()
         }
 
         populatePie()
@@ -151,7 +158,7 @@ class ActivitySettings : AppCompatActivity() {
         th.start()
     }
 
-    private fun downloadAssetsAndUpdateUi() {
+    private fun downloadAssetsUpdateUi() {
         MessageClassifier.refreshAssets(this) { status ->
             val message =
                 if (status)
@@ -163,5 +170,34 @@ class ActivitySettings : AppCompatActivity() {
                 toast.show()
             }
         }
+    }
+
+    private fun deleteSpamOtpUpdateUi() {
+        if (!isDefaultSmsApp(this)) {
+            val toast =
+                Toast.makeText(this, "Carolyn is not the default SMS app.", Toast.LENGTH_LONG)
+            toast.show()
+            return
+        }
+
+        Toast.makeText(this, "Clearing all OTPs and Spam.", Toast.LENGTH_LONG).show()
+
+        val clearAllMessages = Thread {
+
+            // clear all
+            val realmL = RealmUtil.getCustomRealmInstance(this)
+            realmL.where(Message::class.java).findAll().forEach { m ->
+                val smsId = m.smsId
+                if ((m.type == "spam" || m.type == "otp") && smsId != null) {
+                    deleteSMS(this, smsId)
+                }
+            }
+            realmL.close()
+
+            // re index
+            IndexTask(this, false).start()
+        }
+
+        clearAllMessages.start()
     }
 }

@@ -104,29 +104,7 @@ class ActivityHome : ActivityBase() {
 
         button_send_message.setOnLongClickListener {
 
-            /*// ****** Experimental *******
-            // Testing delete SMS and OTP feature :D
-
-            Toast.makeText(this, "Clearing all OTPs and Spam.", Toast.LENGTH_LONG).show()
-
-            val clearAllMessages = Thread {
-
-                // clear all
-                val realmL = RealmUtil.getCustomRealmInstance(this)
-                realmL.where(Message::class.java).findAll().forEach { m ->
-                    val smsId = m.smsId
-                    if ((m.type == "spam" || m.type == "otp") && smsId != null) {
-                        deleteSMS(this, smsId)
-                    }
-                }
-                realmL.close()
-
-                // re-index
-                IndexTask(this, false).start()
-            }
-
-            clearAllMessages.start()*/
-
+            // ****** Experimental *******
             startActivity(Intent(this, ActivitySettings::class.java))
 
             true
