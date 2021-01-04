@@ -7,7 +7,7 @@ package com.siddhantkushwaha.carolyn.index
 
 import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
-import com.siddhantkushwaha.carolyn.common.*
+import com.siddhantkushwaha.carolyn.common.Enums
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import com.siddhantkushwaha.carolyn.common.util.FirebaseUtil
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil

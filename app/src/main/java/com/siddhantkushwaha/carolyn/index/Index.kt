@@ -2,7 +2,8 @@ package com.siddhantkushwaha.carolyn.index
 
 import android.content.Context
 import android.util.Log
-import com.siddhantkushwaha.carolyn.common.*
+import com.siddhantkushwaha.carolyn.common.DbHelper
+import com.siddhantkushwaha.carolyn.common.Enums
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil

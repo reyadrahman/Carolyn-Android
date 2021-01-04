@@ -3,7 +3,6 @@ package com.siddhantkushwaha.carolyn.activity
 import android.graphics.Color
 import android.os.Bundle
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.github.mikephil.charting.components.Legend
@@ -22,7 +21,7 @@ import com.siddhantkushwaha.carolyn.index.IndexTask
 import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import kotlinx.android.synthetic.main.activity_settings.*
 
-class ActivitySettings : AppCompatActivity() {
+class ActivitySettings : ActivityBase() {
 
     private lateinit var firebaseStorage: FirebaseStorage
 

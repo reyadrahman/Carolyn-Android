@@ -4,16 +4,19 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import com.google.firebase.auth.FirebaseAuth
+import com.siddhantkushwaha.carolyn.common.util.CommonUtil.checkPermissions
 
 
 open class ActivityBase : AppCompatActivity() {
 
-    lateinit var TAG: String
-    lateinit var mAuth: FirebaseAuth
+    protected lateinit var TAG: String
+    protected lateinit var mAuth: FirebaseAuth
 
     // saves callbacks to be used in onRequestPermissionsResult
-    protected val requestPermissionCallbacks = HashMap<Int, (Boolean) -> Unit>()
+    private val requestPermissionCallbacks = HashMap<Int, (Boolean) -> Unit>()
+    private val startActivityForResultCallbacks = HashMap<Int, (Intent?) -> Unit>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +46,36 @@ open class ActivityBase : AppCompatActivity() {
             callback?.invoke(false)
     }
 
-    private fun moveToLoginActivity() {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        val callback = startActivityForResultCallbacks[requestCode]
+        callback?.invoke(data)
+    }
+
+    protected fun requestPermissions(
+        permissions: Array<String>,
+        requestCode: Int,
+        callback: (Boolean) -> Unit
+    ) {
+        val requiredPermissions = checkPermissions(this, permissions)
+        if (requiredPermissions.isNotEmpty()) {
+            requestPermissionCallbacks[requestCode] = callback
+            ActivityCompat.requestPermissions(this, requiredPermissions, requestCode)
+        } else {
+            callback(true)
+        }
+    }
+
+    protected fun startActivityForResult(
+        intent: Intent,
+        requestCode: Int,
+        callback: (Intent?) -> Unit
+    ) {
+        startActivityForResultCallbacks[requestCode] = callback
+        startActivityForResult(intent, requestCode)
+    }
+
+    protected fun moveToLoginActivity() {
 
         if (this::class.java == ActivityLogin::class.java)
             return
@@ -53,7 +85,7 @@ open class ActivityBase : AppCompatActivity() {
         finish()
     }
 
-    fun moveToHomeActivity() {
+    protected fun moveToHomeActivity() {
 
         if (this::class.java == ActivityHome::class.java)
             return

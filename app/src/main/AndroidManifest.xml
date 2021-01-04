@@ -9,6 +9,7 @@
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.WRITE_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <!-- Firebase model doesn't download and SMS receiver notifications don't work without
     this exemption on certain OEMs such as SAMSUNG and XIAOMI -->
@@ -55,15 +56,16 @@
         <receiver
             android:name=".service.SMSReceiver"
             android:permission="android.permission.BROADCAST_SMS">
-            <intent-filter android:priority="1000">
+            <intent-filter android:priority="999">
                 <action android:name="android.provider.Telephony.SMS_DELIVER" />
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
         <receiver
             android:name=".service.MMSReceiver"
             android:permission="android.permission.BROADCAST_WAP_PUSH">
-            <intent-filter>
+            <intent-filter android:priority="999">
                 <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
 
                 <data android:mimeType="application/vnd.wap.mms-message" />

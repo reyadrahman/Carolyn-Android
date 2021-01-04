@@ -1,7 +1,9 @@
 package com.siddhantkushwaha.carolyn.common.util
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.provider.Settings
+import androidx.core.app.ActivityCompat
 import com.google.i18n.phonenumbers.NumberParseException
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import java.security.MessageDigest
@@ -107,5 +109,14 @@ object CommonUtil {
                 formatTimestamp(timestamp, "dd/MM/yy")
             }
         }
+    }
+
+    public fun checkPermissions(context: Context, permissions: Array<String>): Array<String> {
+        return permissions.filter { permission ->
+            ActivityCompat.checkSelfPermission(
+                context,
+                permission
+            ) != PackageManager.PERMISSION_GRANTED
+        }.toTypedArray()
     }
 }

@@ -2,7 +2,6 @@ package com.siddhantkushwaha.carolyn.activity
 
 import android.os.Bundle
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.common.Enums.MessageType
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
@@ -13,7 +12,7 @@ import io.realm.Realm
 import kotlinx.android.synthetic.main.activity_profile.*
 
 
-class ActivityProfile : AppCompatActivity() {
+class ActivityProfile : ActivityBase() {
 
     private lateinit var realm: Realm
 

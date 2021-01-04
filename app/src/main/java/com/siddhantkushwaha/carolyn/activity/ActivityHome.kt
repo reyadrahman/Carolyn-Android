@@ -10,7 +10,6 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.ThreadAdapter
 import com.siddhantkushwaha.carolyn.common.*
-import com.siddhantkushwaha.carolyn.common.util.PermissionsUtil
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.index.IndexTask
@@ -141,26 +140,17 @@ class ActivityHome : ActivityBase() {
         outState.putInt("selected_view", bottom_nav_filter.selectedItemId)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == RequestCodes.REQUEST_CODE_DISABLE_BATTERY_OPTIMIZATION) {
-            IndexTask(this@ActivityHome, false).start()
-        }
-    }
-
     private fun checkPermissions() {
-        PermissionsUtil.requestPermissions(
-            this,
+        requestPermissions(
             arrayOf(
                 android.Manifest.permission.READ_SMS,
                 android.Manifest.permission.RECEIVE_SMS,
                 android.Manifest.permission.READ_CONTACTS,
                 android.Manifest.permission.READ_PHONE_STATE
-            ),
-            RequestCodes.REQUEST_CODE_PERMISSION_BASIC,
-            requestPermissionCallbacks
-        ) {
-            IndexTask(this@ActivityHome, false).start()
+            ), RequestCodes.REQUEST_CODE_PERMISSION_BASIC
+        ) { granted ->
+            if (granted)
+                IndexTask(this@ActivityHome, false).start()
         }
     }
 
@@ -193,12 +183,17 @@ class ActivityHome : ActivityBase() {
         this exemption on certain OEMs such as SAMSUNG and XIAOMI
     */
     private fun requestDisableBatteryOptimization() {
+        val requestCode = RequestCodes.REQUEST_CODE_DISABLE_BATTERY_OPTIMIZATION
         val powerManager = getSystemService(POWER_SERVICE) as PowerManager
         if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
             val intent = Intent()
             intent.action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
             intent.data = Uri.parse("package:$packageName")
-            startActivityForResult(intent, RequestCodes.REQUEST_CODE_DISABLE_BATTERY_OPTIMIZATION)
+            startActivityForResult(intent, requestCode) {
+                // Run index task only if app got white listed
+                if (powerManager.isIgnoringBatteryOptimizations(packageName))
+                    IndexTask(this@ActivityHome, false).start()
+            }
         }
     }
 }

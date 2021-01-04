@@ -10,6 +10,7 @@ import android.net.Uri
 import android.provider.ContactsContract
 import android.provider.Telephony
 import android.telephony.SubscriptionManager
+import com.siddhantkushwaha.carolyn.common.util.CommonUtil.checkPermissions
 import java.io.InputStream
 
 object TelephonyUtil {
@@ -33,7 +34,7 @@ object TelephonyUtil {
     @SuppressLint("MissingPermission")
     public fun getSubscriptions(context: Context): HashMap<Int, String>? {
         var subscriptions: HashMap<Int, String>? = null
-        if (PermissionsUtil.checkPermissions(
+        if (checkPermissions(
                 context,
                 arrayOf(Manifest.permission.READ_PHONE_STATE)
             ).isEmpty()
@@ -51,7 +52,7 @@ object TelephonyUtil {
     @SuppressLint("MissingPermission")
     public fun getAllSms(context: Context): ArrayList<SMSMessage>? {
         var messages: ArrayList<SMSMessage>? = null
-        if (PermissionsUtil.checkPermissions(
+        if (checkPermissions(
                 context,
                 arrayOf(Manifest.permission.READ_SMS)
             ).isEmpty()
@@ -117,7 +118,7 @@ object TelephonyUtil {
         context: Context,
     ): HashMap<String, ContactInfo>? {
         var contactsList: HashMap<String, ContactInfo>? = null
-        if (PermissionsUtil.checkPermissions(
+        if (checkPermissions(
                 context,
                 arrayOf(Manifest.permission.READ_CONTACTS)
             ).isEmpty()
