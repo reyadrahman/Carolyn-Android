@@ -14,8 +14,8 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.storage.FirebaseStorage
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.common.DbHelper
-import com.siddhantkushwaha.carolyn.common.RealmUtil
-import com.siddhantkushwaha.carolyn.common.TelephonyUtils
+import com.siddhantkushwaha.carolyn.common.util.RealmUtil
+import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.entity.GlobalParam
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.index.IndexTask
@@ -180,7 +180,7 @@ class ActivitySettings : AppCompatActivity() {
     }
 
     private fun deleteSpamOtpUpdateUi() {
-        if (!TelephonyUtils.isDefaultSmsApp(this)) {
+        if (!TelephonyUtil.isDefaultSmsApp(this)) {
             val toast =
                 Toast.makeText(this, "Carolyn is not the default SMS app.", Toast.LENGTH_LONG)
             toast.show()
@@ -196,7 +196,7 @@ class ActivitySettings : AppCompatActivity() {
             realmL.where(Message::class.java).findAll().forEach { m ->
                 val smsId = m.smsId
                 if ((m.type == "spam" || m.type == "otp") && smsId != null) {
-                    TelephonyUtils.deleteSMS(this, smsId)
+                    TelephonyUtil.deleteSMS(this, smsId)
                 }
             }
             realmL.close()

@@ -6,8 +6,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.MessageAdapter
 import com.siddhantkushwaha.carolyn.common.Enums.MessageStatus
-import com.siddhantkushwaha.carolyn.common.RealmUtil
-import com.siddhantkushwaha.carolyn.common.Task
+import com.siddhantkushwaha.carolyn.common.util.RealmUtil
+import com.siddhantkushwaha.carolyn.common.util.TaskUtil
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.index.IndexTask
@@ -58,7 +58,7 @@ class ActivityMessage : ActivityBase() {
             messageAdapter.notifyDataSetChanged()
 
 
-            val markAsRead = Task {
+            val markAsRead = TaskUtil {
                 val realmLocal = RealmUtil.getCustomRealmInstance(this)
 
                 realmLocal.executeTransaction { realmT ->

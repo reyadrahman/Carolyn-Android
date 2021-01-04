@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.common.Enums.MessageType
-import com.siddhantkushwaha.carolyn.common.RealmUtil
+import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.Contact
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.entity.Rule

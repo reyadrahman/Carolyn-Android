@@ -1,7 +1,7 @@
-package com.siddhantkushwaha.carolyn.common
+package com.siddhantkushwaha.carolyn.common.util
 
 
-class Task(private val task: () -> Unit) : Thread() {
+class TaskUtil(private val task: () -> Unit) : Thread() {
 
     companion object {
         @JvmStatic

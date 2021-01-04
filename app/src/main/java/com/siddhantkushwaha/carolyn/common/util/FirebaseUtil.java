@@ -1,9 +1,9 @@
-package com.siddhantkushwaha.carolyn.common;
+package com.siddhantkushwaha.carolyn.common.util;
 
 import com.google.firebase.database.FirebaseDatabase;
 
 
-public class FirebaseUtils {
+public class FirebaseUtil {
 
     private static FirebaseDatabase firebaseDatabase;
 

@@ -8,7 +8,7 @@ import com.google.firebase.ml.custom.FirebaseCustomRemoteModel
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.siddhantkushwaha.carolyn.common.CommonUtils
+import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import org.tensorflow.lite.Interpreter
 import java.io.File
 import java.nio.ByteBuffer
@@ -135,7 +135,7 @@ class MessageClassifier {
                 val interpreter = loadModel()
                 val metaData = loadMetaData(context)
 
-                var body = CommonUtils.cleanText(uncleanedMessage)
+                var body = CommonUtil.cleanText(uncleanedMessage)
                 body = body.replace("#", "0")
 
                 val tokens = body.split(" ")

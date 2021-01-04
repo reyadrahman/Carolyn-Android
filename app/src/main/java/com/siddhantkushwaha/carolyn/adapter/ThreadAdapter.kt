@@ -12,7 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.siddhantkushwaha.carolyn.R
-import com.siddhantkushwaha.carolyn.common.CommonUtils
+import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import com.siddhantkushwaha.carolyn.common.Enums.MessageStatus
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import io.realm.OrderedRealmCollection
@@ -57,7 +57,7 @@ class ThreadAdapter(
                 timestampTextView.visibility = View.GONE
             } else {
                 timestampTextView.visibility = View.VISIBLE
-                timestampTextView.text = CommonUtils.getStringForTimestamp(timestamp)
+                timestampTextView.text = CommonUtil.getStringForTimestamp(timestamp)
             }
 
             itemView.setOnClickListener { view ->

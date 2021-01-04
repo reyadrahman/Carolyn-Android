@@ -7,7 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.siddhantkushwaha.carolyn.R
-import com.siddhantkushwaha.carolyn.common.CommonUtils
+import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import com.siddhantkushwaha.carolyn.common.Enums.MessageType
 import com.siddhantkushwaha.carolyn.entity.Message
 import io.realm.OrderedRealmCollection
@@ -72,7 +72,7 @@ class MessageAdapter(
 
             messageBodyTextView.text = message.body
 
-            messageTimestampTextView.text = CommonUtils.formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
+            messageTimestampTextView.text = CommonUtil.formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
 
             sentViaSubscription.text = message.messageThread?.user1 ?: ""
         }
@@ -97,7 +97,7 @@ class MessageAdapter(
                 null -> messageClassIcon.setImageResource(R.drawable.icon_message_personal)
             }
 
-            messageTimestampTextView.text = CommonUtils.formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
+            messageTimestampTextView.text = CommonUtil.formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
 
             receivedOnNumberTextView.text = message.messageThread?.user1 ?: ""
         }

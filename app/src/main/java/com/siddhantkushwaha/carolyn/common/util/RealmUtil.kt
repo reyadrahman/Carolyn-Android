@@ -1,4 +1,4 @@
-package com.siddhantkushwaha.carolyn.common
+package com.siddhantkushwaha.carolyn.common.util
 
 import android.content.Context
 import io.realm.Realm

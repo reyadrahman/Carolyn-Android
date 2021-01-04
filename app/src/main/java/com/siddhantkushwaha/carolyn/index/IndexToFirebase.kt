@@ -8,12 +8,15 @@ package com.siddhantkushwaha.carolyn.index
 import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.siddhantkushwaha.carolyn.common.*
+import com.siddhantkushwaha.carolyn.common.util.CommonUtil
+import com.siddhantkushwaha.carolyn.common.util.FirebaseUtil
+import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.Message
 
 
 class IndexToFirebase(private val context: Context) {
 
-    private val firebaseDatabase = FirebaseUtils.getRealtimeDb(false)
+    private val firebaseDatabase = FirebaseUtil.getRealtimeDb(false)
     private val firebaseAuth = FirebaseAuth.getInstance()
 
     public fun upload() {
@@ -27,7 +30,7 @@ class IndexToFirebase(private val context: Context) {
             if (messageBody == null || message.language != Enums.LanguageType.en)
                 continue
 
-            val body = CommonUtils.cleanText(messageBody)
+            val body = CommonUtil.cleanText(messageBody)
 
             val hashRatio = body.count { it == '#' } / body.length.toFloat()
             if (hashRatio < 0.5) {

@@ -1,7 +1,7 @@
 package com.siddhantkushwaha.carolyn.entity
 
 import android.content.Context
-import com.siddhantkushwaha.carolyn.common.RealmUtil
+import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import io.realm.RealmObject
 import io.realm.annotations.PrimaryKey
 

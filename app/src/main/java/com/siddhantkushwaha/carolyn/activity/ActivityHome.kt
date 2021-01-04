@@ -10,6 +10,8 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.ThreadAdapter
 import com.siddhantkushwaha.carolyn.common.*
+import com.siddhantkushwaha.carolyn.common.util.PermissionsUtil
+import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.index.IndexTask
 import io.realm.OrderedRealmCollectionChangeListener

@@ -1,5 +1,6 @@
-package com.siddhantkushwaha.carolyn.common
+package com.siddhantkushwaha.carolyn.common.util
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.ContentUris
@@ -11,7 +12,7 @@ import android.provider.Telephony
 import android.telephony.SubscriptionManager
 import java.io.InputStream
 
-object TelephonyUtils {
+object TelephonyUtil {
 
     data class SMSMessage(
         val id: Int,
@@ -34,14 +35,14 @@ object TelephonyUtils {
         var subscriptions: HashMap<Int, String>? = null
         if (PermissionsUtil.checkPermissions(
                 context,
-                arrayOf(android.Manifest.permission.READ_PHONE_STATE)
+                arrayOf(Manifest.permission.READ_PHONE_STATE)
             ).isEmpty()
         ) {
             val subscriptionManager = context.getSystemService(SubscriptionManager::class.java)
             subscriptions = HashMap()
             subscriptionManager.activeSubscriptionInfoList.forEach {
                 subscriptions[it.subscriptionId] =
-                    CommonUtils.normalizePhoneNumber(it.number ?: "Unknown") ?: "Unknown"
+                    CommonUtil.normalizePhoneNumber(it.number ?: "Unknown") ?: "Unknown"
             }
         }
         return subscriptions
@@ -52,7 +53,7 @@ object TelephonyUtils {
         var messages: ArrayList<SMSMessage>? = null
         if (PermissionsUtil.checkPermissions(
                 context,
-                arrayOf(android.Manifest.permission.READ_SMS)
+                arrayOf(Manifest.permission.READ_SMS)
             ).isEmpty()
         ) {
             messages = ArrayList()
@@ -118,7 +119,7 @@ object TelephonyUtils {
         var contactsList: HashMap<String, ContactInfo>? = null
         if (PermissionsUtil.checkPermissions(
                 context,
-                arrayOf(android.Manifest.permission.READ_CONTACTS)
+                arrayOf(Manifest.permission.READ_CONTACTS)
             ).isEmpty()
         ) {
             contactsList = HashMap()
@@ -133,7 +134,7 @@ object TelephonyUtils {
                         cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
                     val name: String =
                         cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
-                    phoneNumber = CommonUtils.normalizePhoneNumber(phoneNumber) ?: "Unknown"
+                    phoneNumber = CommonUtil.normalizePhoneNumber(phoneNumber) ?: "Unknown"
                     contactsList[phoneNumber] = ContactInfo(contactId, phoneNumber, name)
                 }
                 cursor.close()

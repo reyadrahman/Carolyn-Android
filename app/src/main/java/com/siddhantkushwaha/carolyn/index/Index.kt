@@ -3,6 +3,9 @@ package com.siddhantkushwaha.carolyn.index
 import android.content.Context
 import android.util.Log
 import com.siddhantkushwaha.carolyn.common.*
+import com.siddhantkushwaha.carolyn.common.util.CommonUtil
+import com.siddhantkushwaha.carolyn.common.util.RealmUtil
+import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.entity.Contact
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
@@ -36,8 +39,8 @@ class Index(
 
     private fun indexMessages(realm: Realm) {
 
-        val messages = TelephonyUtils.getAllSms(context)
-        val subscriptions = TelephonyUtils.getSubscriptions(context)
+        val messages = TelephonyUtil.getAllSms(context)
+        val subscriptions = TelephonyUtil.getSubscriptions(context)
 
         if (messages == null || subscriptions == null)
             return
@@ -54,12 +57,12 @@ class Index(
     }
 
 
-    private fun pruneMessages(realm: Realm, messages: ArrayList<TelephonyUtils.SMSMessage>) {
+    private fun pruneMessages(realm: Realm, messages: ArrayList<TelephonyUtil.SMSMessage>) {
         val allMessages = realm.where(Message::class.java).findAll()
 
         val messageIds =
             messages.map { message ->
-                CommonUtils.getHash("${message.timestamp}, ${message.body}, ${message.sent}")
+                CommonUtil.getHash("${message.timestamp}, ${message.body}, ${message.sent}")
             }.toHashSet()
 
         allMessages.forEach { indexedMessage ->
@@ -74,7 +77,7 @@ class Index(
 
     private fun addMessages(
         realm: Realm,
-        messages: ArrayList<TelephonyUtils.SMSMessage>,
+        messages: ArrayList<TelephonyUtil.SMSMessage>,
         subscriptions: HashMap<Int, String>
     ) {
         val breakpoint = if (optimized) {
@@ -95,17 +98,17 @@ class Index(
 
     private fun indexMessage(
         realm: Realm,
-        message: TelephonyUtils.SMSMessage,
+        message: TelephonyUtil.SMSMessage,
         subscriptions: HashMap<Int, String>
     ): Int {
 
         val user1 = subscriptions[message.subId] ?: "unknown"
 
         val user2 =
-            CommonUtils.normalizePhoneNumber(message.user2)
+            CommonUtil.normalizePhoneNumber(message.user2)
                 ?: message.user2.toLowerCase(Locale.getDefault())
 
-        val id = CommonUtils.getHash("${message.timestamp}, ${message.body}, ${message.sent}")
+        val id = CommonUtil.getHash("${message.timestamp}, ${message.body}, ${message.sent}")
         realm.executeTransaction { realmT ->
 
             var realmThread =
@@ -229,7 +232,7 @@ class Index(
 
     private fun indexContacts(realm: Realm) {
 
-        val contacts = TelephonyUtils.getAllContacts(context)
+        val contacts = TelephonyUtil.getAllContacts(context)
 
         contacts?.forEach { (number, info) ->
             realm.executeTransaction { rt ->
@@ -242,7 +245,7 @@ class Index(
                 realmContact.name = info.name
                 realmContact.contactId = info.id
 
-                val photoInputStream = TelephonyUtils.openContactPhoto(context, info.id, true)
+                val photoInputStream = TelephonyUtil.openContactPhoto(context, info.id, true)
                 if (photoInputStream != null) {
 
                     val photoBytes = photoInputStream.readBytes()

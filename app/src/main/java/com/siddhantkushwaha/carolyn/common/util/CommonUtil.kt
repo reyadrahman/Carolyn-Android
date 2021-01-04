@@ -1,4 +1,4 @@
-package com.siddhantkushwaha.carolyn.common
+package com.siddhantkushwaha.carolyn.common.util
 
 import android.content.Context
 import android.provider.Settings
@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 
-object CommonUtils {
+object CommonUtil {
     public fun getDeviceId(context: Context): String {
         return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
     }
