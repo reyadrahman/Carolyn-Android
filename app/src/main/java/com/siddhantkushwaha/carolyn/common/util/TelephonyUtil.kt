@@ -160,11 +160,12 @@ object TelephonyUtil {
 
     public fun deleteSMS(context: Context, smsId: Int): Boolean {
         try {
-            context.contentResolver.delete(
+            val numDeleted = context.contentResolver.delete(
                 Uri.parse("${Telephony.Sms.CONTENT_URI}/$smsId"),
                 null,
                 null
             )
+            return numDeleted > 0
         } catch (exception: Exception) {
             exception.printStackTrace()
         }

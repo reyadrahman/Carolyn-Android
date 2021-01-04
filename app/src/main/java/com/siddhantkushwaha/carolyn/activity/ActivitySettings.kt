@@ -1,7 +1,11 @@
 package com.siddhantkushwaha.carolyn.activity
 
+import android.app.role.RoleManager
+import android.content.Intent
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
+import android.provider.Telephony
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
@@ -13,6 +17,8 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.storage.FirebaseStorage
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.common.DbHelper
+import com.siddhantkushwaha.carolyn.common.Enums
+import com.siddhantkushwaha.carolyn.common.RequestCodes
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.entity.GlobalParam
@@ -20,6 +26,7 @@ import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.index.IndexTask
 import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import kotlinx.android.synthetic.main.activity_settings.*
+
 
 class ActivitySettings : ActivityBase() {
 
@@ -47,6 +54,10 @@ class ActivitySettings : ActivityBase() {
 
         checkbox_enable_unsaved_number_classification.setOnCheckedChangeListener { _, isChecked ->
             DbHelper.setUnsavedNumberClassificationRule(this, isChecked)
+        }
+
+        button_default_sms_app.setOnClickListener {
+            setAsDefault()
         }
 
         populatePie()
@@ -172,32 +183,50 @@ class ActivitySettings : ActivityBase() {
                 else
                     "Download failed."
             runOnUiThread {
-                val toast = Toast.makeText(this, message, Toast.LENGTH_LONG)
-                toast.show()
+                showStatus(message)
             }
         }
     }
 
     private fun deleteSpamOtpUpdateUi() {
         if (!TelephonyUtil.isDefaultSmsApp(this)) {
-            val toast =
-                Toast.makeText(this, "Carolyn is not the default SMS app.", Toast.LENGTH_LONG)
-            toast.show()
+            showStatus("Carolyn is not the default SMS app.")
             return
         }
 
-        Toast.makeText(this, "Clearing all OTPs and Spam.", Toast.LENGTH_LONG).show()
+        showStatus("Clearing all OTPs and Spam.")
 
         val clearAllMessages = Thread {
 
             // clear all
             val realmL = RealmUtil.getCustomRealmInstance(this)
-            realmL.where(Message::class.java).findAll().forEach { m ->
+            val allOtpMessages =
+                realmL.where(Message::class.java).equalTo("type", Enums.MessageType.otp).findAll()
+            val allSpamMessages =
+                realmL.where(Message::class.java).equalTo("type", Enums.MessageType.spam).findAll()
+
+            var deleted = true
+
+            for (m in allOtpMessages) {
                 val smsId = m.smsId
-                if ((m.type == "spam" || m.type == "otp") && smsId != null) {
-                    TelephonyUtil.deleteSMS(this, smsId)
+                if (smsId != null) {
+                    deleted = TelephonyUtil.deleteSMS(this, smsId)
+                    if (!deleted) break
                 }
             }
+
+            for (m in allSpamMessages) {
+                val smsId = m.smsId
+                if (smsId != null) {
+                    deleted = TelephonyUtil.deleteSMS(this, smsId)
+                    if (!deleted) break
+                }
+            }
+
+            if (!deleted) {
+                showStatus("Failed to delete all spam and OTPs.")
+            }
+
             realmL.close()
 
             // re index
@@ -205,5 +234,33 @@ class ActivitySettings : ActivityBase() {
         }
 
         clearAllMessages.start()
+    }
+
+    private fun setAsDefault() {
+        if (TelephonyUtil.isDefaultSmsApp(this)) {
+            showStatus("Carolyn is already default SMS app.")
+            return
+        }
+
+        val requestCode = RequestCodes.REQUEST_CHANGE_DEFAULT
+        val callback: (Intent?) -> Unit = {
+            if (TelephonyUtil.isDefaultSmsApp(this)) {
+                showStatus("Carolyn is now default SMS app.")
+            }
+        }
+
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+            val roleManager = getSystemService(RoleManager::class.java)
+            val roleRequestIntent = roleManager.createRequestRoleIntent(RoleManager.ROLE_SMS)
+            startActivityForResult(roleRequestIntent, requestCode, callback)
+        } else {
+            val intent = Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT)
+            intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, packageName)
+            startActivityForResult(intent, requestCode, callback)
+        }
+    }
+
+    private fun showStatus(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 }
