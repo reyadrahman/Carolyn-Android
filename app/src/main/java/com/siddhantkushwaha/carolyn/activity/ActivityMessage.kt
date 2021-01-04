@@ -5,7 +5,7 @@ import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.MessageAdapter
-import com.siddhantkushwaha.carolyn.common.MessageStatus
+import com.siddhantkushwaha.carolyn.common.Enums.MessageStatus
 import com.siddhantkushwaha.carolyn.common.RealmUtil
 import com.siddhantkushwaha.carolyn.common.Task
 import com.siddhantkushwaha.carolyn.entity.Message

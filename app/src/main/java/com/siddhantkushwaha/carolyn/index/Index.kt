@@ -36,8 +36,8 @@ class Index(
 
     private fun indexMessages(realm: Realm) {
 
-        val messages = getAllSms(context)
-        val subscriptions = getSubscriptions(context)
+        val messages = TelephonyUtils.getAllSms(context)
+        val subscriptions = TelephonyUtils.getSubscriptions(context)
 
         if (messages == null || subscriptions == null)
             return
@@ -54,12 +54,12 @@ class Index(
     }
 
 
-    private fun pruneMessages(realm: Realm, messages: ArrayList<SMSMessage>) {
+    private fun pruneMessages(realm: Realm, messages: ArrayList<TelephonyUtils.SMSMessage>) {
         val allMessages = realm.where(Message::class.java).findAll()
 
         val messageIds =
             messages.map { message ->
-                getHash("${message.timestamp}, ${message.body}, ${message.sent}")
+                CommonUtils.getHash("${message.timestamp}, ${message.body}, ${message.sent}")
             }.toHashSet()
 
         allMessages.forEach { indexedMessage ->
@@ -74,7 +74,7 @@ class Index(
 
     private fun addMessages(
         realm: Realm,
-        messages: ArrayList<SMSMessage>,
+        messages: ArrayList<TelephonyUtils.SMSMessage>,
         subscriptions: HashMap<Int, String>
     ) {
         val breakpoint = if (optimized) {
@@ -95,16 +95,17 @@ class Index(
 
     private fun indexMessage(
         realm: Realm,
-        message: SMSMessage,
+        message: TelephonyUtils.SMSMessage,
         subscriptions: HashMap<Int, String>
     ): Int {
 
         val user1 = subscriptions[message.subId] ?: "unknown"
 
         val user2 =
-            normalizePhoneNumber(message.user2) ?: message.user2.toLowerCase(Locale.getDefault())
+            CommonUtils.normalizePhoneNumber(message.user2)
+                ?: message.user2.toLowerCase(Locale.getDefault())
 
-        val id = getHash("${message.timestamp}, ${message.body}, ${message.sent}")
+        val id = CommonUtils.getHash("${message.timestamp}, ${message.body}, ${message.sent}")
         realm.executeTransaction { realmT ->
 
             var realmThread =
@@ -143,9 +144,9 @@ class Index(
 
             if (realmMessage.sent == false) {
                 // don't update status of read messages
-                if (realmMessage.status != MessageStatus.read) {
+                if (realmMessage.status != Enums.MessageStatus.read) {
                     realmMessage.status =
-                        if (message.isRead) MessageStatus.read else MessageStatus.notRead
+                        if (message.isRead) Enums.MessageStatus.read else Enums.MessageStatus.notRead
                 }
             }
 
@@ -155,37 +156,40 @@ class Index(
             val rule = realm.where(Rule::class.java).equalTo("user2", user2).findFirst()
             if (rule != null) {
                 realmMessage.type = rule.type
-                realmMessage.classificationSource = SourceType.rule
+                realmMessage.classificationSource = Enums.SourceType.rule
             }
 
             // If message is in contacts, always treat all messages as personal
             else if (realmThread.contact != null) {
                 realmMessage.type = null
-                realmMessage.classificationSource = SourceType.contact
+                realmMessage.classificationSource = Enums.SourceType.contact
             }
 
-            // If number has 10 digits, we have decided to mark the message as personal
-            /*else if (realmThread.user2?.length == 13) {
+            // If number has 10 digits and classification not enabled on unsaved numbers,
+            // we have decided to mark the message as personal
+            else if (realmThread.user2?.length == 13
+                && !DbHelper.getUnsavedNumberClassificationRule(context)
+            ) {
                 realmMessage.type = null
-                realmMessage.classificationSource = SourceType.numberLen
-            }*/
+                realmMessage.classificationSource = Enums.SourceType.unsavedNumber
+            }
 
             // If user is not in rules, or not in contacts, check if it is a sent message, if yes, mark as personal
             else if (realmMessage.sent == true) {
                 realmMessage.type = null
-                realmMessage.classificationSource = SourceType.sentMessage
+                realmMessage.classificationSource = Enums.SourceType.sentMessage
             }
 
             // If prediction needs to be applied
             else {
                 // If language is not english, mark it spam
-                if (realmMessage.language != LanguageType.en) {
-                    realmMessage.type = MessageType.spam
-                    realmMessage.classificationSource = SourceType.model
+                if (realmMessage.language != Enums.LanguageType.en) {
+                    realmMessage.type = Enums.MessageType.spam
+                    realmMessage.classificationSource = Enums.SourceType.model
                 } else {
 
                     // Only try to run prediction if new message or this messages was not classified via a model last time
-                    if (realmMessage.type == null || realmMessage.classificationSource != SourceType.model) {
+                    if (realmMessage.type == null || realmMessage.classificationSource != Enums.SourceType.model) {
                         val messageType = MessageClassifier.doClassification(
                             context,
                             message.body,
@@ -195,7 +199,7 @@ class Index(
                         // messageType could be null if model was not downloaded yet and skipIfNotDownloaded was set to true
                         if (messageType != null) {
                             realmMessage.type = messageType
-                            realmMessage.classificationSource = SourceType.model
+                            realmMessage.classificationSource = Enums.SourceType.model
                         }
                     }
                 }
@@ -225,7 +229,7 @@ class Index(
 
     private fun indexContacts(realm: Realm) {
 
-        val contacts = getAllContacts(context)
+        val contacts = TelephonyUtils.getAllContacts(context)
 
         contacts?.forEach { (number, info) ->
             realm.executeTransaction { rt ->
@@ -238,7 +242,7 @@ class Index(
                 realmContact.name = info.name
                 realmContact.contactId = info.id
 
-                val photoInputStream = openContactPhoto(context, info.id, true)
+                val photoInputStream = TelephonyUtils.openContactPhoto(context, info.id, true)
                 if (photoInputStream != null) {
 
                     val photoBytes = photoInputStream.readBytes()

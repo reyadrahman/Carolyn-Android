@@ -47,15 +47,15 @@ class ActivityHome : ActivityBase() {
             R.id.personal ->
                 threads = getPersonalThreadsQuery()
             R.id.otp ->
-                threads = getThreadsForTypeQuery(MessageType.otp)
+                threads = getThreadsForTypeQuery(Enums.MessageType.otp)
             R.id.transaction ->
-                threads = getThreadsForTypeQuery(MessageType.transaction)
+                threads = getThreadsForTypeQuery(Enums.MessageType.transaction)
             R.id.update ->
-                threads = getThreadsForTypeQuery(MessageType.update)
+                threads = getThreadsForTypeQuery(Enums.MessageType.update)
             R.id.spam ->
-                threads = getThreadsForTypeQuery(MessageType.spam)
+                threads = getThreadsForTypeQuery(Enums.MessageType.spam)
             null -> {
-                threads = getThreadsForTypeQuery(MessageType.otp)
+                threads = getThreadsForTypeQuery(Enums.MessageType.otp)
                 bottom_nav_filter.selectedItemId = R.id.otp
             }
         }
@@ -83,19 +83,19 @@ class ActivityHome : ActivityBase() {
                     updateUI(1)
                 }
                 R.id.otp -> {
-                    threads = getThreadsForTypeQuery(MessageType.otp)
+                    threads = getThreadsForTypeQuery(Enums.MessageType.otp)
                     updateUI(1)
                 }
                 R.id.transaction -> {
-                    threads = getThreadsForTypeQuery(MessageType.transaction)
+                    threads = getThreadsForTypeQuery(Enums.MessageType.transaction)
                     updateUI(1)
                 }
                 R.id.update -> {
-                    threads = getThreadsForTypeQuery(MessageType.update)
+                    threads = getThreadsForTypeQuery(Enums.MessageType.update)
                     updateUI(1)
                 }
                 R.id.spam -> {
-                    threads = getThreadsForTypeQuery(MessageType.spam)
+                    threads = getThreadsForTypeQuery(Enums.MessageType.spam)
                     updateUI(1)
                 }
             }

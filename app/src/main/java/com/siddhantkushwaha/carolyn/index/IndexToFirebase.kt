@@ -7,10 +7,7 @@ package com.siddhantkushwaha.carolyn.index
 
 import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
-import com.siddhantkushwaha.carolyn.common.FirebaseUtils
-import com.siddhantkushwaha.carolyn.common.LanguageType
-import com.siddhantkushwaha.carolyn.common.RealmUtil
-import com.siddhantkushwaha.carolyn.common.cleanText
+import com.siddhantkushwaha.carolyn.common.*
 import com.siddhantkushwaha.carolyn.entity.Message
 
 
@@ -27,10 +24,10 @@ class IndexToFirebase(private val context: Context) {
         for (message in messages) {
 
             val messageBody = message.body
-            if (messageBody == null || message.language != LanguageType.en)
+            if (messageBody == null || message.language != Enums.LanguageType.en)
                 continue
 
-            val body = cleanText(messageBody)
+            val body = CommonUtils.cleanText(messageBody)
 
             val hashRatio = body.count { it == '#' } / body.length.toFloat()
             if (hashRatio < 0.5) {

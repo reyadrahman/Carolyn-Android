@@ -12,8 +12,8 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.siddhantkushwaha.carolyn.R
-import com.siddhantkushwaha.carolyn.common.MessageStatus
-import com.siddhantkushwaha.carolyn.common.getStringForTimestamp
+import com.siddhantkushwaha.carolyn.common.CommonUtils
+import com.siddhantkushwaha.carolyn.common.Enums.MessageStatus
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import io.realm.OrderedRealmCollection
 import io.realm.RealmRecyclerViewAdapter
@@ -44,17 +44,20 @@ class ThreadAdapter(
             val threadTitleTextView = itemView.findViewById<TextView>(R.id.text_thread)
             val lastMessageTextView = itemView.findViewById<TextView>(R.id.text_message)
             val timestampTextView = itemView.findViewById<TextView>(R.id.text_timestamp)
-            // val threadClassImageView = itemView.findViewById<ImageView>(R.id.image_view_thread_class)
 
             threadTitleTextView.text = messageThread.getDisplayName()
+
             lastMessageTextView.text = messageThread.lastMessage?.body ?: "No messages."
+            if(messageThread.lastMessage?.sent == true) {
+                lastMessageTextView.text = "You: ${lastMessageTextView.text}"
+            }
 
             val timestamp = messageThread.lastMessage?.timestamp
             if (timestamp == null) {
                 timestampTextView.visibility = View.GONE
             } else {
                 timestampTextView.visibility = View.VISIBLE
-                timestampTextView.text = getStringForTimestamp(timestamp)
+                timestampTextView.text = CommonUtils.getStringForTimestamp(timestamp)
             }
 
             itemView.setOnClickListener { view ->

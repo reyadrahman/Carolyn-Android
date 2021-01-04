@@ -13,9 +13,9 @@ import com.github.mikephil.charting.data.PieEntry
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.storage.FirebaseStorage
 import com.siddhantkushwaha.carolyn.R
+import com.siddhantkushwaha.carolyn.common.DbHelper
 import com.siddhantkushwaha.carolyn.common.RealmUtil
-import com.siddhantkushwaha.carolyn.common.deleteSMS
-import com.siddhantkushwaha.carolyn.common.isDefaultSmsApp
+import com.siddhantkushwaha.carolyn.common.TelephonyUtils
 import com.siddhantkushwaha.carolyn.entity.GlobalParam
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.index.IndexTask
@@ -35,12 +35,19 @@ class ActivitySettings : AppCompatActivity() {
 
         firebaseStorage = FirebaseStorage.getInstance()
 
+        checkbox_enable_unsaved_number_classification.isChecked =
+            DbHelper.getUnsavedNumberClassificationRule(this)
+
         button_download_assets.setOnClickListener {
             downloadAssetsUpdateUi()
         }
 
         button_delete_spam_otp.setOnClickListener {
             deleteSpamOtpUpdateUi()
+        }
+
+        checkbox_enable_unsaved_number_classification.setOnCheckedChangeListener { _, isChecked ->
+            DbHelper.setUnsavedNumberClassificationRule(this, isChecked)
         }
 
         populatePie()
@@ -173,7 +180,7 @@ class ActivitySettings : AppCompatActivity() {
     }
 
     private fun deleteSpamOtpUpdateUi() {
-        if (!isDefaultSmsApp(this)) {
+        if (!TelephonyUtils.isDefaultSmsApp(this)) {
             val toast =
                 Toast.makeText(this, "Carolyn is not the default SMS app.", Toast.LENGTH_LONG)
             toast.show()
@@ -189,7 +196,7 @@ class ActivitySettings : AppCompatActivity() {
             realmL.where(Message::class.java).findAll().forEach { m ->
                 val smsId = m.smsId
                 if ((m.type == "spam" || m.type == "otp") && smsId != null) {
-                    deleteSMS(this, smsId)
+                    TelephonyUtils.deleteSMS(this, smsId)
                 }
             }
             realmL.close()

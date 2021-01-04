@@ -5,10 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
-import com.siddhantkushwaha.carolyn.common.LanguageType
-import com.siddhantkushwaha.carolyn.common.MessageType
-import com.siddhantkushwaha.carolyn.common.RealmUtil
-import com.siddhantkushwaha.carolyn.common.normalizePhoneNumber
+import com.siddhantkushwaha.carolyn.common.*
 import com.siddhantkushwaha.carolyn.entity.Contact
 import com.siddhantkushwaha.carolyn.entity.Rule
 import com.siddhantkushwaha.carolyn.index.IndexTask
@@ -65,7 +62,7 @@ class SMSReceiver : BroadcastReceiver() {
 
             val realm = RealmUtil.getCustomRealmInstance(context)
 
-            val user2 = normalizePhoneNumber(user2NotNormalized)
+            val user2 = CommonUtils.normalizePhoneNumber(user2NotNormalized)
                 ?: user2NotNormalized.toLowerCase(Locale.getDefault())
 
             val contact = realm.where(Contact::class.java).equalTo("number", user2).findFirst()
@@ -83,17 +80,18 @@ class SMSReceiver : BroadcastReceiver() {
                     null
                 }
 
-                // If number has 10 digits, we have decided to mark the message as personal
-                /*else if (user2.length == 13) {
+                // If number has 10 digits and classification not enabled on unsaved numbers,
+                // we have decided to mark the message as personal
+                else if (user2.length == 13 && !DbHelper.getUnsavedNumberClassificationRule(context)) {
                     null
-                }*/
+                }
 
                 // If prediction needs to be applied
                 else {
 
                     // If language is not english, mark it spam
-                    if (LanguageId.getLanguage(messageBody) != LanguageType.en) {
-                        MessageType.spam
+                    if (LanguageId.getLanguage(messageBody) != Enums.LanguageType.en) {
+                        Enums.MessageType.spam
                     }
 
                     // Use model
