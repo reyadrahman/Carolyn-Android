@@ -5,6 +5,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
+import android.view.Menu
+import android.view.MenuItem
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.siddhantkushwaha.carolyn.R
@@ -36,6 +38,8 @@ class ActivityHome : ActivityBase() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
+
+        setSupportActionBar(toolbar)
 
         checkPermissions()
 
@@ -103,14 +107,6 @@ class ActivityHome : ActivityBase() {
             true
         }
 
-        button_send_message.setOnLongClickListener {
-
-            // ****** Experimental *******
-            startActivity(Intent(this, ActivitySettings::class.java))
-
-            true
-        }
-
         requestDisableBatteryOptimization()
     }
 
@@ -138,6 +134,21 @@ class ActivityHome : ActivityBase() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt("selected_view", bottom_nav_filter.selectedItemId)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_home, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.dashboard -> {
+                val intent = Intent(this, ActivitySettings::class.java)
+                startActivity(intent)
+            }
+        }
+        return true
     }
 
     private fun checkPermissions() {
