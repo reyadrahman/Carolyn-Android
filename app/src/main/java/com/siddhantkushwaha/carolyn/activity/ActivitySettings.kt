@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.provider.Telephony
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.github.mikephil.charting.components.Legend
@@ -14,6 +13,7 @@ import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.google.android.gms.tasks.Tasks
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.storage.FirebaseStorage
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.common.DbHelper
@@ -190,7 +190,12 @@ class ActivitySettings : ActivityBase() {
 
     private fun deleteSpamOtpUpdateUi() {
         if (!TelephonyUtil.isDefaultSmsApp(this)) {
-            showStatus("Carolyn is not the default SMS app.")
+            showStatus("Carolyn is not the default SMS app.") { snackbar ->
+                snackbar.setAction("MAKE DEFAULT") {
+                    setAsDefault()
+                }
+                snackbar.setActionTextColor(Color.BLACK)
+            }
             return
         }
 
@@ -238,7 +243,7 @@ class ActivitySettings : ActivityBase() {
 
     private fun setAsDefault() {
         if (TelephonyUtil.isDefaultSmsApp(this)) {
-            showStatus("Carolyn is already default SMS app.")
+            showStatus("Already set as default.")
             return
         }
 
@@ -260,7 +265,9 @@ class ActivitySettings : ActivityBase() {
         }
     }
 
-    private fun showStatus(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    private fun showStatus(message: String, modifySnackbar: ((Snackbar) -> Unit)? = null) {
+        val snackbar = Snackbar.make(root, message, Snackbar.LENGTH_LONG)
+        modifySnackbar?.invoke(snackbar)
+        snackbar.show()
     }
 }
