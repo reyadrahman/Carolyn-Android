@@ -194,7 +194,7 @@ class ActivitySettings : ActivityBase() {
                 snackbar.setAction("MAKE DEFAULT") {
                     setAsDefault()
                 }
-                snackbar.setActionTextColor(Color.BLACK)
+                snackbar.setActionTextColor(Color.WHITE)
             }
             return
         }
