@@ -5,7 +5,10 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
+import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil.checkPermissions
 
 
@@ -93,5 +96,13 @@ open class ActivityBase : AppCompatActivity() {
         val intent = Intent(this, ActivityHome::class.java)
         startActivity(intent)
         finish()
+    }
+
+    protected fun logout() {
+        mAuth.signOut()
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id)).requestEmail().build()
+        val googleSignInClient = GoogleSignIn.getClient(this, gso)
+        googleSignInClient.signOut()
     }
 }

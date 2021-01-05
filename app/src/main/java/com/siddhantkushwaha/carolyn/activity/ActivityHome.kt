@@ -147,6 +147,10 @@ class ActivityHome : ActivityBase() {
                 val intent = Intent(this, ActivitySettings::class.java)
                 startActivity(intent)
             }
+            R.id.logout -> {
+                logout()
+                moveToLoginActivity()
+            }
         }
         return true
     }
