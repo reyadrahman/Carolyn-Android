@@ -107,6 +107,11 @@ class ActivityHome : ActivityBase() {
             true
         }
 
+        button_send_message.setOnClickListener {
+            val intent = Intent(this, ActivitySendNewMessage::class.java)
+            startActivity(intent)
+        }
+
         requestDisableBatteryOptimization()
     }
 
