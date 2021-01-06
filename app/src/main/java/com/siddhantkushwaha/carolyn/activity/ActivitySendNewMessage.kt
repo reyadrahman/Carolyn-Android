@@ -1,7 +1,7 @@
 package com.siddhantkushwaha.carolyn.activity
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import com.siddhantkushwaha.carolyn.R
 
 class ActivitySendNewMessage : AppCompatActivity() {

@@ -79,7 +79,7 @@ class Index(
     private fun addMessages(
         realm: Realm,
         messages: ArrayList<TelephonyUtil.SMSMessage>,
-        subscriptions: HashMap<Int, String>
+        subscriptions: HashMap<Int, TelephonyUtil.SubscriptionInfo>
     ) {
         val breakpoint = if (optimized) {
             realm.where(Message::class.java).sort("timestamp", Sort.DESCENDING)
@@ -100,10 +100,10 @@ class Index(
     private fun indexMessage(
         realm: Realm,
         message: TelephonyUtil.SMSMessage,
-        subscriptions: HashMap<Int, String>
+        subscriptions: HashMap<Int, TelephonyUtil.SubscriptionInfo>
     ): Int {
 
-        val user1 = subscriptions[message.subId] ?: "unknown"
+        val user1 = subscriptions[message.subId]?.number ?: "unknown"
 
         val user2 =
             CommonUtil.normalizePhoneNumber(message.user2)

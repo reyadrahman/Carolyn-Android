@@ -72,10 +72,25 @@
             android:background="@drawable/background_button_sim"
             android:elevation="2dp"
             android:padding="8dp"
+            android:backgroundTint="@color/color3"
             android:src="@drawable/icon_sim"
             app:layout_constraintBottom_toBottomOf="@id/edit_text_message"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/edit_text_message" />
+
+        <ImageButton
+            android:id="@+id/button_send_message"
+            android:layout_width="20dp"
+            android:layout_height="24dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/icon_send_message"
+            android:translationZ="2dp"
+            app:layout_constraintBottom_toBottomOf="@id/edit_text_message"
+            app:layout_constraintEnd_toEndOf="@+id/edit_text_message"
+            app:layout_constraintTop_toTopOf="@id/edit_text_message" />
+
 
         <EditText
             android:id="@+id/edit_text_message"
@@ -100,17 +115,6 @@
             app:layout_constraintStart_toEndOf="@+id/button_sim_picker"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <ImageButton
-            android:layout_width="20dp"
-            android:layout_height="24dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/icon_send_message"
-            android:translationZ="1dp"
-            app:layout_constraintBottom_toBottomOf="@id/edit_text_message"
-            app:layout_constraintEnd_toEndOf="@+id/edit_text_message"
-            app:layout_constraintTop_toTopOf="@id/edit_text_message" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

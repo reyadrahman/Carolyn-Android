@@ -31,9 +31,15 @@ object TelephonyUtil {
         val name: String
     )
 
+    data class SubscriptionInfo(
+        val subId: Int,
+        val number: String,
+        val carrierName: String
+    )
+
     @SuppressLint("MissingPermission")
-    public fun getSubscriptions(context: Context): HashMap<Int, String>? {
-        var subscriptions: HashMap<Int, String>? = null
+    public fun getSubscriptions(context: Context): HashMap<Int, SubscriptionInfo>? {
+        var subscriptions: HashMap<Int, SubscriptionInfo>? = null
         if (checkPermissions(
                 context,
                 arrayOf(Manifest.permission.READ_PHONE_STATE)
@@ -43,7 +49,12 @@ object TelephonyUtil {
             subscriptions = HashMap()
             subscriptionManager.activeSubscriptionInfoList.forEach {
                 subscriptions[it.subscriptionId] =
-                    CommonUtil.normalizePhoneNumber(it.number ?: "Unknown") ?: "Unknown"
+                    SubscriptionInfo(
+                        subId = it.subscriptionId,
+                        number = CommonUtil.normalizePhoneNumber(it.number ?: "Unknown")
+                            ?: "Unknown",
+                        carrierName = it.carrierName.toString()
+                    )
             }
         }
         return subscriptions

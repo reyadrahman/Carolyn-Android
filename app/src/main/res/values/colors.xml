@@ -5,10 +5,12 @@
     <color name="colorAccent">#28fc52</color>
 
     <color name="colorPrimaryDarkLighter">#303030</color>
-    <color name="colorDist1">#d600dd</color>
-    <color name="colorDist2">#28fc52</color>
-    <color name="colorDist3">#E91E63</color>
-    <color name="colorDist4">#5C00FF</color>
-    <color name="colorDist5">#FFEB3B</color>
+    <color name="color1">#d600dd</color>
+    <color name="color2">#28fc52</color>
+    <color name="color3">#E91E63</color>
+    <color name="color4">#5C00FF</color>
+    <color name="color5">#FFEB3B</color>
+    <color name="color6">#009688</color>
+    <color name="color7">#FF9800</color>
 
 </resources>

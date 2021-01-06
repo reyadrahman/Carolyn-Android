@@ -107,7 +107,7 @@ class ActivityHome : ActivityBase() {
             true
         }
 
-        button_send_message.setOnClickListener {
+        fab_send_message.setOnClickListener {
             val intent = Intent(this, ActivitySendNewMessage::class.java)
             startActivity(intent)
         }
@@ -165,6 +165,7 @@ class ActivityHome : ActivityBase() {
             arrayOf(
                 android.Manifest.permission.READ_SMS,
                 android.Manifest.permission.RECEIVE_SMS,
+                android.Manifest.permission.SEND_SMS,
                 android.Manifest.permission.READ_CONTACTS,
                 android.Manifest.permission.READ_PHONE_STATE
             ), RequestCodes.REQUEST_CODE_PERMISSION_BASIC

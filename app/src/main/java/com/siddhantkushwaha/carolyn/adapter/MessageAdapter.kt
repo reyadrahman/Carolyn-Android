@@ -16,7 +16,9 @@ import io.realm.RealmRecyclerViewAdapter
 
 class MessageAdapter(
     data: OrderedRealmCollection<Message>,
-    autoUpdate: Boolean
+    autoUpdate: Boolean,
+    private val clickListener: (Message) -> Unit,
+    private val longClickListener: (Message) -> Unit
 ) : RealmRecyclerViewAdapter<Message, RecyclerView.ViewHolder>(data, autoUpdate) {
 
     private val TYPE_MESSAGE_SENT = 1
@@ -50,10 +52,14 @@ class MessageAdapter(
         val message = data!![position]
         when (holder.itemViewType) {
             TYPE_MESSAGE_SENT -> {
-                (holder as SentMessageViewHolder).bind(message)
+                (holder as SentMessageViewHolder).bind(message, clickListener, longClickListener)
             }
             TYPE_MESSAGE_RECEIVED -> {
-                (holder as ReceivedMessageViewHolder).bind(message)
+                (holder as ReceivedMessageViewHolder).bind(
+                    message,
+                    clickListener,
+                    longClickListener
+                )
             }
             else -> {
                 throw Exception("Message Adapter Error: Message type not supported.")
@@ -61,9 +67,12 @@ class MessageAdapter(
         }
     }
 
-    private class SentMessageViewHolder(itemView: View) :
-        RecyclerView.ViewHolder(itemView) {
-        fun bind(message: Message) {
+    private class SentMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        fun bind(
+            message: Message,
+            clickListener: (Message) -> Unit,
+            longClickListener: (Message) -> Unit
+        ) {
             val messageBodyTextView = itemView.findViewById<TextView>(R.id.textview_message_text)
             val messageTimestampTextView =
                 itemView.findViewById<TextView>(R.id.textview_message_timestamp)
@@ -72,15 +81,28 @@ class MessageAdapter(
 
             messageBodyTextView.text = message.body
 
-            messageTimestampTextView.text = CommonUtil.formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
+            messageTimestampTextView.text =
+                CommonUtil.formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
 
             sentViaSubscription.text = message.messageThread?.user1 ?: ""
+
+            itemView.setOnClickListener {
+                clickListener(message)
+            }
+
+            itemView.setOnLongClickListener {
+                longClickListener(message)
+                true
+            }
         }
     }
 
-    private class ReceivedMessageViewHolder(itemView: View) :
-        RecyclerView.ViewHolder(itemView) {
-        fun bind(message: Message) {
+    private class ReceivedMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        fun bind(
+            message: Message,
+            clickListener: (Message) -> Unit,
+            longClickListener: (Message) -> Unit
+        ) {
             val messageBodyTextView = itemView.findViewById<TextView>(R.id.textview_message_text)
             val messageClassIcon = itemView.findViewById<ImageView>(R.id.image_view_message_class)
             val messageTimestampTextView =
@@ -97,9 +119,19 @@ class MessageAdapter(
                 null -> messageClassIcon.setImageResource(R.drawable.icon_message_personal)
             }
 
-            messageTimestampTextView.text = CommonUtil.formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
+            messageTimestampTextView.text =
+                CommonUtil.formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
 
             receivedOnNumberTextView.text = message.messageThread?.user1 ?: ""
+
+            itemView.setOnClickListener {
+                clickListener(message)
+            }
+
+            itemView.setOnLongClickListener {
+                longClickListener(message)
+                true
+            }
         }
     }
 }
