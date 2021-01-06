@@ -9,10 +9,11 @@
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.WRITE_SMS" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-
-    <!-- Firebase model doesn't download and SMS receiver notifications don't work without
-    this exemption on certain OEMs such as SAMSUNG and XIAOMI -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!--
+ Firebase model doesn't download and SMS receiver notifications don't work without
+    this exemption on certain OEMs such as SAMSUNG and XIAOMI
+    -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <application
@@ -23,6 +24,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".activity.ActivitySendNewMessage"></activity>
         <!-- *******************  Activities  ******************* -->
         <activity
             android:name=".activity.ActivityLogin"
@@ -51,15 +53,14 @@
             </intent-filter>
         </activity>
         <activity android:name=".activity.ActivityProfile" />
-        <activity android:name=".activity.ActivitySettings" />
-        <!-- *******************  Receivers  ******************* -->
+        <activity android:name=".activity.ActivitySettings" /> <!-- *******************  Receivers  ******************* -->
         <receiver
             android:name=".service.SMSReceiver"
             android:permission="android.permission.BROADCAST_SMS">
             <intent-filter android:priority="999">
                 <action android:name="android.provider.Telephony.SMS_DELIVER" />
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
         <receiver
@@ -70,8 +71,7 @@
 
                 <data android:mimeType="application/vnd.wap.mms-message" />
             </intent-filter>
-        </receiver>
-        <!-- *******************  Services  ******************* -->
+        </receiver> <!-- *******************  Services  ******************* -->
         <service
             android:name=".service.SendMessageService"
             android:exported="true"
