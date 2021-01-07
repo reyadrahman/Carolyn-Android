@@ -1,6 +1,7 @@
 package com.siddhantkushwaha.carolyn.index
 
 import android.content.Context
+import android.provider.Telephony
 import android.util.Log
 import com.siddhantkushwaha.carolyn.common.DbHelper
 import com.siddhantkushwaha.carolyn.common.Enums
@@ -143,7 +144,7 @@ class Index(
                 realmThread.lastMessage = realmMessage
             }
 
-            if (realmMessage.smsType == Enums.SMSType.inbox) {
+            if (realmMessage.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX) {
                 // don't update status of read messages
                 if (realmMessage.status != Enums.MessageStatus.read) {
                     realmMessage.status =
@@ -176,7 +177,7 @@ class Index(
             }
 
             // If user is not in rules, or not in contacts, check if it is a sent message, if yes, mark as personal
-            else if (realmMessage.smsType != Enums.SMSType.inbox) {
+            else if (realmMessage.smsType != Telephony.Sms.MESSAGE_TYPE_INBOX) {
                 realmMessage.type = null
                 realmMessage.classificationSource = Enums.SourceType.sentMessage
             }

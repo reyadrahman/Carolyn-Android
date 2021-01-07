@@ -2,12 +2,12 @@ package com.siddhantkushwaha.carolyn.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Telephony
 import android.telephony.SmsManager
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.MessageAdapter
-import com.siddhantkushwaha.carolyn.common.Enums
 import com.siddhantkushwaha.carolyn.common.Enums.MessageStatus
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TaskUtil
@@ -86,18 +86,27 @@ class ActivityMessage : ActivityBase() {
         messagesChangeListener = OrderedRealmCollectionChangeListener { _, _ ->
             messageAdapter.notifyDataSetChanged()
 
-
             val markAsRead = TaskUtil {
                 val realmLocal = RealmUtil.getCustomRealmInstance(this)
 
                 realmLocal.executeTransaction { realmT ->
+
                     val messagesForThread =
                         realmT.where(Message::class.java).equalTo("messageThread.user2", user2)
                             .findAll()
+
                     messagesForThread.forEach { message ->
-                        if (message.smsType == Enums.SMSType.inbox && message.status == MessageStatus.notRead) {
+                        if (message.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX && message.status == MessageStatus.notRead) {
                             message.status = MessageStatus.read
+
+                            // mark as read in db
                             realmT.insertOrUpdate(message)
+
+                            // mark as read in os db
+                            val smsId = message.smsId
+                            if (TelephonyUtil.isDefaultSmsApp(this) && smsId != null) {
+                                TelephonyUtil.markMessageAsRead(this, smsId)
+                            }
                         }
                     }
                 }
@@ -122,9 +131,9 @@ class ActivityMessage : ActivityBase() {
         }
 
         button_send_message.setOnClickListener {
-            val messageText = edit_text_message.text.toString()
+            /*val messageText = edit_text_message.text.toString()
             sendMessage(messageText)
-            edit_text_message.setText("")
+            edit_text_message.setText("")*/
         }
     }
 

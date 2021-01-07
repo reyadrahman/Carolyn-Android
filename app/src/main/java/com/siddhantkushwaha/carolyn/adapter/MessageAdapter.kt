@@ -1,5 +1,6 @@
 package com.siddhantkushwaha.carolyn.adapter
 
+import android.provider.Telephony
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -7,7 +8,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.siddhantkushwaha.carolyn.R
-import com.siddhantkushwaha.carolyn.common.Enums
 import com.siddhantkushwaha.carolyn.common.Enums.MessageType
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import com.siddhantkushwaha.carolyn.entity.Message
@@ -26,7 +26,7 @@ class MessageAdapter(
     private val TYPE_MESSAGE_RECEIVED = 2
 
     override fun getItemViewType(position: Int): Int {
-        return if (data!![position].smsType != Enums.SMSType.inbox) TYPE_MESSAGE_SENT else TYPE_MESSAGE_RECEIVED
+        return if (data!![position].smsType != Telephony.Sms.MESSAGE_TYPE_INBOX) TYPE_MESSAGE_SENT else TYPE_MESSAGE_RECEIVED
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {

@@ -44,7 +44,7 @@ class SMSReceiver : BroadcastReceiver() {
                         user2 = originatingAddress,
                         timestamp = Instant.now().toEpochMilli(),
                         body = smsMessage.messageBody,
-                        type = Enums.SMSType.inbox,
+                        type = Telephony.Sms.MESSAGE_TYPE_INBOX,
                         subId = subscription,
                         isRead = false
                     )

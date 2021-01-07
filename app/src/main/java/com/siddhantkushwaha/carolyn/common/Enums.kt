@@ -2,16 +2,6 @@ package com.siddhantkushwaha.carolyn.common
 
 object Enums {
 
-    object SMSType {
-        const val all = 0
-        const val inbox = 1
-        const val sent = 2
-        const val draft = 3
-        const val outbox = 4
-        const val failed = 5
-        const val queued = 6
-    }
-
     object MessageType {
         const val otp = "otp"
         const val transaction = "transaction"

@@ -3,6 +3,7 @@ package com.siddhantkushwaha.carolyn.adapter
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
+import android.provider.Telephony
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +13,6 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.siddhantkushwaha.carolyn.R
-import com.siddhantkushwaha.carolyn.common.Enums
 import com.siddhantkushwaha.carolyn.common.Enums.MessageStatus
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import com.siddhantkushwaha.carolyn.entity.MessageThread
@@ -49,7 +49,7 @@ class ThreadAdapter(
             threadTitleTextView.text = messageThread.getDisplayName()
 
             lastMessageTextView.text = messageThread.lastMessage?.body ?: "No messages."
-            if(messageThread.lastMessage?.smsType != Enums.SMSType.inbox) {
+            if(messageThread.lastMessage?.smsType != Telephony.Sms.MESSAGE_TYPE_INBOX) {
                 lastMessageTextView.text = "You: ${lastMessageTextView.text}"
             }
 
@@ -78,7 +78,7 @@ class ThreadAdapter(
                 threadImageView.setImageResource(R.drawable.icon_user)
             }
 
-            if (messageThread.lastMessage?.smsType == Enums.SMSType.inbox && messageThread.lastMessage?.status == MessageStatus.notRead) {
+            if (messageThread.lastMessage?.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX && messageThread.lastMessage?.status == MessageStatus.notRead) {
                 threadTitleTextView.setTypeface(null, Typeface.BOLD)
                 lastMessageTextView.setTypeface(null, Typeface.BOLD)
                 lastMessageTextView.setTextColor(Color.WHITE)

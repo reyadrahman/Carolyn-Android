@@ -18,6 +18,8 @@ import java.io.InputStream
 
 object TelephonyUtil {
 
+    private val tag = "TelephonyUtil"
+
     data class SMSMessage(
         val id: Int,
         val threadId: Int,
@@ -101,6 +103,8 @@ object TelephonyUtil {
 
                         val isRead = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.READ))
 
+                        val status = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.STATUS))
+
                         val subId =
                             if (c.columnNames.find { it == Telephony.Sms.SUBSCRIPTION_ID } != null) {
                                 c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.SUBSCRIPTION_ID))
@@ -119,7 +123,7 @@ object TelephonyUtil {
                             isRead = isRead == 1
                         )
 
-                        Log.d("TelephonyUtil", "$message")
+                        Log.d(tag, "$message $status")
 
                         // this list will have latest messages at the top
                         messages.add(message)
@@ -136,20 +140,45 @@ object TelephonyUtil {
     public fun saveSms(
         context: Context,
         smsMessage: SMSMessage
-    ) {
+    ): Int {
         val values = ContentValues()
 
-        if (smsMessage.threadId > 0) {
+        if (smsMessage.threadId > 0)
             values.put(Telephony.Sms.THREAD_ID, smsMessage.threadId)
-        }
+
         values.put(Telephony.Sms.ADDRESS, smsMessage.user2)
         values.put(Telephony.Sms.DATE, smsMessage.timestamp)
         values.put(Telephony.Sms.BODY, smsMessage.body)
         values.put(Telephony.Sms.TYPE, smsMessage.type)
         values.put(Telephony.Sms.SUBSCRIPTION_ID, smsMessage.subId)
-        values.put(Telephony.Sms.READ, if (smsMessage.isRead) 1 else 0)
+        values.put(Telephony.Sms.READ, smsMessage.isRead)
 
-        context.contentResolver.insert(Telephony.Sms.Sent.CONTENT_URI, values)
+        val uri = context.contentResolver.insert(Telephony.Sms.CONTENT_URI, values)
+            ?: return 0
+
+        val smsId = uri.toString().split("/").last().toInt()
+
+        Log.d(tag, "Message added at URI: $uri $smsId")
+
+        return smsId
+    }
+
+    public fun markMessageAsRead(context: Context, smsId: Int): Int {
+        val uri = Uri.parse("${Telephony.Sms.CONTENT_URI}/$smsId")
+
+        val values = ContentValues()
+        values.put(Telephony.Sms.READ, 1)
+
+        val numUpdated = context.contentResolver.update(
+            uri,
+            values,
+            null,
+            null
+        )
+
+        Log.d(tag, "Message updated at URI: $uri $smsId")
+
+        return numUpdated
     }
 
     @SuppressLint("MissingPermission")
@@ -198,17 +227,13 @@ object TelephonyUtil {
     }
 
     public fun deleteSMS(context: Context, smsId: Int): Boolean {
-        try {
-            val numDeleted = context.contentResolver.delete(
-                Uri.parse("${Telephony.Sms.CONTENT_URI}/$smsId"),
-                null,
-                null
-            )
-            return numDeleted > 0
-        } catch (exception: Exception) {
-            exception.printStackTrace()
-        }
-        return false
+        val uri = Uri.parse("${Telephony.Sms.CONTENT_URI}/$smsId")
+        val numDeleted = context.contentResolver.delete(
+            uri,
+            null,
+            null
+        )
+        return numDeleted > 0
     }
 
     public fun isDefaultSmsApp(context: Context): Boolean {
