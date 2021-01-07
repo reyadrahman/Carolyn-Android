@@ -9,12 +9,14 @@ import com.siddhantkushwaha.carolyn.common.DbHelper
 import com.siddhantkushwaha.carolyn.common.Enums
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
+import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.entity.Contact
 import com.siddhantkushwaha.carolyn.entity.Rule
 import com.siddhantkushwaha.carolyn.index.IndexTask
 import com.siddhantkushwaha.carolyn.ml.LanguageId
 import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import com.siddhantkushwaha.carolyn.notification.NotificationSender
+import java.time.Instant
 import java.util.*
 
 class SMSReceiver : BroadcastReceiver() {
@@ -25,49 +27,71 @@ class SMSReceiver : BroadcastReceiver() {
 
         val tag = this::class.java.toString()
 
+        val extras = intent.extras ?: return
+
+        // TODO get all keys and upload to db to debug other OEMs
+        val subscription = extras.getInt("subscription")
+
         if (Telephony.Sms.Intents.SMS_RECEIVED_ACTION == intent.action) {
-
-            // save new messages in local database
-            IndexTask(context, true).start()
-
-            val messagesMap = HashMap<String, Pair<String, Long>>()
+            val messagesMap = HashMap<String, TelephonyUtil.SMSMessage>()
 
             for (smsMessage in Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
-
                 val originatingAddress = smsMessage.originatingAddress!!
                 if (!messagesMap.containsKey(originatingAddress)) {
-                    val messageDetails = Pair(smsMessage.messageBody, smsMessage.timestampMillis)
+                    val messageDetails = TelephonyUtil.SMSMessage(
+                        id = 0,
+                        threadId = 0,
+                        user2 = originatingAddress,
+                        timestamp = Instant.now().toEpochMilli(),
+                        body = smsMessage.messageBody,
+                        type = Enums.SMSType.inbox,
+                        subId = subscription,
+                        isRead = false
+                    )
                     messagesMap[originatingAddress] = messageDetails
                 } else {
                     val oldMessageDetails = messagesMap[originatingAddress]
                         ?: throw Exception("Old message details not found.")
-                    val newMessageDetails = Pair(
-                        oldMessageDetails.first + smsMessage.messageBody,
-                        oldMessageDetails.second
+                    val newMessageDetails = TelephonyUtil.SMSMessage(
+                        id = oldMessageDetails.id,
+                        threadId = oldMessageDetails.threadId,
+                        user2 = oldMessageDetails.user2,
+                        timestamp = oldMessageDetails.timestamp,
+                        body = oldMessageDetails.body + smsMessage.messageBody,
+                        type = oldMessageDetails.type,
+                        subId = oldMessageDetails.subId,
+                        isRead = oldMessageDetails.isRead
                     )
                     messagesMap[originatingAddress] = newMessageDetails
                 }
             }
 
-            messagesMap.forEach { (originatingAddress, details) ->
-                processMessage(context, originatingAddress, details.first, details.second)
+            messagesMap.forEach { (_, details) ->
+
+                if (TelephonyUtil.isDefaultSmsApp(context)) {
+                    // we need to save messages manually when our app is default
+                    TelephonyUtil.saveSms(context, details)
+                }
+
+                processMessage(context, details)
             }
+
+            // refresh the local database
+            IndexTask(context, true).start()
         }
     }
 
     private fun processMessage(
         context: Context,
-        user2NotNormalized: String,
-        messageBody: String,
-        timestampMillis: Long
+        message: TelephonyUtil.SMSMessage
     ) {
         // thread to classify and send notification
         val thread = Thread {
 
             val realm = RealmUtil.getCustomRealmInstance(context)
 
-            val user2 = CommonUtil.normalizePhoneNumber(user2NotNormalized)
-                ?: user2NotNormalized.toLowerCase(Locale.getDefault())
+            val user2 = CommonUtil.normalizePhoneNumber(message.user2)
+                ?: message.user2.toLowerCase(Locale.getDefault())
 
             val contact = realm.where(Contact::class.java).equalTo("number", user2).findFirst()
             val rule = realm.where(Rule::class.java).equalTo("user2", user2).findFirst()
@@ -94,7 +118,7 @@ class SMSReceiver : BroadcastReceiver() {
                 else {
 
                     // If language is not english, mark it spam
-                    if (LanguageId.getLanguage(messageBody) != Enums.LanguageType.en) {
+                    if (LanguageId.getLanguage(message.body) != Enums.LanguageType.en) {
                         Enums.MessageType.spam
                     }
 
@@ -102,7 +126,7 @@ class SMSReceiver : BroadcastReceiver() {
                     else {
                         MessageClassifier.doClassification(
                             context,
-                            messageBody,
+                            message.body,
                             skipIfNotDownloaded = true
                         )
                     }
@@ -110,26 +134,21 @@ class SMSReceiver : BroadcastReceiver() {
 
             // Details required for sending notification
             val photoUri = contact?.photoUri
-            val user2DisplayName = contact?.name ?: contact?.number ?: user2NotNormalized
-            val trimmedMessage =
-                if (messageBody.length > 300)
-                    "${messageBody.substring(0, 300)}..."
-                else
-                    messageBody
+            val user2DisplayName = contact?.name ?: contact?.number ?: message.user2
 
             realm.close()
 
-            Log.d(tag, "$messageBody - $messageClass")
+            Log.d(tag, "${message.body} - $messageClass")
 
             // This workaround should do for now
-            val notificationId = timestampMillis.toInt()
+            val notificationId = message.timestamp.toInt()
 
             val notificationSender = NotificationSender(context)
             notificationSender.sendNotification(
                 notificationId,
                 user2,
                 user2DisplayName,
-                trimmedMessage,
+                message.body,
                 photoUri,
                 messageClass
             )

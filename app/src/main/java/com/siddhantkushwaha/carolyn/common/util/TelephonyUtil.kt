@@ -147,7 +147,7 @@ object TelephonyUtil {
         values.put(Telephony.Sms.BODY, smsMessage.body)
         values.put(Telephony.Sms.TYPE, smsMessage.type)
         values.put(Telephony.Sms.SUBSCRIPTION_ID, smsMessage.subId)
-        values.put(Telephony.Sms.READ, smsMessage.isRead)
+        values.put(Telephony.Sms.READ, if (smsMessage.isRead) 1 else 0)
 
         context.contentResolver.insert(Telephony.Sms.Sent.CONTENT_URI, values)
     }
