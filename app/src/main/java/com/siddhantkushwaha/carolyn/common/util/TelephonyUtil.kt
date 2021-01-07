@@ -4,23 +4,27 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.ContentUris
+import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import android.provider.ContactsContract
 import android.provider.Telephony
 import android.telephony.SubscriptionManager
+import android.util.Log
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil.checkPermissions
 import java.io.InputStream
+
 
 object TelephonyUtil {
 
     data class SMSMessage(
+        val threadId: Int,
         val id: Int,
         val user2: String,
         val timestamp: Long,
         val body: String,
-        val sent: Boolean,
+        val type: Int,
         val subId: Int,
         val isRead: Boolean
     )
@@ -75,7 +79,9 @@ object TelephonyUtil {
                 if (c.moveToFirst()) {
                     for (j in 0 until totalSMS) {
 
-                        var smsId = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms._ID))
+                        val smsId = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms._ID))
+
+                        val threadId = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.THREAD_ID))
 
                         val user2: String =
                             c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
@@ -84,13 +90,13 @@ object TelephonyUtil {
 
                         /*
                         Epoch time
-                    */
+                        */
                         val date = c.getLong(c.getColumnIndexOrThrow(Telephony.Sms.DATE))
 
                         /*
                         1 - Received
                         2 - Sent
-                    */
+                        */
                         val type: Int = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.TYPE))
 
                         val isRead = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.READ))
@@ -103,14 +109,17 @@ object TelephonyUtil {
                             }
 
                         val message = SMSMessage(
+                            threadId = threadId,
                             id = smsId,
                             user2 = user2,
                             timestamp = date,
                             body = body,
-                            sent = type == 2,
+                            type = type,
                             subId = subId,
                             isRead = isRead == 1
                         )
+
+                        Log.d("----", "$message")
 
                         // this list will have latest messages at the top
                         messages.add(message)
@@ -122,6 +131,23 @@ object TelephonyUtil {
             }
         }
         return messages
+    }
+
+    public fun saveSms(
+        context: Context,
+        senderAddress: String,
+        body: String,
+        timestamp: Long,
+        type: Int,
+        subId: Int
+    ) {
+        val values = ContentValues()
+        values.put(Telephony.Sms.ADDRESS, senderAddress)
+        values.put(Telephony.Sms.BODY, body)
+        values.put(Telephony.Sms.DATE, timestamp)
+        values.put(Telephony.Sms.SUBSCRIPTION_ID, subId)
+        values.put(Telephony.Sms.TYPE, type)
+        context.contentResolver.insert(Telephony.Sms.Sent.CONTENT_URI, values)
     }
 
     @SuppressLint("MissingPermission")

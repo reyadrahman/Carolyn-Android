@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.siddhantkushwaha.carolyn.R
+import com.siddhantkushwaha.carolyn.common.Enums
 import com.siddhantkushwaha.carolyn.common.Enums.MessageType
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import com.siddhantkushwaha.carolyn.entity.Message
@@ -25,7 +26,7 @@ class MessageAdapter(
     private val TYPE_MESSAGE_RECEIVED = 2
 
     override fun getItemViewType(position: Int): Int {
-        return if (data!![position].sent != false) TYPE_MESSAGE_SENT else TYPE_MESSAGE_RECEIVED
+        return if (data!![position].smsType != Enums.SMSType.inbox) TYPE_MESSAGE_SENT else TYPE_MESSAGE_RECEIVED
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -84,7 +85,7 @@ class MessageAdapter(
             messageTimestampTextView.text =
                 CommonUtil.formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
 
-            sentViaSubscription.text = message.messageThread?.user1 ?: ""
+            sentViaSubscription.text = message.user1 ?: ""
 
             itemView.setOnClickListener {
                 clickListener(message)
@@ -122,7 +123,7 @@ class MessageAdapter(
             messageTimestampTextView.text =
                 CommonUtil.formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
 
-            receivedOnNumberTextView.text = message.messageThread?.user1 ?: ""
+            receivedOnNumberTextView.text = message.user1 ?: ""
 
             itemView.setOnClickListener {
                 clickListener(message)

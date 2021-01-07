@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.MessageAdapter
+import com.siddhantkushwaha.carolyn.common.Enums
 import com.siddhantkushwaha.carolyn.common.Enums.MessageStatus
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TaskUtil
@@ -94,7 +95,7 @@ class ActivityMessage : ActivityBase() {
                         realmT.where(Message::class.java).equalTo("messageThread.user2", user2)
                             .findAll()
                     messagesForThread.forEach { message ->
-                        if (message.sent == false && message.status == MessageStatus.notRead) {
+                        if (message.smsType == Enums.SMSType.inbox && message.status == MessageStatus.notRead) {
                             message.status = MessageStatus.read
                             realmT.insertOrUpdate(message)
                         }

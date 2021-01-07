@@ -33,6 +33,7 @@ class SMSReceiver : BroadcastReceiver() {
             val messagesMap = HashMap<String, Pair<String, Long>>()
 
             for (smsMessage in Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
+
                 val originatingAddress = smsMessage.originatingAddress!!
                 if (!messagesMap.containsKey(originatingAddress)) {
                     val messageDetails = Pair(smsMessage.messageBody, smsMessage.timestampMillis)
