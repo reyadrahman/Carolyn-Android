@@ -201,18 +201,15 @@ class ActivityMessage : ActivityBase() {
 
         val subId = subscriptions[initialSenderSimIndex].subId
 
-        // right now just adding whole message as one part
-        val messageParts = ArrayList<String>()
-        messageParts.add(message)
-
         val scAddress = null
-        val sentIntents = null
-        val delIntents = null
+
+        val sentIntent = null
+        val delIntent = null
 
         val smsManager = SmsManager.getSmsManagerForSubscriptionId(subId)
-        smsManager.sendMultipartTextMessage(
+        smsManager.sendTextMessage(
             thread.user2, scAddress,
-            messageParts, sentIntents, delIntents
+            message, sentIntent, delIntent
         )
     }
 }

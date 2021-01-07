@@ -19,8 +19,8 @@ import java.io.InputStream
 object TelephonyUtil {
 
     data class SMSMessage(
-        val threadId: Int,
         val id: Int,
+        val threadId: Int,
         val user2: String,
         val timestamp: Long,
         val body: String,
@@ -119,7 +119,7 @@ object TelephonyUtil {
                             isRead = isRead == 1
                         )
 
-                        Log.d("----", "$message")
+                        Log.d("TelephonyUtil", "$message")
 
                         // this list will have latest messages at the top
                         messages.add(message)
@@ -135,18 +135,20 @@ object TelephonyUtil {
 
     public fun saveSms(
         context: Context,
-        senderAddress: String,
-        body: String,
-        timestamp: Long,
-        type: Int,
-        subId: Int
+        smsMessage: SMSMessage
     ) {
         val values = ContentValues()
-        values.put(Telephony.Sms.ADDRESS, senderAddress)
-        values.put(Telephony.Sms.BODY, body)
-        values.put(Telephony.Sms.DATE, timestamp)
-        values.put(Telephony.Sms.SUBSCRIPTION_ID, subId)
-        values.put(Telephony.Sms.TYPE, type)
+
+        if (smsMessage.threadId > 0) {
+            values.put(Telephony.Sms.THREAD_ID, smsMessage.threadId)
+        }
+        values.put(Telephony.Sms.ADDRESS, smsMessage.user2)
+        values.put(Telephony.Sms.DATE, smsMessage.timestamp)
+        values.put(Telephony.Sms.BODY, smsMessage.body)
+        values.put(Telephony.Sms.TYPE, smsMessage.type)
+        values.put(Telephony.Sms.SUBSCRIPTION_ID, smsMessage.subId)
+        values.put(Telephony.Sms.READ, smsMessage.isRead)
+
         context.contentResolver.insert(Telephony.Sms.Sent.CONTENT_URI, values)
     }
 
@@ -206,7 +208,7 @@ object TelephonyUtil {
         } catch (exception: Exception) {
             exception.printStackTrace()
         }
-        return false;
+        return false
     }
 
     public fun isDefaultSmsApp(context: Context): Boolean {
