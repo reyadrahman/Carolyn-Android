@@ -8,6 +8,7 @@ import com.siddhantkushwaha.carolyn.adapter.MessageAdapter
 import com.siddhantkushwaha.carolyn.common.Enums.MessageStatus
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TaskUtil
+import com.siddhantkushwaha.carolyn.entity.Contact
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.index.IndexTask
@@ -47,8 +48,17 @@ class ActivityMessage : ActivityBase() {
         messages = realm.where(Message::class.java).equalTo("messageThread.user2", user2)
             .sort("timestamp", Sort.ASCENDING).findAllAsync()
 
-        thread = realm.where(MessageThread::class.java).equalTo("user2", user2).findFirst()
-            ?: throw Exception("Thread not found for given user.")
+        var threadL = realm.where(MessageThread::class.java).equalTo("user2", user2).findFirst()
+        if (threadL == null) {
+             realm.executeTransaction {realmT ->
+                threadL  = realmT.createObject(MessageThread::class.java, user2) ?: throw Exception("Realm Error")
+                 val contact = realmT.where(Contact::class.java).equalTo("number", user2).findFirst()
+                 threadL!!.contact = contact
+                 realmT.insertOrUpdate(threadL)
+             }
+        }
+
+        thread = threadL!!
 
         header_title.text = thread.getDisplayName()
 
