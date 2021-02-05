@@ -3,6 +3,7 @@ package com.siddhantkushwaha.carolyn.adapter
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
+import android.provider.Telephony
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -48,7 +49,7 @@ class ThreadAdapter(
             threadTitleTextView.text = messageThread.getDisplayName()
 
             lastMessageTextView.text = messageThread.lastMessage?.body ?: "No messages."
-            if(messageThread.lastMessage?.sent == true) {
+            if(messageThread.lastMessage?.smsType != Telephony.Sms.MESSAGE_TYPE_INBOX) {
                 lastMessageTextView.text = "You: ${lastMessageTextView.text}"
             }
 
@@ -77,7 +78,7 @@ class ThreadAdapter(
                 threadImageView.setImageResource(R.drawable.icon_user)
             }
 
-            if (messageThread.lastMessage?.sent == false && messageThread.lastMessage?.status == MessageStatus.notRead) {
+            if (messageThread.lastMessage?.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX && messageThread.lastMessage?.status == MessageStatus.notRead) {
                 threadTitleTextView.setTypeface(null, Typeface.BOLD)
                 lastMessageTextView.setTypeface(null, Typeface.BOLD)
                 lastMessageTextView.setTextColor(Color.WHITE)

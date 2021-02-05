@@ -1,11 +1,8 @@
 package com.siddhantkushwaha.carolyn.activity
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import android.widget.Toast
-import android.widget.Toolbar
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.ContactAdapter
@@ -16,6 +13,7 @@ import io.realm.Realm
 import io.realm.RealmResults
 import io.realm.Sort
 import kotlinx.android.synthetic.main.activity_send_new_message.*
+
 
 class ActivitySendNewMessage : AppCompatActivity() {
 
@@ -31,7 +29,7 @@ class ActivitySendNewMessage : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         realm = RealmUtil.getCustomRealmInstance(this)
 
-        contacts =  realm
+        contacts = realm
             .where(Contact::class.java)
             .isNotNull("number")
             .sort("name", Sort.ASCENDING).findAllAsync()

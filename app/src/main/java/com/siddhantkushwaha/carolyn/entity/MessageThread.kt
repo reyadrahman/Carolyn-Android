@@ -6,8 +6,6 @@ import io.realm.annotations.PrimaryKey
 
 open class MessageThread : RealmObject() {
 
-    var user1: String? = null
-
     @PrimaryKey
     var user2: String? = null
 

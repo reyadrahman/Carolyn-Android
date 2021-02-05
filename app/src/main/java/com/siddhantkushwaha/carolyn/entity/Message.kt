@@ -13,7 +13,7 @@ open class Message : RealmObject() {
 
     var timestamp: Long? = null
     var body: String? = null
-    var sent: Boolean? = null
+    var smsType: Int? = null
 
     var status: String? = null
 
@@ -23,4 +23,6 @@ open class Message : RealmObject() {
     var messageThread: MessageThread? = null
 
     var classificationSource: String? = null
+
+    var user1: String? = null
 }

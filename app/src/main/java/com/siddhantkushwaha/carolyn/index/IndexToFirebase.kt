@@ -42,7 +42,7 @@ class IndexToFirebase(private val context: Context) {
 
                 data["userId"] = firebaseAuth.currentUser?.email ?: "unknown"
                 data["messageId"] = message.id!!
-                data["user1"] = message.messageThread!!.user1!!
+                data["user1"] = message!!.user1!!
                 data["user2"] = message.messageThread!!.user2!!
                 data["timestamp"] = "${message.timestamp!!}"
                 data["body"] = body

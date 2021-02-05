@@ -85,11 +85,11 @@ class ActivitySettings : ActivityBase() {
 
             val dataSet = PieDataSet(values, "")
             dataSet.setColors(
-                ContextCompat.getColor(this, R.color.colorDist1),
-                ContextCompat.getColor(this, R.color.colorDist2),
-                ContextCompat.getColor(this, R.color.colorDist3),
-                ContextCompat.getColor(this, R.color.colorDist4),
-                ContextCompat.getColor(this, R.color.colorDist5)
+                ContextCompat.getColor(this, R.color.color1),
+                ContextCompat.getColor(this, R.color.color2),
+                ContextCompat.getColor(this, R.color.color3),
+                ContextCompat.getColor(this, R.color.color4),
+                ContextCompat.getColor(this, R.color.color5)
             )
 
             val data = PieData(dataSet)

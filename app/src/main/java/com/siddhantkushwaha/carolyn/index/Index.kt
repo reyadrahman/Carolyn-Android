@@ -1,6 +1,7 @@
 package com.siddhantkushwaha.carolyn.index
 
 import android.content.Context
+import android.provider.Telephony
 import android.util.Log
 import com.siddhantkushwaha.carolyn.common.DbHelper
 import com.siddhantkushwaha.carolyn.common.Enums
@@ -63,7 +64,7 @@ class Index(
 
         val messageIds =
             messages.map { message ->
-                CommonUtil.getHash("${message.timestamp}, ${message.body}, ${message.sent}")
+                CommonUtil.getHash("${message.timestamp}, ${message.body}")
             }.toHashSet()
 
         allMessages.forEach { indexedMessage ->
@@ -79,7 +80,7 @@ class Index(
     private fun addMessages(
         realm: Realm,
         messages: ArrayList<TelephonyUtil.SMSMessage>,
-        subscriptions: HashMap<Int, String>
+        subscriptions: HashMap<Int, TelephonyUtil.SubscriptionInfo>
     ) {
         val breakpoint = if (optimized) {
             realm.where(Message::class.java).sort("timestamp", Sort.DESCENDING)
@@ -100,16 +101,16 @@ class Index(
     private fun indexMessage(
         realm: Realm,
         message: TelephonyUtil.SMSMessage,
-        subscriptions: HashMap<Int, String>
+        subscriptions: HashMap<Int, TelephonyUtil.SubscriptionInfo>
     ): Int {
 
-        val user1 = subscriptions[message.subId] ?: "unknown"
+        val user1 = subscriptions[message.subId]?.number ?: "unknown"
 
         val user2 =
             CommonUtil.normalizePhoneNumber(message.user2)
                 ?: message.user2.toLowerCase(Locale.getDefault())
 
-        val id = CommonUtil.getHash("${message.timestamp}, ${message.body}, ${message.sent}")
+        val id = CommonUtil.getHash("${message.timestamp}, ${message.body}")
         realm.executeTransaction { realmT ->
 
             var realmThread =
@@ -117,10 +118,6 @@ class Index(
             if (realmThread == null) {
                 realmThread = realm.createObject(MessageThread::class.java, user2)
                     ?: throw Exception("Could not create Thread object.")
-            }
-
-            if (realmThread.user1 == null) {
-                realmThread.user1 = user1
             }
 
             if (realmThread.contact == null) {
@@ -136,17 +133,18 @@ class Index(
                     ?: throw Exception("Could not create Message object.")
                 realmMessage.body = message.body
                 realmMessage.timestamp = message.timestamp
-                realmMessage.sent = message.sent
+                realmMessage.smsType = message.type
                 realmMessage.language = LanguageId.getLanguage(message.body)
             }
 
             realmMessage.smsId = message.id
+            realmMessage.user1 = user1
 
             if (message.timestamp > realmThread.lastMessage?.timestamp ?: 0) {
                 realmThread.lastMessage = realmMessage
             }
 
-            if (realmMessage.sent == false) {
+            if (realmMessage.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX) {
                 // don't update status of read messages
                 if (realmMessage.status != Enums.MessageStatus.read) {
                     realmMessage.status =
@@ -179,7 +177,7 @@ class Index(
             }
 
             // If user is not in rules, or not in contacts, check if it is a sent message, if yes, mark as personal
-            else if (realmMessage.sent == true) {
+            else if (realmMessage.smsType != Telephony.Sms.MESSAGE_TYPE_INBOX) {
                 realmMessage.type = null
                 realmMessage.classificationSource = Enums.SourceType.sentMessage
             }
