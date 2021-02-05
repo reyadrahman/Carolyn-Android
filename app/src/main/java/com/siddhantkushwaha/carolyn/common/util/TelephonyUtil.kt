@@ -199,12 +199,14 @@ object TelephonyUtil {
                 while (cursor.moveToNext()) {
                     val contactId =
                         cursor.getLong(cursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup.CONTACT_ID))
-                    var phoneNumber: String =
+                    val phoneNumber: String =
                         cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
                     val name: String =
                         cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
-                    phoneNumber = CommonUtil.normalizePhoneNumber(phoneNumber) ?: "Unknown"
-                    contactsList[phoneNumber] = ContactInfo(contactId, phoneNumber, name)
+                    val phoneNumberNormalized = CommonUtil.normalizePhoneNumber(phoneNumber)
+                    if (phoneNumberNormalized != null) {
+                        contactsList[phoneNumberNormalized] = ContactInfo(contactId, phoneNumber, name)
+                    }
                 }
                 cursor.close()
             }

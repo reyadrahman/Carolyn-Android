@@ -22,7 +22,7 @@ class ContactAdapter(
 ) : RealmRecyclerViewAdapter<Contact, RecyclerView.ViewHolder>(data, autoUpdate) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.activity_contact, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_contact, parent, false)
         return ContactHolder(context, view)
     }
 
