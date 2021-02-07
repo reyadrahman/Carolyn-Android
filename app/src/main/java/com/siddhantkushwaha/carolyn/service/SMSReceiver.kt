@@ -91,7 +91,7 @@ class SMSReceiver : BroadcastReceiver() {
             val realm = RealmUtil.getCustomRealmInstance(context)
 
             val user2 = CommonUtil.normalizePhoneNumber(message.user2)
-                ?: message.user2.toLowerCase(Locale.getDefault())
+                ?: message.user2.replace("-", "").toLowerCase(Locale.getDefault())
 
             val contact = realm.where(Contact::class.java).equalTo("number", user2).findFirst()
             val rule = realm.where(Rule::class.java).equalTo("user2", user2).findFirst()

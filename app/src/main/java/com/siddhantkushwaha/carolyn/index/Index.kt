@@ -108,7 +108,7 @@ class Index(
 
         val user2 =
             CommonUtil.normalizePhoneNumber(message.user2)
-                ?: message.user2.toLowerCase(Locale.getDefault())
+                ?: message.user2.replace("-", "").toLowerCase(Locale.getDefault())
 
         val id = CommonUtil.getHash("${message.timestamp}, ${message.body}")
         realm.executeTransaction { realmT ->
