@@ -1,5 +1,7 @@
 package com.siddhantkushwaha.carolyn.adapter
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.provider.Telephony
 import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
@@ -19,8 +21,8 @@ import io.realm.RealmRecyclerViewAdapter
 class MessageAdapter(
     data: OrderedRealmCollection<Message>,
     autoUpdate: Boolean,
-    private val clickListener: (Message) -> Unit,
-    private val longClickListener: (Message) -> Unit
+    private val longClickListener: (Message) -> Unit,
+    public var messageType: String?
 ) : RealmRecyclerViewAdapter<Message, RecyclerView.ViewHolder>(data, autoUpdate) {
 
     private val TYPE_MESSAGE_SENT = 1
@@ -54,13 +56,13 @@ class MessageAdapter(
         val message = data!![position]
         when (holder.itemViewType) {
             TYPE_MESSAGE_SENT -> {
-                (holder as SentMessageViewHolder).bind(message, clickListener, longClickListener)
+                (holder as SentMessageViewHolder).bind(message, longClickListener)
             }
             TYPE_MESSAGE_RECEIVED -> {
                 (holder as ReceivedMessageViewHolder).bind(
                     message,
-                    clickListener,
-                    longClickListener
+                    longClickListener,
+                    messageType
                 )
             }
             else -> {
@@ -72,7 +74,6 @@ class MessageAdapter(
     private class SentMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(
             message: Message,
-            clickListener: (Message) -> Unit,
             longClickListener: (Message) -> Unit
         ) {
             val messageBodyTextView = itemView.findViewById<TextView>(R.id.textview_message_text)
@@ -90,7 +91,7 @@ class MessageAdapter(
             sentViaSubscription.text = message.user1 ?: ""
 
             itemView.setOnClickListener {
-                clickListener(message)
+
             }
 
             itemView.setOnLongClickListener {
@@ -103,38 +104,64 @@ class MessageAdapter(
     private class ReceivedMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(
             message: Message,
-            clickListener: (Message) -> Unit,
-            longClickListener: (Message) -> Unit
+            longClickListener: (Message) -> Unit,
+            messageType: String?
         ) {
-            val messageBodyTextView = itemView.findViewById<TextView>(R.id.textview_message_text)
-            val messageClassIcon = itemView.findViewById<ImageView>(R.id.image_view_message_class)
-            val messageTimestampTextView =
-                itemView.findViewById<TextView>(R.id.textview_message_timestamp)
-            val receivedOnNumberTextView =
-                itemView.findViewById<TextView>(R.id.textview_message_subscription)
-
-            messageBodyTextView.movementMethod = LinkMovementMethod.getInstance()
-            messageBodyTextView.text = message.body
-            when (message.type) {
-                MessageType.otp -> messageClassIcon.setImageResource(R.drawable.icon_message_otp)
-                MessageType.transaction -> messageClassIcon.setImageResource(R.drawable.icon_message_transaction)
-                MessageType.update -> messageClassIcon.setImageResource(R.drawable.icon_message_update)
-                MessageType.spam -> messageClassIcon.setImageResource(R.drawable.icon_message_spam)
-                null -> messageClassIcon.setImageResource(R.drawable.icon_message_personal)
-            }
-
-            messageTimestampTextView.text =
-                CommonUtil.formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
-
-            receivedOnNumberTextView.text = message.user1 ?: ""
+            val showMessage: Boolean = messageType == "view-all" || messageType == message.type
+            bindMessage(message, showMessage = showMessage)
 
             itemView.setOnClickListener {
-                clickListener(message)
+
             }
 
             itemView.setOnLongClickListener {
                 longClickListener(message)
                 true
+            }
+        }
+
+        private fun bindMessage(message: Message, showMessage: Boolean) {
+            val messageBodyTextView = itemView.findViewById<TextView>(R.id.textview_message_text)
+            val messageTimestampTextView =
+                itemView.findViewById<TextView>(R.id.textview_message_timestamp)
+            val receivedOnNumberTextView =
+                itemView.findViewById<TextView>(R.id.textview_message_subscription)
+            val messageClassIcon = itemView.findViewById<ImageView>(R.id.image_view_message_class)
+
+            // change states to hide message
+            if (!showMessage) {
+                messageBodyTextView.text = "Hidden."
+                messageBodyTextView.setTextColor(Color.GRAY)
+                messageBodyTextView.backgroundTintList = ColorStateList.valueOf(Color.BLACK)
+
+                messageTimestampTextView.visibility = View.GONE
+                receivedOnNumberTextView.visibility = View.GONE
+
+                when (message.type) {
+                    MessageType.otp -> messageClassIcon.setImageResource(R.drawable.icon_message_otp)
+                    MessageType.transaction -> messageClassIcon.setImageResource(R.drawable.icon_message_transaction)
+                    MessageType.update -> messageClassIcon.setImageResource(R.drawable.icon_message_update)
+                    MessageType.spam -> messageClassIcon.setImageResource(R.drawable.icon_message_spam)
+                    null -> messageClassIcon.setImageResource(R.drawable.icon_message_personal)
+                }
+                messageClassIcon.visibility = View.VISIBLE
+            }
+
+            // change states to shoe message
+            else {
+                messageBodyTextView.text = message.body
+                messageBodyTextView.setTextColor(Color.WHITE)
+                messageBodyTextView.backgroundTintList = null
+                messageBodyTextView.movementMethod = LinkMovementMethod.getInstance()
+
+                messageTimestampTextView.text =
+                    CommonUtil.formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
+                messageTimestampTextView.visibility = View.VISIBLE
+
+                receivedOnNumberTextView.text = message.user1 ?: ""
+                receivedOnNumberTextView.visibility = View.VISIBLE
+
+                messageClassIcon.visibility = View.GONE
             }
         }
     }

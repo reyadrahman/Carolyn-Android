@@ -34,6 +34,7 @@ class ActivityMessage : ActivityBase() {
     private lateinit var messagesChangeListener: OrderedRealmCollectionChangeListener<RealmResults<Message>>
 
     private lateinit var thread: MessageThread
+    private var showMessageType: String? = null
 
     private var initialSenderSimIndex = -1
     private val subscriptions: ArrayList<TelephonyUtil.SubscriptionInfo> = ArrayList()
@@ -58,6 +59,8 @@ class ActivityMessage : ActivityBase() {
 
         val user2 = intent.getStringExtra("user2")
             ?: throw Exception("This activity requires user2 field in intent extras.")
+        showMessageType = intent.getStringExtra("view-type")
+
         messages = realm.where(Message::class.java).equalTo("messageThread.user2", user2)
             .sort("timestamp", Sort.ASCENDING).findAllAsync()
 
@@ -79,9 +82,6 @@ class ActivityMessage : ActivityBase() {
         messageAdapter = MessageAdapter(
             messages,
             true,
-            clickListener = {
-
-            },
             longClickListener = {
 
                 // TODO ******* Experimental *********
@@ -91,7 +91,8 @@ class ActivityMessage : ActivityBase() {
                 }
 
                 IndexTask(this, false).start()
-            }
+            },
+            messageType = showMessageType
         )
 
         messagesChangeListener = OrderedRealmCollectionChangeListener { _, _ ->

@@ -7,12 +7,10 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Telephony
 import androidx.core.content.ContextCompat
-import com.bumptech.glide.Glide
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
-import com.google.android.gms.tasks.Tasks
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.storage.FirebaseStorage
 import com.siddhantkushwaha.carolyn.R
@@ -21,7 +19,6 @@ import com.siddhantkushwaha.carolyn.common.Enums
 import com.siddhantkushwaha.carolyn.common.RequestCodes
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
-import com.siddhantkushwaha.carolyn.entity.GlobalParam
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.index.IndexTask
 import com.siddhantkushwaha.carolyn.ml.MessageClassifier

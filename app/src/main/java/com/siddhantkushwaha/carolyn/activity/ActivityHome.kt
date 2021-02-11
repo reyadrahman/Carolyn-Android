@@ -48,7 +48,9 @@ class ActivityHome : ActivityBase() {
 
         realm = RealmUtil.getCustomRealmInstance(this)
 
-        when (savedInstanceState?.getInt("selected_view")) {
+        bottom_nav_filter.selectedItemId =
+            savedInstanceState?.getInt("selected_view") ?: R.id.otp
+        when (bottom_nav_filter.selectedItemId) {
             R.id.personal ->
                 threads = getPersonalThreadsQuery()
             R.id.otp ->
@@ -59,16 +61,20 @@ class ActivityHome : ActivityBase() {
                 threads = getThreadsForTypeQuery(Enums.MessageType.update)
             R.id.spam ->
                 threads = getThreadsForTypeQuery(Enums.MessageType.spam)
-            null -> {
-                threads = getThreadsForTypeQuery(Enums.MessageType.otp)
-                bottom_nav_filter.selectedItemId = R.id.otp
-            }
         }
 
         threadsAdapter = ThreadAdapter(this, threads, true, itemClickListener = { _, th ->
-            val messageActivityIntent = Intent(this, ActivityMessage::class.java)
-            messageActivityIntent.putExtra("user2", th.user2)
-            startActivity(messageActivityIntent)
+            val intent = Intent(this, ActivityMessage::class.java)
+            intent.putExtra("user2", th.user2)
+            when (bottom_nav_filter.selectedItemId) {
+                // R.id.personal -> don't send, so it will be picked as null and only personal type will be shown
+                // to show all types, "view-all" will be used
+                R.id.otp -> intent.putExtra("view-type", Enums.MessageType.otp)
+                R.id.transaction -> intent.putExtra("view-type", Enums.MessageType.transaction)
+                R.id.update -> intent.putExtra("view-type", Enums.MessageType.update)
+                R.id.spam -> intent.putExtra("view-type", Enums.MessageType.spam)
+            }
+            startActivity(intent)
         })
 
         threadsChangeListener = OrderedRealmCollectionChangeListener { _, _ ->
