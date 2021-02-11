@@ -1,6 +1,7 @@
 package com.siddhantkushwaha.carolyn.adapter
 
 import android.provider.Telephony
+import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -80,6 +81,7 @@ class MessageAdapter(
             val sentViaSubscription =
                 itemView.findViewById<TextView>(R.id.textview_message_subscription)
 
+            messageBodyTextView.movementMethod = LinkMovementMethod.getInstance()
             messageBodyTextView.text = message.body
 
             messageTimestampTextView.text =
@@ -111,6 +113,7 @@ class MessageAdapter(
             val receivedOnNumberTextView =
                 itemView.findViewById<TextView>(R.id.textview_message_subscription)
 
+            messageBodyTextView.movementMethod = LinkMovementMethod.getInstance()
             messageBodyTextView.text = message.body
             when (message.type) {
                 MessageType.otp -> messageClassIcon.setImageResource(R.drawable.icon_message_otp)

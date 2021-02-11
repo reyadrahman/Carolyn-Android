@@ -18,7 +18,7 @@ import java.io.InputStream
 
 object TelephonyUtil {
 
-    private val tag = "TelephonyUtil"
+    private val tag = javaClass.toString()
 
     data class SMSMessage(
         val id: Int,
@@ -46,11 +46,7 @@ object TelephonyUtil {
     @SuppressLint("MissingPermission")
     public fun getSubscriptions(context: Context): HashMap<Int, SubscriptionInfo>? {
         var subscriptions: HashMap<Int, SubscriptionInfo>? = null
-        if (checkPermissions(
-                context,
-                arrayOf(Manifest.permission.READ_PHONE_STATE)
-            ).isEmpty()
-        ) {
+        if (checkPermissions(context, arrayOf(Manifest.permission.READ_PHONE_STATE)).isEmpty()) {
             val subscriptionManager = context.getSystemService(SubscriptionManager::class.java)
             subscriptions = HashMap()
             subscriptionManager.activeSubscriptionInfoList.forEach {
@@ -66,81 +62,74 @@ object TelephonyUtil {
         return subscriptions
     }
 
-    @SuppressLint("MissingPermission")
     public fun getAllSms(context: Context): ArrayList<SMSMessage>? {
         var messages: ArrayList<SMSMessage>? = null
-        if (checkPermissions(
-                context,
-                arrayOf(Manifest.permission.READ_SMS)
-            ).isEmpty()
-        ) {
+        if (checkPermissions(context, arrayOf(Manifest.permission.READ_SMS)).isEmpty()) {
             messages = ArrayList()
-            val c = context.contentResolver.query(Telephony.Sms.CONTENT_URI, null, null, null, null)
-            if (c != null) {
-                val totalSMS = c.count
-                if (c.moveToFirst()) {
-                    for (j in 0 until totalSMS) {
+            val cursor = context.contentResolver.query(
+                Telephony.Sms.CONTENT_URI,
+                null,
+                null,
+                null,
+                null
+            )
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
 
-                        val smsId = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms._ID))
+                    val smsId = cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Sms._ID))
 
-                        val threadId = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.THREAD_ID))
+                    val threadId =
+                        cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Sms.THREAD_ID))
 
-                        val user2: String =
-                            c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
+                    val user2: String =
+                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
+                            ?: continue
 
-                        val body: String = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.BODY))
+                    val body: String =
+                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.BODY))
 
-                        /*
-                        Epoch time
-                        */
-                        val date = c.getLong(c.getColumnIndexOrThrow(Telephony.Sms.DATE))
+                    // Epoch time
+                    val date = cursor.getLong(cursor.getColumnIndexOrThrow(Telephony.Sms.DATE))
 
-                        /*
+                    /*
                         1 - Received
                         2 - Sent
-                        */
-                        val type: Int = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.TYPE))
+                    */
+                    val type: Int =
+                        cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Sms.TYPE))
 
-                        val isRead = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.READ))
+                    val isRead = cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Sms.READ))
 
-                        val status = c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.STATUS))
+                    val status = cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Sms.STATUS))
 
-                        val subId =
-                            if (c.columnNames.find { it == Telephony.Sms.SUBSCRIPTION_ID } != null) {
-                                c.getInt(c.getColumnIndexOrThrow(Telephony.Sms.SUBSCRIPTION_ID))
-                            } else {
-                                c.getInt(c.getColumnIndex("sim_id"))
-                            }
+                    val subId =
+                        if (cursor.columnNames.find { it == Telephony.Sms.SUBSCRIPTION_ID } != null) {
+                            cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Sms.SUBSCRIPTION_ID))
+                        } else {
+                            cursor.getInt(cursor.getColumnIndex("sim_id"))
+                        }
 
-                        val message = SMSMessage(
-                            threadId = threadId,
-                            id = smsId,
-                            user2 = user2,
-                            timestamp = date,
-                            body = body,
-                            type = type,
-                            subId = subId,
-                            isRead = isRead == 1
-                        )
+                    val message = SMSMessage(
+                        threadId = threadId,
+                        id = smsId,
+                        user2 = user2,
+                        timestamp = date,
+                        body = body,
+                        type = type,
+                        subId = subId,
+                        isRead = isRead == 1
+                    )
 
-                        Log.d(tag, "$message $status")
-
-                        // this list will have latest messages at the top
-                        messages.add(message)
-
-                        c.moveToNext()
-                    }
+                    // this list will have latest messages at the top
+                    messages.add(message)
                 }
-                c.close()
+                cursor.close()
             }
         }
         return messages
     }
 
-    public fun saveSms(
-        context: Context,
-        smsMessage: SMSMessage
-    ): Int {
+    public fun saveSms(context: Context, smsMessage: SMSMessage): Int {
         val values = ContentValues()
 
         if (smsMessage.threadId > 0)
@@ -181,16 +170,9 @@ object TelephonyUtil {
         return numUpdated
     }
 
-    @SuppressLint("MissingPermission")
-    public fun getAllContacts(
-        context: Context,
-    ): HashMap<String, ContactInfo>? {
+    public fun getAllContacts(context: Context): HashMap<String, ContactInfo>? {
         var contactsList: HashMap<String, ContactInfo>? = null
-        if (checkPermissions(
-                context,
-                arrayOf(Manifest.permission.READ_CONTACTS)
-            ).isEmpty()
-        ) {
+        if (checkPermissions(context, arrayOf(Manifest.permission.READ_CONTACTS)).isEmpty()) {
             contactsList = HashMap()
             val contentResolver: ContentResolver = context.contentResolver
             val uri: Uri = ContactsContract.CommonDataKinds.Contactables.CONTENT_URI
@@ -205,7 +187,8 @@ object TelephonyUtil {
                         cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
                     val phoneNumberNormalized = CommonUtil.normalizePhoneNumber(phoneNumber)
                     if (phoneNumberNormalized != null) {
-                        contactsList[phoneNumberNormalized] = ContactInfo(contactId, phoneNumber, name)
+                        contactsList[phoneNumberNormalized] =
+                            ContactInfo(contactId, phoneNumber, name)
                     }
                 }
                 cursor.close()
