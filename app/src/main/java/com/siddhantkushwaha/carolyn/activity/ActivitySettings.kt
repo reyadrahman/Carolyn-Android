@@ -61,7 +61,6 @@ class ActivitySettings : ActivityBase() {
         }
 
         populatePie()
-        populateContributors()
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -111,66 +110,6 @@ class ActivitySettings : ActivityBase() {
             pie_chart_type_distribution.setTransparentCircleAlpha(0)
 
             realm.close()
-        }
-        th.start()
-    }
-
-    private fun populateContributors() {
-        val th = Thread {
-            try {
-                val realm = RealmUtil.getCustomRealmInstance(this)
-                realm.executeTransaction {
-                    val ayuRef = "contributors/ayushi.jpg"
-                    var ayuGP =
-                        realm.where(GlobalParam::class.java).equalTo("attrName", ayuRef).findFirst()
-                    val sidRef = "contributors/sid.jpg"
-                    var sidGP =
-                        realm.where(GlobalParam::class.java).equalTo("attrName", sidRef).findFirst()
-
-                    var ayuUri = ayuGP?.attrVal
-                    var sidUri = sidGP?.attrVal
-                    runOnUiThread {
-                        Glide.with(this).load(ayuUri).error(R.drawable.icon_user)
-                            .circleCrop()
-                            .into(c5)
-                        Glide.with(this).load(sidUri).error(R.drawable.icon_user)
-                            .circleCrop()
-                            .into(c6)
-                    }
-
-
-                    if (ayuGP == null) {
-                        ayuGP = realm.createObject(GlobalParam::class.java, ayuRef)
-                            ?: throw Exception("Error")
-                    }
-                    if (sidGP == null) {
-                        sidGP = realm.createObject(GlobalParam::class.java, sidRef)
-                            ?: throw Exception("Error")
-                    }
-
-                    ayuGP.attrVal =
-                        Tasks.await(firebaseStorage.getReference(ayuRef).downloadUrl)?.toString()
-                    sidGP.attrVal =
-                        Tasks.await(firebaseStorage.getReference(sidRef).downloadUrl)?.toString()
-
-                    ayuUri = ayuGP.attrVal
-                    sidUri = sidGP.attrVal
-                    runOnUiThread {
-                        Glide.with(this).load(ayuUri).error(R.drawable.icon_user)
-                            .circleCrop()
-                            .into(c5)
-                        Glide.with(this).load(sidUri).error(R.drawable.icon_user)
-                            .circleCrop()
-                            .into(c6)
-                    }
-
-                    realm.insertOrUpdate(ayuGP)
-                    realm.insertOrUpdate(sidGP)
-                }
-                realm.close()
-            } catch (exception: Exception) {
-                exception.printStackTrace()
-            }
         }
         th.start()
     }
