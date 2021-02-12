@@ -140,16 +140,16 @@ class Index(
             realmMessage.smsId = message.id
             realmMessage.user1 = user1
 
-            if (message.timestamp > realmThread.lastMessage?.timestamp ?: 0) {
-                realmThread.lastMessage = realmMessage
-            }
-
             if (realmMessage.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX) {
                 // don't update status of read messages
                 if (realmMessage.status != Enums.MessageStatus.read) {
                     realmMessage.status =
                         if (message.isRead) Enums.MessageStatus.read else Enums.MessageStatus.notRead
                 }
+            }
+
+            if (message.timestamp > realmThread.timestamp ?: 0) {
+                realmThread.timestamp = message.timestamp
             }
 
             /******************************** This is the real deal *******************************/
@@ -209,7 +209,7 @@ class Index(
 
             /******************************** ********************* *******************************/
 
-            realmMessage.messageThread = realmThread
+            realmMessage.thread = realmThread
 
             realmT.insertOrUpdate(realmThread)
             realmT.insertOrUpdate(realmMessage)
@@ -221,7 +221,7 @@ class Index(
     private fun pruneThreads(realm: Realm) {
         val allThreads = realm.where(MessageThread::class.java).findAll()
         allThreads.forEach { th ->
-            if (th.lastMessage == null) {
+            if (th.numMessages() < 1) {
                 realm.executeTransaction {
                     th.deleteFromRealm()
                 }

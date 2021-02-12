@@ -50,32 +50,26 @@ class ActivityHome : ActivityBase() {
 
         bottom_nav_filter.selectedItemId =
             savedInstanceState?.getInt("selected_view") ?: R.id.otp
-        when (bottom_nav_filter.selectedItemId) {
-            R.id.personal ->
-                threads = getPersonalThreadsQuery()
-            R.id.otp ->
-                threads = getThreadsForTypeQuery(Enums.MessageType.otp)
-            R.id.transaction ->
-                threads = getThreadsForTypeQuery(Enums.MessageType.transaction)
-            R.id.update ->
-                threads = getThreadsForTypeQuery(Enums.MessageType.update)
-            R.id.spam ->
-                threads = getThreadsForTypeQuery(Enums.MessageType.spam)
-        }
 
-        threadsAdapter = ThreadAdapter(this, threads, true, itemClickListener = { _, th ->
-            val intent = Intent(this, ActivityMessage::class.java)
-            intent.putExtra("user2", th.user2)
-            when (bottom_nav_filter.selectedItemId) {
-                // R.id.personal -> don't send, so it will be picked as null and only personal type will be shown
-                // to show all types, "view-all" will be used
-                R.id.otp -> intent.putExtra("view-type", Enums.MessageType.otp)
-                R.id.transaction -> intent.putExtra("view-type", Enums.MessageType.transaction)
-                R.id.update -> intent.putExtra("view-type", Enums.MessageType.update)
-                R.id.spam -> intent.putExtra("view-type", Enums.MessageType.spam)
-            }
-            startActivity(intent)
-        })
+        val messageType = getMessageTypeByView(bottom_nav_filter.selectedItemId)
+        threads =
+            if (messageType == null)
+                getPersonalThreadsQuery()
+            else
+                getThreadsForTypeQuery(messageType)
+        threadsAdapter = ThreadAdapter(
+            this,
+            threads,
+            true,
+            clickListener = { _, th ->
+                val intent = Intent(this, ActivityMessage::class.java)
+                intent.putExtra("user2", th.user2)
+                val messageTypeUpdated = getMessageTypeByView(bottom_nav_filter.selectedItemId)
+                if (messageTypeUpdated != null) intent.putExtra("view-type", messageTypeUpdated)
+                startActivity(intent)
+            },
+            messageType = messageType
+        )
 
         threadsChangeListener = OrderedRealmCollectionChangeListener { _, _ ->
             threadsAdapter.notifyDataSetChanged()
@@ -88,28 +82,14 @@ class ActivityHome : ActivityBase() {
         recycler_view_threads.adapter = threadsAdapter
 
         bottom_nav_filter.setOnNavigationItemSelectedListener {
-            when (it.itemId) {
-                R.id.personal -> {
-                    threads = getPersonalThreadsQuery()
-                    updateUI(1)
-                }
-                R.id.otp -> {
-                    threads = getThreadsForTypeQuery(Enums.MessageType.otp)
-                    updateUI(1)
-                }
-                R.id.transaction -> {
-                    threads = getThreadsForTypeQuery(Enums.MessageType.transaction)
-                    updateUI(1)
-                }
-                R.id.update -> {
-                    threads = getThreadsForTypeQuery(Enums.MessageType.update)
-                    updateUI(1)
-                }
-                R.id.spam -> {
-                    threads = getThreadsForTypeQuery(Enums.MessageType.spam)
-                    updateUI(1)
-                }
-            }
+            val messageTypeUpdated = getMessageTypeByView(it.itemId)
+            threads = if (messageTypeUpdated == null)
+                getPersonalThreadsQuery()
+            else
+                getThreadsForTypeQuery(messageTypeUpdated)
+            threadsAdapter.messageType = messageTypeUpdated
+
+            updateUI(1)
             true
         }
 
@@ -184,17 +164,17 @@ class ActivityHome : ActivityBase() {
     private fun getPersonalThreadsQuery(): RealmResults<MessageThread> {
         return realm
             .where(MessageThread::class.java)
-            .isNotNull("lastMessage")
-            .isNull("lastMessage.type")
-            .sort("lastMessage.timestamp", Sort.DESCENDING).findAllAsync()
+            .isNull("messages.type")
+            .sort("timestamp", Sort.DESCENDING)
+            .findAllAsync()
     }
 
     private fun getThreadsForTypeQuery(type: String): RealmResults<MessageThread> {
         return realm
             .where(MessageThread::class.java)
-            .isNotNull("lastMessage")
-            .equalTo("lastMessage.type", type)
-            .sort("lastMessage.timestamp", Sort.DESCENDING).findAllAsync()
+            .equalTo("messages.type", type)
+            .sort("timestamp", Sort.DESCENDING)
+            .findAllAsync()
     }
 
     private fun updateUI(flag: Int) {
@@ -221,6 +201,17 @@ class ActivityHome : ActivityBase() {
                 if (powerManager.isIgnoringBatteryOptimizations(packageName))
                     IndexTask(this@ActivityHome, false).start()
             }
+        }
+    }
+
+    private fun getMessageTypeByView(id: Int): String? {
+        return when (id) {
+            R.id.personal -> null
+            R.id.otp -> Enums.MessageType.otp
+            R.id.transaction -> Enums.MessageType.transaction
+            R.id.update -> Enums.MessageType.update
+            R.id.spam -> Enums.MessageType.spam
+            else -> null
         }
     }
 }

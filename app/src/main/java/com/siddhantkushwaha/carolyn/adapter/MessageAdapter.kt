@@ -132,7 +132,7 @@ class MessageAdapter(
             if (!showMessage) {
                 messageBodyTextView.text = "Hidden."
                 messageBodyTextView.setTextColor(Color.GRAY)
-                messageBodyTextView.backgroundTintList = ColorStateList.valueOf(Color.BLACK)
+                messageBodyTextView.backgroundTintList = ColorStateList.valueOf(Color.argb(255, 33, 33, 33))
 
                 messageTimestampTextView.visibility = View.GONE
                 receivedOnNumberTextView.visibility = View.GONE

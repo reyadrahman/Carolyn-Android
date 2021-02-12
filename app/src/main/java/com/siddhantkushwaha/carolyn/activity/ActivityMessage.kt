@@ -61,7 +61,7 @@ class ActivityMessage : ActivityBase() {
             ?: throw Exception("This activity requires user2 field in intent extras.")
         showMessageType = intent.getStringExtra("view-type")
 
-        messages = realm.where(Message::class.java).equalTo("messageThread.user2", user2)
+        messages = realm.where(Message::class.java).equalTo("thread.user2", user2)
             .sort("timestamp", Sort.ASCENDING).findAllAsync()
 
         var threadL = realm.where(MessageThread::class.java).equalTo("user2", user2).findFirst()
@@ -74,7 +74,6 @@ class ActivityMessage : ActivityBase() {
                 realmT.insertOrUpdate(threadL)
             }
         }
-
         thread = threadL!!
 
         header_title.text = thread.getDisplayName()
@@ -104,7 +103,7 @@ class ActivityMessage : ActivityBase() {
                 realmLocal.executeTransaction { realmT ->
 
                     val messagesForThread =
-                        realmT.where(Message::class.java).equalTo("messageThread.user2", user2)
+                        realmT.where(Message::class.java).equalTo("thread.user2", user2)
                             .findAll()
 
                     messagesForThread.forEach { message ->

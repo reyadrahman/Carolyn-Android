@@ -35,7 +35,7 @@ class IndexToFirebase(private val context: Context) {
             val hashRatio = body.count { it == '#' } / body.length.toFloat()
             if (hashRatio < 0.5) {
 
-                if (message.messageThread?.classifyThread() != true)
+                if (message.thread?.classifyThread() != true)
                     continue
 
                 val data = HashMap<String, String>()
@@ -43,7 +43,7 @@ class IndexToFirebase(private val context: Context) {
                 data["userId"] = firebaseAuth.currentUser?.email ?: "unknown"
                 data["messageId"] = message.id!!
                 data["user1"] = message!!.user1!!
-                data["user2"] = message.messageThread!!.user2!!
+                data["user2"] = message.thread!!.user2!!
                 data["timestamp"] = "${message.timestamp!!}"
                 data["body"] = body
 

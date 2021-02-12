@@ -24,7 +24,8 @@ class ThreadAdapter(
     val context: Context,
     data: OrderedRealmCollection<MessageThread>,
     autoUpdate: Boolean,
-    private val itemClickListener: (View, MessageThread) -> Unit
+    private val clickListener: (View, MessageThread) -> Unit,
+    public var messageType: String?
 ) : RealmRecyclerViewAdapter<MessageThread, RecyclerView.ViewHolder>(data, autoUpdate) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -34,12 +35,16 @@ class ThreadAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val thread = data!![position]
-        (holder as ThreadViewHolder).bind(thread, itemClickListener)
+        (holder as ThreadViewHolder).bind(thread, clickListener, messageType)
     }
 
     private class ThreadViewHolder(val context: Context, itemView: View) :
         RecyclerView.ViewHolder(itemView) {
-        fun bind(messageThread: MessageThread, itemClickListener: (View, MessageThread) -> Unit) {
+        fun bind(
+            messageThread: MessageThread,
+            itemClickListener: (View, MessageThread) -> Unit,
+            messageType: String?
+        ) {
 
             val threadImageView = itemView.findViewById<ImageView>(R.id.icon_user)
             val threadTitleTextView = itemView.findViewById<TextView>(R.id.text_thread)
@@ -48,12 +53,14 @@ class ThreadAdapter(
 
             threadTitleTextView.text = messageThread.getDisplayName()
 
-            lastMessageTextView.text = messageThread.lastMessage?.body ?: "No messages."
-            if(messageThread.lastMessage?.smsType != Telephony.Sms.MESSAGE_TYPE_INBOX) {
+            val lastMessage = messageThread.messages?.filter { m -> m.type == messageType }
+                ?.maxBy { m -> m.timestamp ?: 0 }
+            lastMessageTextView.text = lastMessage?.body ?: "No messages."
+            if (lastMessage != null && lastMessage?.smsType != Telephony.Sms.MESSAGE_TYPE_INBOX) {
                 lastMessageTextView.text = "You: ${lastMessageTextView.text}"
             }
 
-            val timestamp = messageThread.lastMessage?.timestamp
+            val timestamp = lastMessage?.timestamp
             if (timestamp == null) {
                 timestampTextView.visibility = View.GONE
             } else {
@@ -78,7 +85,7 @@ class ThreadAdapter(
                 threadImageView.setImageResource(R.drawable.icon_user)
             }
 
-            if (messageThread.lastMessage?.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX && messageThread.lastMessage?.status == MessageStatus.notRead) {
+            if (lastMessage?.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX && lastMessage.status == MessageStatus.notRead) {
                 threadTitleTextView.setTypeface(null, Typeface.BOLD)
                 lastMessageTextView.setTypeface(null, Typeface.BOLD)
                 lastMessageTextView.setTextColor(Color.WHITE)
@@ -91,7 +98,6 @@ class ThreadAdapter(
                         android.R.color.secondary_text_dark
                     )
                 )
-
             }
         }
     }

@@ -9,6 +9,8 @@ open class Message : RealmObject() {
     @PrimaryKey
     var id: String? = null
 
+    var thread: MessageThread? = null
+
     var smsId: Int? = null
 
     var timestamp: Long? = null
@@ -19,9 +21,6 @@ open class Message : RealmObject() {
 
     var type: String? = null
     var language: String? = null
-
-    var messageThread: MessageThread? = null
-
     var classificationSource: String? = null
 
     var user1: String? = null
