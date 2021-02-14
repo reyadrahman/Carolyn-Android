@@ -21,25 +21,24 @@ import java.util.*
 
 
 class Index(
-    private val context: Context,
     private val optimized: Boolean
 ) {
 
     private val tag: String = this::class.java.toString()
 
-    public fun run() {
+    public fun run(context: Context) {
         val realm = RealmUtil.getCustomRealmInstance(context)
 
         if (!optimized) {
-            indexContacts(realm)
+            indexContacts(context, realm)
         }
 
-        indexMessages(realm)
+        indexMessages(context, realm)
 
         realm.close()
     }
 
-    private fun indexMessages(realm: Realm) {
+    private fun indexMessages(context: Context, realm: Realm) {
 
         val messages = TelephonyUtil.getAllSms(context)
         val subscriptions = TelephonyUtil.getSubscriptions(context)
@@ -51,13 +50,12 @@ class Index(
             pruneMessages(realm, messages)
         }
 
-        addMessages(realm, messages, subscriptions)
+        addMessages(context, realm, messages, subscriptions)
 
         if (!optimized) {
             pruneThreads(realm)
         }
     }
-
 
     private fun pruneMessages(realm: Realm, messages: ArrayList<TelephonyUtil.SMSMessage>) {
         val allMessages = realm.where(Message::class.java).findAll()
@@ -78,6 +76,7 @@ class Index(
     }
 
     private fun addMessages(
+        context: Context,
         realm: Realm,
         messages: ArrayList<TelephonyUtil.SMSMessage>,
         subscriptions: HashMap<Int, TelephonyUtil.SubscriptionInfo>
@@ -94,11 +93,12 @@ class Index(
                 break
             }
 
-            indexMessage(realm, message, subscriptions)
+            indexMessage(context, realm, message, subscriptions)
         }
     }
 
     private fun indexMessage(
+        context: Context,
         realm: Realm,
         message: TelephonyUtil.SMSMessage,
         subscriptions: HashMap<Int, TelephonyUtil.SubscriptionInfo>
@@ -229,7 +229,7 @@ class Index(
         }
     }
 
-    private fun indexContacts(realm: Realm) {
+    private fun indexContacts(context: Context, realm: Realm) {
 
         val contacts = TelephonyUtil.getAllContacts(context)
 

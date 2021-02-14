@@ -12,9 +12,6 @@ class IndexTask(private val context: Context, private val optimized: Boolean) : 
 
         @JvmStatic
         private var index: Index? = null
-
-        @JvmStatic
-        private var indexToFirebase: IndexToFirebase? = null
     }
 
     override fun run() {
@@ -24,21 +21,16 @@ class IndexTask(private val context: Context, private val optimized: Boolean) : 
         inProgress = true
 
         if (index == null)
-            index = Index(context, optimized)
-
-        if (indexToFirebase == null)
-            indexToFirebase = IndexToFirebase(context)
+            index = Index(optimized)
 
         val startTime = System.nanoTime()
 
-        index?.run()
+        index?.run(context)
 
         val endTime = System.nanoTime()
         val duration = endTime - startTime
 
         Log.d("IndexTask", "Indexing took ${duration / 1000000} ms.")
-
-        indexToFirebase?.upload()
 
         inProgress = false
     }
