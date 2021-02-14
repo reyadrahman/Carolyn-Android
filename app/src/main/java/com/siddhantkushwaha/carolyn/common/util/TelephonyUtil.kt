@@ -221,6 +221,14 @@ object TelephonyUtil {
         return numDeleted > 0
     }
 
+    public fun markSmsRead(context: Context, smsId: Int): Boolean {
+        val uri = Uri.parse("${Telephony.Sms.CONTENT_URI}/$smsId")
+        val values = ContentValues()
+        values.put(Telephony.Sms.READ, true)
+        val numUpdated = context.contentResolver.update(uri, values, null, null)
+        return numUpdated > 0
+    }
+
     public fun isDefaultSmsApp(context: Context): Boolean {
         return context.packageName == Telephony.Sms.getDefaultSmsPackage(context)
     }

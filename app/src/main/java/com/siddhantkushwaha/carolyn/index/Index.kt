@@ -54,6 +54,9 @@ class Index(
 
         if (!optimized) {
             pruneThreads(realm)
+
+            if (TelephonyUtil.isDefaultSmsApp(context))
+                markSmsReadInContentProvider(context, realm)
         }
     }
 
@@ -272,6 +275,18 @@ class Index(
                 realm.executeTransaction {
                     ct.deleteFromRealm()
                 }
+            }
+        }
+    }
+
+    private fun markSmsReadInContentProvider(context: Context, realm: Realm) {
+        val messages = realm.where(Message::class.java).findAll()
+        for (message in messages) {
+            val id = message.smsId
+            if (id != null && message.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX && message.status == Enums.MessageStatus.read) {
+                val ret = TelephonyUtil.markSmsRead(context, id)
+                if (!ret)
+                    break
             }
         }
     }
