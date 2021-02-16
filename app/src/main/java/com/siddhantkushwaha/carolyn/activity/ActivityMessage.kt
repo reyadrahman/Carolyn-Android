@@ -106,7 +106,7 @@ class ActivityMessage : ActivityBase() {
                         realmT.where(Message::class.java).equalTo("thread.user2", user2)
                             .findAll()
 
-                    messagesForThread.forEac { message ->
+                    messagesForThread.forEach { message ->
                         if (message.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX && message.status == MessageStatus.notRead) {
                             message.status = MessageStatus.read
 
