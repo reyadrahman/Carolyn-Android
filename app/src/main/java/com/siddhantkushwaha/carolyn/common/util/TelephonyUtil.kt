@@ -11,6 +11,7 @@ import android.net.Uri
 import android.provider.ContactsContract
 import android.provider.Telephony
 import android.telephony.SubscriptionManager
+import android.telephony.TelephonyManager
 import android.util.Log
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil.checkPermissions
 import java.io.InputStream
@@ -40,7 +41,9 @@ object TelephonyUtil {
     data class SubscriptionInfo(
         val subId: Int,
         val number: String,
-        val carrierName: String
+        val carrierDisplayName: String,
+        val carrierName: String,
+        val slotIndex: Int
     )
 
     @SuppressLint("MissingPermission")
@@ -55,11 +58,20 @@ object TelephonyUtil {
                         subId = it.subscriptionId,
                         number = CommonUtil.normalizePhoneNumber(it.number ?: "Unknown")
                             ?: "Unknown",
-                        carrierName = it.carrierName.toString()
+                        carrierDisplayName = it.displayName.toString(),
+                        carrierName = it.carrierName.toString(),
+                        slotIndex = it.simSlotIndex
                     )
             }
         }
         return subscriptions
+    }
+
+    public fun getDefaultSMSSubscriptionId(): Int {
+        var subId = SubscriptionManager.getDefaultSmsSubscriptionId()
+        if (subId == SubscriptionManager.INVALID_SUBSCRIPTION_ID)
+            subId = -1
+        return subId
     }
 
     public fun getAllSms(context: Context): ArrayList<SMSMessage>? {

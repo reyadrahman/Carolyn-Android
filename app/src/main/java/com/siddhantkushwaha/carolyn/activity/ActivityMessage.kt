@@ -36,7 +36,7 @@ class ActivityMessage : ActivityBase() {
     private lateinit var thread: MessageThread
     private var showMessageType: String? = null
 
-    private var initialSenderSimIndex = -1
+    private var senderSimIndex = -1
     private val subscriptions: ArrayList<TelephonyUtil.SubscriptionInfo> = ArrayList()
     private val subColors = arrayOf(
         R.color.color3,
@@ -106,7 +106,7 @@ class ActivityMessage : ActivityBase() {
                         realmT.where(Message::class.java).equalTo("thread.user2", user2)
                             .findAll()
 
-                    messagesForThread.forEach { message ->
+                    messagesForThread.forEac { message ->
                         if (message.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX && message.status == MessageStatus.notRead) {
                             message.status = MessageStatus.read
 
@@ -178,9 +178,9 @@ class ActivityMessage : ActivityBase() {
 
     private fun populateSimInfo() {
         button_sim_picker.setOnClickListener {
-            initialSenderSimIndex += 1
-            initialSenderSimIndex %= subscriptions.size
-            updateEditTextHint(initialSenderSimIndex)
+            senderSimIndex += 1
+            senderSimIndex %= subscriptions.size
+            updateSendViaSimUI()
         }
 
         // Even if no sim card available, user should be allowed to see the messages
@@ -190,36 +190,34 @@ class ActivityMessage : ActivityBase() {
             subscriptions.addAll(subscriptionSet.values)
         }
 
-        initialSenderSimIndex =
-            if (subscriptions.size > 0) {
-                1
-            } else
-                -1
+        senderSimIndex = if (subscriptions.size > 0) 1 else -1
 
-        updateEditTextHint(initialSenderSimIndex)
+        val defaultSmsSimSubId = TelephonyUtil.getDefaultSMSSubscriptionId()
+        val defaultSimIndex = subscriptions.indexOfFirst { it.subId == defaultSmsSimSubId }
+        if (defaultSimIndex > -1) {
+            senderSimIndex = defaultSimIndex
+        }
+
+        updateSendViaSimUI()
     }
 
-    private fun updateEditTextHint(idx: Int) {
-        if (idx < 0 || idx >= subscriptions.size)
+    private fun updateSendViaSimUI() {
+        if (senderSimIndex < 0 || senderSimIndex >= subscriptions.size)
             return
 
-        val info = subscriptions[idx]
+        val info = subscriptions[senderSimIndex]
 
-        val carrierName = info.carrierName.toLowerCase().capitalize()
-
-        edit_text_message.hint =
-            "Send via $carrierName ${info.number}"
-
+        edit_text_message.hint = "Send via ${info.carrierDisplayName} ${info.number}"
         button_sim_picker.backgroundTintList =
-            ContextCompat.getColorStateList(this, subColors[initialSenderSimIndex])
+            ContextCompat.getColorStateList(this, subColors[senderSimIndex])
     }
 
     private fun sendMessage(message: String) {
-        if (initialSenderSimIndex < 0) {
+        if (senderSimIndex < 0) {
             return
         }
 
-        val subId = subscriptions[initialSenderSimIndex].subId
+        val subId = subscriptions[senderSimIndex].subId
 
         val scAddress = null
 
