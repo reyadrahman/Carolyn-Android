@@ -28,6 +28,8 @@ class MessageAdapter(
     private val TYPE_MESSAGE_SENT = 1
     private val TYPE_MESSAGE_RECEIVED = 2
 
+    private val isMessageShownMap: HashMap<String, Boolean> = HashMap()
+
     override fun getItemViewType(position: Int): Int {
         return if (data!![position].smsType != Telephony.Sms.MESSAGE_TYPE_INBOX) TYPE_MESSAGE_SENT else TYPE_MESSAGE_RECEIVED
     }
@@ -56,14 +58,10 @@ class MessageAdapter(
         val message = data!![position]
         when (holder.itemViewType) {
             TYPE_MESSAGE_SENT -> {
-                (holder as SentMessageViewHolder).bind(message, longClickListener)
+                (holder as SentMessageViewHolder).bind(message)
             }
             TYPE_MESSAGE_RECEIVED -> {
-                (holder as ReceivedMessageViewHolder).bind(
-                    message,
-                    longClickListener,
-                    messageType
-                )
+                (holder as ReceivedMessageViewHolder).bind(message)
             }
             else -> {
                 throw Exception("Message Adapter Error: Message type not supported.")
@@ -71,11 +69,8 @@ class MessageAdapter(
         }
     }
 
-    private class SentMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bind(
-            message: Message,
-            longClickListener: (Message) -> Unit
-        ) {
+    private inner class SentMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        fun bind(message: Message) {
             val messageBodyTextView = itemView.findViewById<TextView>(R.id.textview_message_text)
             val messageTimestampTextView =
                 itemView.findViewById<TextView>(R.id.textview_message_timestamp)
@@ -90,37 +85,51 @@ class MessageAdapter(
 
             sentViaSubscription.text = message.user1 ?: ""
 
-            itemView.setOnClickListener {
+            messageBodyTextView.setOnClickListener {
 
             }
 
-            itemView.setOnLongClickListener {
+            messageBodyTextView.setOnLongClickListener {
                 longClickListener(message)
                 true
             }
         }
     }
 
-    private class ReceivedMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bind(
-            message: Message,
-            longClickListener: (Message) -> Unit,
-            messageType: String?
-        ) {
-            val showMessage: Boolean = messageType == "view-all" || messageType == message.type
+    private inner class ReceivedMessageViewHolder(itemView: View) :
+        RecyclerView.ViewHolder(itemView) {
+        fun bind(message: Message) {
+
+            val messageBodyTextView = itemView.findViewById<TextView>(R.id.textview_message_text)
+
+            val messageId = message.id
+
+            // honor value already present in map to maintain current status
+            val showMessage: Boolean =
+                isMessageShownMap[messageId]
+                    ?: (messageType == "view-all" || messageType == message.type)
+
             bindMessage(message, showMessage = showMessage)
 
-            itemView.setOnClickListener {
-
+            messageBodyTextView.setOnClickListener {
+                if (messageId != null) {
+                    val currentShownStatus = isMessageShownMap[messageId] ?: false
+                    bindMessage(message, !currentShownStatus)
+                }
             }
 
-            itemView.setOnLongClickListener {
+            messageBodyTextView.setOnLongClickListener {
                 longClickListener(message)
                 true
             }
         }
 
         private fun bindMessage(message: Message, showMessage: Boolean) {
+            val messageId = message.id
+            if (messageId != null) {
+                isMessageShownMap[messageId] = showMessage
+            }
+
             val messageBodyTextView = itemView.findViewById<TextView>(R.id.textview_message_text)
             val messageTimestampTextView =
                 itemView.findViewById<TextView>(R.id.textview_message_timestamp)
@@ -132,7 +141,8 @@ class MessageAdapter(
             if (!showMessage) {
                 messageBodyTextView.text = "Hidden."
                 messageBodyTextView.setTextColor(Color.GRAY)
-                messageBodyTextView.backgroundTintList = ColorStateList.valueOf(Color.argb(255, 33, 33, 33))
+                messageBodyTextView.backgroundTintList =
+                    ColorStateList.valueOf(Color.argb(255, 33, 33, 33))
 
                 messageTimestampTextView.visibility = View.GONE
                 receivedOnNumberTextView.visibility = View.GONE

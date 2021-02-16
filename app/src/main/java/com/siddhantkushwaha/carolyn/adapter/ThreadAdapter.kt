@@ -35,16 +35,12 @@ class ThreadAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val thread = data!![position]
-        (holder as ThreadViewHolder).bind(thread, clickListener, messageType)
+        (holder as ThreadViewHolder).bind(thread)
     }
 
-    private class ThreadViewHolder(val context: Context, itemView: View) :
+    private inner class ThreadViewHolder(val context: Context, itemView: View) :
         RecyclerView.ViewHolder(itemView) {
-        fun bind(
-            messageThread: MessageThread,
-            itemClickListener: (View, MessageThread) -> Unit,
-            messageType: String?
-        ) {
+        fun bind(messageThread: MessageThread) {
 
             val threadImageView = itemView.findViewById<ImageView>(R.id.icon_user)
             val threadTitleTextView = itemView.findViewById<TextView>(R.id.text_thread)
@@ -69,7 +65,7 @@ class ThreadAdapter(
             }
 
             itemView.setOnClickListener { view ->
-                itemClickListener(view, messageThread)
+                clickListener(view, messageThread)
             }
 
             val photoUri = messageThread.contact?.photoUri
