@@ -124,7 +124,7 @@ class Index(
         realm.executeTransaction { realmT ->
             val realmThread = DbHelper.getOrCreateThreadObject(realmT, user2)
             if (realmThread.contact == null) {
-                realmThread.contact = DbHelper.getContactObject(realmT, user1)
+                realmThread.contact = DbHelper.getContactObject(realmT, user2)
             }
 
             realmThread.user2DisplayName = message.user2
@@ -137,7 +137,7 @@ class Index(
                 realmMessage.smsType = message.type
                 realmMessage.language = LanguageId.getLanguage(message.body)
             }
-            realmMessage.thread = realmThread
+
             realmMessage.smsId = message.id
             realmMessage.user1 = user1
 
@@ -209,6 +209,8 @@ class Index(
             }
 
             /******************************** ********************* *******************************/
+
+            realmMessage.thread = realmThread
 
             realmT.insertOrUpdate(realmThread)
             realmT.insertOrUpdate(realmMessage)
