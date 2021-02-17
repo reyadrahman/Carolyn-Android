@@ -11,7 +11,6 @@ import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.entity.Contact
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.entity.MessageThread
-import com.siddhantkushwaha.carolyn.entity.Rule
 import com.siddhantkushwaha.carolyn.ml.LanguageId
 import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import io.realm.Realm
@@ -46,33 +45,44 @@ class Index(
         if (messages == null || subscriptions == null)
             return
 
-        if (!optimized) {
-            pruneMessages(realm, messages)
-        }
-
         addMessages(context, realm, messages, subscriptions)
 
         if (!optimized) {
+            pruneMessages(realm, messages)
             pruneThreads(realm)
 
-            if (TelephonyUtil.isDefaultSmsApp(context))
+            if (TelephonyUtil.isDefaultSmsApp(context)) {
                 markSmsReadInContentProvider(context, realm)
+            }
         }
     }
 
     private fun pruneMessages(realm: Realm, messages: ArrayList<TelephonyUtil.SMSMessage>) {
         val allMessages = realm.where(Message::class.java).findAll()
+        val messageIds = messages.map { message ->
+            DbHelper.getMessageId(message.timestamp, message.body)
+        }.toHashSet()
 
-        val messageIds =
-            messages.map { message ->
-                CommonUtil.getHash("${message.timestamp}, ${message.body}")
-            }.toHashSet()
+        for (indexedMessage in allMessages) {
+            // We need to retain these messages
+            if (indexedMessage.status == Enums.MessageStatus.notSent || indexedMessage.status == Enums.MessageStatus.pending)
+                continue
 
-        allMessages.forEach { indexedMessage ->
             if (!messageIds.contains(indexedMessage.id)) {
                 Log.d(tag, "Deleting message: ${indexedMessage.body}")
                 realm.executeTransaction {
                     indexedMessage.deleteFromRealm()
+                }
+            }
+        }
+    }
+
+    private fun pruneThreads(realm: Realm) {
+        val allThreads = realm.where(MessageThread::class.java).findAll()
+        for (thread in allThreads) {
+            if (thread.numMessages() < 1) {
+                realm.executeTransaction {
+                    thread.deleteFromRealm()
                 }
             }
         }
@@ -106,40 +116,28 @@ class Index(
         message: TelephonyUtil.SMSMessage,
         subscriptions: HashMap<Int, TelephonyUtil.SubscriptionInfo>
     ): Int {
-
         val user1 = subscriptions[message.subId]?.number ?: "unknown"
+        val user2 = CommonUtil.normalizePhoneNumber(message.user2)
+            ?: message.user2.replace("-", "").toLowerCase(Locale.getDefault())
 
-        val user2 =
-            CommonUtil.normalizePhoneNumber(message.user2)
-                ?: message.user2.replace("-", "").toLowerCase(Locale.getDefault())
-
-        val id = CommonUtil.getHash("${message.timestamp}, ${message.body}")
+        val id = DbHelper.getMessageId(message.timestamp, message.body)
         realm.executeTransaction { realmT ->
-
-            var realmThread =
-                realmT.where(MessageThread::class.java).equalTo("user2", user2).findFirst()
-            if (realmThread == null) {
-                realmThread = realm.createObject(MessageThread::class.java, user2)
-                    ?: throw Exception("Could not create Thread object.")
-            }
-
+            val realmThread = DbHelper.getOrCreateThreadObject(realmT, user2)
             if (realmThread.contact == null) {
-                realmThread.contact =
-                    realm.where(Contact::class.java).equalTo("number", user2).findFirst()
+                realmThread.contact = DbHelper.getContactObject(realmT, user1)
             }
 
             realmThread.user2DisplayName = message.user2
 
-            var realmMessage = realmT.where(Message::class.java).equalTo("id", id).findFirst()
+            var realmMessage = DbHelper.getMessageObject(realmT, id)
             if (realmMessage == null) {
-                realmMessage = realm.createObject(Message::class.java, id)
-                    ?: throw Exception("Could not create Message object.")
+                realmMessage = DbHelper.createMessageObject(realmT, id)
                 realmMessage.body = message.body
                 realmMessage.timestamp = message.timestamp
                 realmMessage.smsType = message.type
                 realmMessage.language = LanguageId.getLanguage(message.body)
             }
-
+            realmMessage.thread = realmThread
             realmMessage.smsId = message.id
             realmMessage.user1 = user1
 
@@ -158,7 +156,7 @@ class Index(
             /******************************** This is the real deal *******************************/
 
             // find the rule
-            val rule = realm.where(Rule::class.java).equalTo("user2", user2).findFirst()
+            val rule = DbHelper.getRuleObject(realmT, user2)
             if (rule != null) {
                 realmMessage.type = rule.type
                 realmMessage.classificationSource = Enums.SourceType.rule
@@ -212,8 +210,6 @@ class Index(
 
             /******************************** ********************* *******************************/
 
-            realmMessage.thread = realmThread
-
             realmT.insertOrUpdate(realmThread)
             realmT.insertOrUpdate(realmMessage)
         }
@@ -221,29 +217,24 @@ class Index(
         return 0
     }
 
-    private fun pruneThreads(realm: Realm) {
-        val allThreads = realm.where(MessageThread::class.java).findAll()
-        allThreads.forEach { th ->
-            if (th.numMessages() < 1) {
-                realm.executeTransaction {
-                    th.deleteFromRealm()
-                }
+    private fun markSmsReadInContentProvider(context: Context, realm: Realm) {
+        val messages = realm.where(Message::class.java).findAll()
+        for (message in messages) {
+            val id = message.smsId
+            if (id != null && message.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX && message.status == Enums.MessageStatus.read) {
+                val ret = TelephonyUtil.markSmsRead(context, id)
+                if (!ret)
+                    break
             }
         }
     }
 
     private fun indexContacts(context: Context, realm: Realm) {
-
         val contacts = TelephonyUtil.getAllContacts(context)
-
         contacts?.forEach { (number, info) ->
             realm.executeTransaction { rt ->
-                var realmContact =
-                    realm.where(Contact::class.java).equalTo("number", number).findFirst()
-                if (realmContact == null) {
-                    realmContact = realm.createObject(Contact::class.java, number)
-                        ?: throw Exception("Couldn't create contact object.")
-                }
+                val realmContact = DbHelper.createContactObject(rt, number)
+
                 realmContact.name = info.name
                 realmContact.contactId = info.id
 
@@ -275,18 +266,6 @@ class Index(
                 realm.executeTransaction {
                     ct.deleteFromRealm()
                 }
-            }
-        }
-    }
-
-    private fun markSmsReadInContentProvider(context: Context, realm: Realm) {
-        val messages = realm.where(Message::class.java).findAll()
-        for (message in messages) {
-            val id = message.smsId
-            if (id != null && message.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX && message.status == Enums.MessageStatus.read) {
-                val ret = TelephonyUtil.markSmsRead(context, id)
-                if (!ret)
-                    break
             }
         }
     }

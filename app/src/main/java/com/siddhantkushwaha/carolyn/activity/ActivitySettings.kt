@@ -38,8 +38,7 @@ class ActivitySettings : ActivityBase() {
 
         firebaseStorage = FirebaseStorage.getInstance()
 
-        checkbox_enable_unsaved_number_classification.isChecked =
-            DbHelper.getUnsavedNumberClassificationRule(this)
+        checkbox_enable_unsaved_number_classification.isChecked = DbHelper.getUnsavedNumberClassificationRule(this)
 
         button_download_assets.setOnClickListener {
             downloadAssetsUpdateUi()

@@ -13,6 +13,7 @@ object Enums {
         const val read = "read"
         const val notRead = "not-read"
         const val sent = "sent"
+        const val pending = "pending"
         const val notSent = "not-sent"
     }
 

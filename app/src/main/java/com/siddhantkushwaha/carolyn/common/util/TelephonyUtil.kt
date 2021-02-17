@@ -11,7 +11,6 @@ import android.net.Uri
 import android.provider.ContactsContract
 import android.provider.Telephony
 import android.telephony.SubscriptionManager
-import android.telephony.TelephonyManager
 import android.util.Log
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil.checkPermissions
 import java.io.InputStream
@@ -56,8 +55,8 @@ object TelephonyUtil {
                 subscriptions[it.subscriptionId] =
                     SubscriptionInfo(
                         subId = it.subscriptionId,
-                        number = CommonUtil.normalizePhoneNumber(it.number ?: "Unknown")
-                            ?: "Unknown",
+                        number = CommonUtil.normalizePhoneNumber(it.number ?: "UNKNOWN")
+                            ?: "UNKNOWN",
                         carrierDisplayName = it.displayName.toString(),
                         carrierName = it.carrierName.toString(),
                         slotIndex = it.simSlotIndex
@@ -100,7 +99,7 @@ object TelephonyUtil {
                     val body: String =
                         cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.BODY))
 
-                    // Epoch time
+                    // Epoch time in milliseconds
                     val date = cursor.getLong(cursor.getColumnIndexOrThrow(Telephony.Sms.DATE))
 
                     /*

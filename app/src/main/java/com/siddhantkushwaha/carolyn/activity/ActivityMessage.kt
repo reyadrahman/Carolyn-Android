@@ -8,19 +8,19 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.MessageAdapter
+import com.siddhantkushwaha.carolyn.common.DbHelper
 import com.siddhantkushwaha.carolyn.common.Enums.MessageStatus
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TaskUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
-import com.siddhantkushwaha.carolyn.entity.Contact
 import com.siddhantkushwaha.carolyn.entity.Message
-import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.index.IndexTask
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.Realm
 import io.realm.RealmResults
 import io.realm.Sort
 import kotlinx.android.synthetic.main.activity_message.*
+import java.time.Instant
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -33,7 +33,7 @@ class ActivityMessage : ActivityBase() {
     private lateinit var messageAdapter: MessageAdapter
     private lateinit var messagesChangeListener: OrderedRealmCollectionChangeListener<RealmResults<Message>>
 
-    private lateinit var thread: MessageThread
+    private lateinit var user2: String
     private var showMessageType: String? = null
 
     private var senderSimIndex = -1
@@ -57,26 +57,18 @@ class ActivityMessage : ActivityBase() {
 
         realm = RealmUtil.getCustomRealmInstance(this)
 
-        val user2 = intent.getStringExtra("user2")
+        user2 = intent.getStringExtra("user2")
             ?: throw Exception("This activity requires user2 field in intent extras.")
         showMessageType = intent.getStringExtra("view-type")
 
         messages = realm.where(Message::class.java).equalTo("thread.user2", user2)
             .sort("timestamp", Sort.ASCENDING).findAllAsync()
 
-        var threadL = realm.where(MessageThread::class.java).equalTo("user2", user2).findFirst()
-        if (threadL == null) {
-            realm.executeTransaction { realmT ->
-                threadL = realmT.createObject(MessageThread::class.java, user2)
-                    ?: throw Exception("Realm Error")
-                val contact = realmT.where(Contact::class.java).equalTo("number", user2).findFirst()
-                threadL!!.contact = contact
-                realmT.insertOrUpdate(threadL)
-            }
+        realm.executeTransaction { realmT ->
+            val thread = DbHelper.getThreadObject(realmT, user2)
+            val contact = thread?.contact ?: DbHelper.getContactObject(realmT, user2)
+            header_title.text = contact?.name ?: contact?.number ?: thread?.getDisplayName()
         }
-        thread = threadL!!
-
-        header_title.text = thread.getDisplayName()
 
         messageAdapter = MessageAdapter(
             messages,
@@ -142,9 +134,7 @@ class ActivityMessage : ActivityBase() {
         }
 
         button_send_message.setOnClickListener {
-            /*val messageText = edit_text_message.text.toString()
-            sendMessage(messageText)
-            edit_text_message.setText("")*/
+            pickDataFromUIAndSend()
         }
     }
 
@@ -212,22 +202,58 @@ class ActivityMessage : ActivityBase() {
             ContextCompat.getColorStateList(this, subColors[senderSimIndex])
     }
 
-    private fun sendMessage(message: String) {
-        if (senderSimIndex < 0) {
-            return
+
+    private fun pushMessageToUI(user1: String, messageTimestamp: Long, messageBody: String) {
+        val messageId = DbHelper.getMessageId(messageTimestamp, messageBody)
+        realm.executeTransaction { realmT ->
+            var message = realmT.where(Message::class.java).equalTo("id", messageId).findFirst()
+            if (message == null) {
+                message = DbHelper.createMessageObject(realm, messageId)
+            }
+            message.user1 = user1
+            message.thread = DbHelper.getOrCreateThreadObject(realmT, user2)
+            message.timestamp = messageTimestamp
+            message.body = messageBody
+            message.status = MessageStatus.pending
+            realmT.insertOrUpdate(message)
         }
+    }
 
-        val subId = subscriptions[senderSimIndex].subId
+    private fun sendMessage(subId: Int, user1: String, messageTimestamp: Long, message: String) {
 
-        val scAddress = null
+        pushMessageToUI(user1, messageTimestamp, message)
 
+        // val messageParts = message.chunked(150)
+        // val numParts = messageParts.size
+
+        val scAddress = if (user1 == "UNKNOWN") null else user1
         val sentIntent = null
         val delIntent = null
 
         val smsManager = SmsManager.getSmsManagerForSubscriptionId(subId)
         smsManager.sendTextMessage(
-            thread.user2, scAddress,
-            message, sentIntent, delIntent
+            user2,
+            scAddress,
+            message,
+            sentIntent,
+            delIntent
         )
+    }
+
+    private fun pickDataFromUIAndSend() {
+        if (senderSimIndex < 0) {
+            return
+        }
+
+        /*val subId = subscriptions[senderSimIndex].subId
+
+        val user1 = subscriptions[senderSimIndex].number
+
+        val messageTimestamp = Instant.now().toEpochMilli()
+
+        val message = edit_text_message.text.toString()
+        edit_text_message.setText("")
+
+        sendMessage(subId, user1, messageTimestamp, message)*/
     }
 }

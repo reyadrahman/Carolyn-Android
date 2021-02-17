@@ -1,6 +1,7 @@
 package com.siddhantkushwaha.carolyn.entity
 
 import android.content.Context
+import com.siddhantkushwaha.carolyn.common.DbHelper
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import io.realm.RealmObject
 import io.realm.annotations.PrimaryKey
@@ -13,13 +14,7 @@ open class GlobalParam : RealmObject() {
                 val realm = RealmUtil.getCustomRealmInstance(context)
 
                 realm.executeTransaction { realmT ->
-                    var rule =
-                        realmT.where(GlobalParam::class.java).equalTo("attrName", attrName)
-                            .findFirst()
-                    if (rule == null) {
-                        rule = realmT.createObject(GlobalParam::class.java, attrName)
-                            ?: throw Exception("Couldn't create GlobalParam object.")
-                    }
+                    val rule = DbHelper.getOrCreateGlobalParamObject(realmT, attrName)
                     rule.attrVal = attrVal
                     realmT.insertOrUpdate(rule)
                 }
@@ -32,9 +27,8 @@ open class GlobalParam : RealmObject() {
         fun getGlobalParam(context: Context, attrName: String): String? {
             val realm = RealmUtil.getCustomRealmInstance(context)
 
-            val rule = realm.where(GlobalParam::class.java)
-                .equalTo("attrName", attrName).findFirst()
-            val attrVal = rule?.attrVal
+            val globalParam: GlobalParam? = DbHelper.getGlobalParamObject(realm, attrName)
+            val attrVal = globalParam?.attrVal
 
             realm.close()
             return attrVal
