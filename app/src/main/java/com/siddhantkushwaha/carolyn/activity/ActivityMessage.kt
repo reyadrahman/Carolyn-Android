@@ -1,8 +1,11 @@
 package com.siddhantkushwaha.carolyn.activity
 
+import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Telephony
+import android.telephony.SmsManager
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
@@ -14,6 +17,7 @@ import com.siddhantkushwaha.carolyn.common.util.TaskUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.index.IndexTask
+import com.siddhantkushwaha.carolyn.receiver.SMSStatusReceiver
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.Realm
 import io.realm.RealmResults
@@ -22,6 +26,7 @@ import kotlinx.android.synthetic.main.activity_message.*
 import java.time.Instant
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.random.Random
 
 
 class ActivityMessage : ActivityBase() {
@@ -206,15 +211,25 @@ class ActivityMessage : ActivityBase() {
     }
 
 
-    private fun pushMessageToUI(user1: String, messageTimestamp: Long, messageBody: String) {
-        val messageId = DbHelper.getMessageId(messageTimestamp, messageBody)
+    private fun pushMessageToUI(
+        messageId: String,
+        user1: String,
+        messageTimestamp: Long,
+        messageBody: String
+    ) {
+
         realm.executeTransaction { realmT ->
             var message = realmT.where(Message::class.java).equalTo("id", messageId).findFirst()
             if (message == null) {
                 message = DbHelper.createMessageObject(realm, messageId)
             }
             message.user1 = user1
-            message.thread = DbHelper.getOrCreateThreadObject(realmT, user2)
+
+            val thread = DbHelper.getOrCreateThreadObject(realmT, user2)
+            thread.contact = DbHelper.getContactObject(realmT, user2)
+
+            message.thread = thread
+
             message.timestamp = messageTimestamp
             message.body = messageBody
             message.status = MessageStatus.pending
@@ -224,26 +239,55 @@ class ActivityMessage : ActivityBase() {
 
     private fun sendMessage(subId: Int, user1: String, messageTimestamp: Long, message: String) {
 
-        pushMessageToUI(user1, messageTimestamp, message)
+        SMSStatusReceiver.registerReceiver(this)
 
-        // val messageParts = message.chunked(150)
-        // val numParts = messageParts.size
-//
-//        val scAddress = if (user1 == "UNKNOWN") null else user1
-//        val sentIntent = null
-//        val delIntent = null
+        // Send messages
+        val messageId = DbHelper.getMessageId(messageTimestamp, message)
 
-//        val smsManager = SmsManager.getSmsManagerForSubscriptionId(subId)
-//        smsManager.sendTextMessage(
-//            user2,
-//            scAddress,
-//            message,
-//            sentIntent,
-//            delIntent
-//        )
+        Log.d("ActivityMessage", "Sending message $messageId $message $messageTimestamp")
+
+        pushMessageToUI(messageId, user1, messageTimestamp, message)
+
+        val messageParts = ArrayList(message.chunked(150))
+        val numParts = messageParts.size
+
+        val scAddress = if (user1 == "UNKNOWN") null else user1
+        val sentIntents = ArrayList(List<PendingIntent>(numParts) { index ->
+            val intent = Intent(getString(R.string.action_message_status_sent))
+            intent.putExtra("messageId", messageId)
+            intent.putExtra("partIndex", index)
+            intent.putExtra("numParts", numParts)
+
+            val reqCode = Random.nextInt()
+            PendingIntent.getBroadcast(this, reqCode, intent, 0)
+        })
+        val delIntents = ArrayList(List<PendingIntent>(numParts) { index ->
+            val intent = Intent(getString(R.string.action_message_status_delivered))
+            intent.putExtra("messageId", messageId)
+            intent.putExtra("partIndex", index)
+            intent.putExtra("numParts", numParts)
+
+            val reqCode = Random.nextInt()
+            PendingIntent.getBroadcast(this, reqCode, intent, 0)
+        })
+
+        val smsManager = SmsManager.getSmsManagerForSubscriptionId(subId)
+        smsManager.sendMultipartTextMessage(
+            user2,
+            scAddress,
+            messageParts,
+            sentIntents,
+            delIntents
+        )
     }
 
+
     private fun pickDataFromUIAndSend() {
+
+        if (!TelephonyUtil.isDefaultSmsApp(this)) {
+            return
+        }
+
         if (senderSimIndex < 0) {
             return
         }

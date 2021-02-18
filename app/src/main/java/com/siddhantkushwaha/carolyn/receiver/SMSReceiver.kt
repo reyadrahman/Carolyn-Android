@@ -1,4 +1,4 @@
-package com.siddhantkushwaha.carolyn.service
+package com.siddhantkushwaha.carolyn.receiver
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -23,14 +23,11 @@ class SMSReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
 
-        val tag = this::class.java.toString()
-
-        val extras = intent.extras ?: return
-
-        // TODO get all keys and upload to db to debug other OEMs
-        val subscription = extras.getInt("subscription")
-
         if (Telephony.Sms.Intents.SMS_RECEIVED_ACTION == intent.action) {
+
+            val extras = intent.extras ?: return
+            val subscription = extras.getInt("subscription")
+
             val messagesMap = HashMap<String, TelephonyUtil.SMSMessage>()
 
             for (smsMessage in Telephony.Sms.Intents.getMessagesFromIntent(intent)) {

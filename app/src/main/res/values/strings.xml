@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Carolyn</string>
     <string name="text_button_login">Sign in with </string>
+
+    <string name="action_message_status_sent">carolyn.action.message.status.sent</string>
+    <string name="action_message_status_delivered">carolyn.action.message.status.delivered</string>
 </resources>

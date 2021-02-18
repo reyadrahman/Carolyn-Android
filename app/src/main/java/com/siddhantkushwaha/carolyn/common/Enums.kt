@@ -15,6 +15,7 @@ object Enums {
         const val sent = "sent"
         const val pending = "pending"
         const val notSent = "not-sent"
+        const val delivered = "delivered"
     }
 
     object SourceType {

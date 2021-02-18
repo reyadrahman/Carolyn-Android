@@ -1,4 +1,4 @@
-package com.siddhantkushwaha.carolyn.service
+package com.siddhantkushwaha.carolyn.receiver
 
 import android.content.BroadcastReceiver
 import android.content.Context

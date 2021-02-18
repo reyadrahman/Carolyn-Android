@@ -89,6 +89,7 @@ class MessageAdapter(
             sentViaSubscription.text = message.user1 ?: ""
 
             when (message.status) {
+                Enums.MessageStatus.delivered -> messageStatusImageView.setImageResource(R.drawable.message_status_delivered)
                 Enums.MessageStatus.sent -> messageStatusImageView.setImageResource(R.drawable.message_status_sent)
                 Enums.MessageStatus.pending -> messageStatusImageView.setImageResource(R.drawable.message_status_pending)
                 Enums.MessageStatus.notSent -> messageStatusImageView.setImageResource(R.drawable.message_status_failed)

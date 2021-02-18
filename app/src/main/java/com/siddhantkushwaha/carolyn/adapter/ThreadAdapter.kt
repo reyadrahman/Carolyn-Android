@@ -57,6 +57,7 @@ class ThreadAdapter(
 
             if (lastMessage != null && lastMessage.smsType != Telephony.Sms.MESSAGE_TYPE_INBOX) {
                 when (lastMessage.status) {
+                    MessageStatus.delivered -> messageStatusImageView.setImageResource(R.drawable.message_status_delivered)
                     MessageStatus.sent -> messageStatusImageView.setImageResource(R.drawable.message_status_sent)
                     MessageStatus.pending -> messageStatusImageView.setImageResource(R.drawable.message_status_pending)
                     MessageStatus.notSent -> messageStatusImageView.setImageResource(R.drawable.message_status_failed)

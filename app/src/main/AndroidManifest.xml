@@ -56,7 +56,7 @@
         <activity android:name=".activity.ActivitySendNewMessage" />
         <!-- *******************  Receivers  ******************* -->
         <receiver
-            android:name=".service.SMSReceiver"
+            android:name=".receiver.SMSReceiver"
             android:permission="android.permission.BROADCAST_SMS">
             <intent-filter android:priority="999">
                 <action android:name="android.provider.Telephony.SMS_DELIVER" />
@@ -65,7 +65,7 @@
             </intent-filter>
         </receiver>
         <receiver
-            android:name=".service.MMSReceiver"
+            android:name=".receiver.MMSReceiver"
             android:permission="android.permission.BROADCAST_WAP_PUSH">
             <intent-filter android:priority="999">
                 <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />

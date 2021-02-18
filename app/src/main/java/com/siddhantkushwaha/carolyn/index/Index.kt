@@ -152,7 +152,9 @@ class Index(
             // sent sms
             else {
                 // if present here, assume sent
-                realmMessage.status = Enums.MessageStatus.sent
+                // if marked as delivered, leave as is, that's even better!
+                if (realmMessage.status != Enums.MessageStatus.delivered)
+                    realmMessage.status = Enums.MessageStatus.sent
             }
 
             if (message.timestamp > realmThread.timestamp ?: 0) {
