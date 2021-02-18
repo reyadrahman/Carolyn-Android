@@ -3,7 +3,6 @@ package com.siddhantkushwaha.carolyn.activity
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Telephony
-import android.telephony.SmsManager
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
@@ -74,14 +73,18 @@ class ActivityMessage : ActivityBase() {
             messages,
             true,
             longClickListener = {
-
-                // TODO ******* Experimental *********
+                // TODO, TEST FEATURE, ******* Experimental *********
                 val smsId = it.smsId
                 if (smsId != null) {
                     TelephonyUtil.deleteSMS(this, smsId)
                 }
 
-                IndexTask(this, false).start()
+                val messageId = it.id
+                if (messageId != null) {
+                    realm.executeTransactionAsync { rt ->
+                        DbHelper.getMessageObject(rt, messageId)?.deleteFromRealm()
+                    }
+                }
             },
             messageType = showMessageType
         )
@@ -225,19 +228,19 @@ class ActivityMessage : ActivityBase() {
 
         // val messageParts = message.chunked(150)
         // val numParts = messageParts.size
+//
+//        val scAddress = if (user1 == "UNKNOWN") null else user1
+//        val sentIntent = null
+//        val delIntent = null
 
-        val scAddress = if (user1 == "UNKNOWN") null else user1
-        val sentIntent = null
-        val delIntent = null
-
-        val smsManager = SmsManager.getSmsManagerForSubscriptionId(subId)
-        smsManager.sendTextMessage(
-            user2,
-            scAddress,
-            message,
-            sentIntent,
-            delIntent
-        )
+//        val smsManager = SmsManager.getSmsManagerForSubscriptionId(subId)
+//        smsManager.sendTextMessage(
+//            user2,
+//            scAddress,
+//            message,
+//            sentIntent,
+//            delIntent
+//        )
     }
 
     private fun pickDataFromUIAndSend() {
@@ -245,7 +248,7 @@ class ActivityMessage : ActivityBase() {
             return
         }
 
-        /*val subId = subscriptions[senderSimIndex].subId
+        val subId = subscriptions[senderSimIndex].subId
 
         val user1 = subscriptions[senderSimIndex].number
 
@@ -254,6 +257,6 @@ class ActivityMessage : ActivityBase() {
         val message = edit_text_message.text.toString()
         edit_text_message.setText("")
 
-        sendMessage(subId, user1, messageTimestamp, message)*/
+        sendMessage(subId, user1, messageTimestamp, message)
     }
 }

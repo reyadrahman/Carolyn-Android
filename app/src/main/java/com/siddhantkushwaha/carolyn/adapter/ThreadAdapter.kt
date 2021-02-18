@@ -46,14 +46,25 @@ class ThreadAdapter(
             val threadTitleTextView = itemView.findViewById<TextView>(R.id.text_thread)
             val lastMessageTextView = itemView.findViewById<TextView>(R.id.text_message)
             val timestampTextView = itemView.findViewById<TextView>(R.id.text_timestamp)
+            val messageStatusImageView =
+                itemView.findViewById<ImageView>(R.id.image_view_sent_messsage_status)
 
             threadTitleTextView.text = messageThread.getDisplayName()
 
             val lastMessage = messageThread.messages?.filter { m -> m.type == messageType }
                 ?.maxBy { m -> m.timestamp ?: 0 }
             lastMessageTextView.text = lastMessage?.body ?: "No messages."
-            if (lastMessage != null && lastMessage?.smsType != Telephony.Sms.MESSAGE_TYPE_INBOX) {
-                lastMessageTextView.text = "You: ${lastMessageTextView.text}"
+
+            if (lastMessage != null && lastMessage.smsType != Telephony.Sms.MESSAGE_TYPE_INBOX) {
+                when (lastMessage.status) {
+                    MessageStatus.sent -> messageStatusImageView.setImageResource(R.drawable.message_status_sent)
+                    MessageStatus.pending -> messageStatusImageView.setImageResource(R.drawable.message_status_pending)
+                    MessageStatus.notSent -> messageStatusImageView.setImageResource(R.drawable.message_status_failed)
+                    else -> messageStatusImageView.setImageResource(R.drawable.message_status_sent)
+                }
+                messageStatusImageView.visibility = View.VISIBLE
+            } else {
+                messageStatusImageView.visibility = View.GONE
             }
 
             val timestamp = lastMessage?.timestamp

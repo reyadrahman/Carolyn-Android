@@ -141,12 +141,18 @@ class Index(
             realmMessage.smsId = message.id
             realmMessage.user1 = user1
 
+            // received sms
             if (realmMessage.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX) {
                 // don't update status of read messages
                 if (realmMessage.status != Enums.MessageStatus.read) {
                     realmMessage.status =
                         if (message.isRead) Enums.MessageStatus.read else Enums.MessageStatus.notRead
                 }
+            }
+            // sent sms
+            else {
+                // if present here, assume sent
+                realmMessage.status = Enums.MessageStatus.sent
             }
 
             if (message.timestamp > realmThread.timestamp ?: 0) {

@@ -11,6 +11,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.siddhantkushwaha.carolyn.R
+import com.siddhantkushwaha.carolyn.common.Enums
 import com.siddhantkushwaha.carolyn.common.Enums.MessageType
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import com.siddhantkushwaha.carolyn.entity.Message
@@ -76,6 +77,8 @@ class MessageAdapter(
                 itemView.findViewById<TextView>(R.id.textview_message_timestamp)
             val sentViaSubscription =
                 itemView.findViewById<TextView>(R.id.textview_message_subscription)
+            val messageStatusImageView =
+                itemView.findViewById<ImageView>(R.id.image_view_message_status)
 
             messageBodyTextView.movementMethod = LinkMovementMethod.getInstance()
             messageBodyTextView.text = message.body
@@ -84,6 +87,13 @@ class MessageAdapter(
                 CommonUtil.formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
 
             sentViaSubscription.text = message.user1 ?: ""
+
+            when (message.status) {
+                Enums.MessageStatus.sent -> messageStatusImageView.setImageResource(R.drawable.message_status_sent)
+                Enums.MessageStatus.pending -> messageStatusImageView.setImageResource(R.drawable.message_status_pending)
+                Enums.MessageStatus.notSent -> messageStatusImageView.setImageResource(R.drawable.message_status_failed)
+                else -> messageStatusImageView.setImageResource(R.drawable.message_status_sent)
+            }
 
             messageBodyTextView.setOnClickListener {
 
