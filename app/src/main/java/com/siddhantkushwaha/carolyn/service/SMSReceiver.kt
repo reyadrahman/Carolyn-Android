@@ -93,8 +93,8 @@ class SMSReceiver : BroadcastReceiver() {
             val user2 = CommonUtil.normalizePhoneNumber(message.user2)
                 ?: message.user2.replace("-", "").toLowerCase(Locale.getDefault())
 
-            val contact = realm.where(Contact::class.java).equalTo("number", user2).findFirst()
-            val rule = realm.where(Rule::class.java).equalTo("user2", user2).findFirst()
+            val contact = DbHelper.getContactObject(realm, user2)
+            val rule = DbHelper.getRuleObject(realm, user2)
 
             val messageClass =
 

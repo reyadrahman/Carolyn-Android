@@ -120,7 +120,6 @@ class Index(
         val user2 = CommonUtil.normalizePhoneNumber(message.user2)
             ?: message.user2.replace("-", "").toLowerCase(Locale.getDefault())
 
-        val id = DbHelper.getMessageId(message.timestamp, message.body)
         realm.executeTransaction { realmT ->
             val realmThread = DbHelper.getOrCreateThreadObject(realmT, user2)
             if (realmThread.contact == null) {
@@ -129,9 +128,10 @@ class Index(
 
             realmThread.user2DisplayName = message.user2
 
-            var realmMessage = DbHelper.getMessageObject(realmT, id)
+            val messageId = DbHelper.getMessageId(message.timestamp, message.body)
+            var realmMessage = DbHelper.getMessageObject(realmT, messageId)
             if (realmMessage == null) {
-                realmMessage = DbHelper.createMessageObject(realmT, id)
+                realmMessage = DbHelper.createMessageObject(realmT, messageId)
                 realmMessage.body = message.body
                 realmMessage.timestamp = message.timestamp
                 realmMessage.smsType = message.type
@@ -235,7 +235,7 @@ class Index(
         val contacts = TelephonyUtil.getAllContacts(context)
         contacts?.forEach { (number, info) ->
             realm.executeTransaction { rt ->
-                val realmContact = DbHelper.createContactObject(rt, number)
+                val realmContact = DbHelper.getOrCreateContactObject(rt, number)
 
                 realmContact.name = info.name
                 realmContact.contactId = info.id
