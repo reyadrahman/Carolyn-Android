@@ -3,15 +3,13 @@ package com.siddhantkushwaha.carolyn.activity
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.ContactAdapter
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.Contact
-import io.realm.OrderedRealmCollectionChangeListener
-import io.realm.Realm
-import io.realm.RealmResults
-import io.realm.Sort
+import io.realm.*
 import kotlinx.android.synthetic.main.activity_send_new_message.*
 
 
@@ -25,14 +23,13 @@ class ActivitySendNewMessage : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_send_new_message)
+
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
         realm = RealmUtil.getCustomRealmInstance(this)
 
-        contacts = realm
-            .where(Contact::class.java)
-            .isNotNull("number")
-            .sort("name", Sort.ASCENDING).findAllAsync()
+        contacts = search("")
 
         contactAdapter = ContactAdapter(this, contacts, true, clickListener = { _, th ->
             val intent = Intent(this, ActivityMessage::class.java)
@@ -44,7 +41,6 @@ class ActivitySendNewMessage : AppCompatActivity() {
             contactAdapter.notifyDataSetChanged()
         }
 
-
         val layoutManager = LinearLayoutManager(this)
         layoutManager.stackFromEnd = false
 
@@ -52,6 +48,26 @@ class ActivitySendNewMessage : AppCompatActivity() {
         recycler_view_contacts.adapter = contactAdapter
 
         contacts.addChangeListener(contactsChangeListener)
+
+        search_contacts.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String): Boolean {
+                contacts = search(query)
+                updateUI(1)
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String): Boolean {
+                contacts = search(newText)
+                updateUI(1)
+                return true
+            }
+        })
+
+        search_contacts.setOnCloseListener {
+            contacts = search("")
+            updateUI(1)
+            true
+        }
     }
 
     override fun onPause() {
@@ -61,8 +77,7 @@ class ActivitySendNewMessage : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        contactAdapter.notifyDataSetChanged()
-        contacts.addChangeListener(contactsChangeListener)
+        updateUI(2)
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -70,4 +85,26 @@ class ActivitySendNewMessage : AppCompatActivity() {
         return true
     }
 
+    private fun updateUI(flag: Int) {
+        when (flag) {
+            1 -> contactAdapter.updateData(contacts)
+            2 -> contactAdapter.notifyDataSetChanged()
+        }
+        contacts.addChangeListener(contactsChangeListener)
+    }
+
+    private fun search(query: String): RealmResults<Contact> {
+        if (query == "") {
+            return realm.where(Contact::class.java).isNotNull("number")
+                .sort("name", Sort.ASCENDING)
+                .findAllAsync()
+        }
+
+        return realm.where(Contact::class.java).isNotNull("number")
+            .contains("name", query, Case.INSENSITIVE)
+            .or()
+            .contains("number", query, Case.INSENSITIVE)
+            .sort("name", Sort.ASCENDING)
+            .findAllAsync()
+    }
 }
