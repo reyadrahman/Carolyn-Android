@@ -6,6 +6,7 @@ import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import io.realm.RealmObject
 import io.realm.annotations.PrimaryKey
 
+
 open class GlobalParam : RealmObject() {
 
     companion object {

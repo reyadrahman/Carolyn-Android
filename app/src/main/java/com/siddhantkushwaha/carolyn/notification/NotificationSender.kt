@@ -139,4 +139,10 @@ class NotificationSender(val context: Context) {
             notification
         )
     }
+
+    public fun cancelNotificationByTag(tag: String) {
+        notificationManager.activeNotifications.forEach { sbn ->
+            notificationManager.cancel(tag, sbn.id)
+        }
+    }
 }

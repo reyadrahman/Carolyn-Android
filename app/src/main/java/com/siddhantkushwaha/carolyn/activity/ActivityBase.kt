@@ -9,12 +9,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.siddhantkushwaha.carolyn.R
+import com.siddhantkushwaha.carolyn.common.ActivityTracker
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil.checkPermissions
 
 
 open class ActivityBase : AppCompatActivity() {
 
-    protected lateinit var TAG: String
+    protected lateinit var tag: String
     protected lateinit var mAuth: FirebaseAuth
 
     // saves callbacks to be used in onRequestPermissionsResult
@@ -24,13 +25,22 @@ open class ActivityBase : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        TAG = this::class.java.toString()
+        tag = this::class.java.toString()
 
         mAuth = FirebaseAuth.getInstance()
     }
 
+    override fun onPause() {
+        super.onPause()
+
+        ActivityTracker.resetInfo()
+    }
+
     override fun onResume() {
         super.onResume()
+
+        ActivityTracker.setInfo(this)
+
         if (mAuth.currentUser == null) {
             moveToLoginActivity()
         }

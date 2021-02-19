@@ -18,6 +18,7 @@ import com.siddhantkushwaha.carolyn.common.util.TaskUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.index.IndexTask
+import com.siddhantkushwaha.carolyn.notification.NotificationSender
 import com.siddhantkushwaha.carolyn.receiver.SMSStatusReceiver
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.Realm
@@ -35,8 +36,6 @@ import kotlin.random.Random
 
 
 class ActivityMessage : ActivityBase() {
-
-    private val tag = "ActivityMessage"
 
     private lateinit var realm: Realm
 
@@ -73,6 +72,8 @@ class ActivityMessage : ActivityBase() {
         user2 = intent.getStringExtra("user2")
             ?: throw Exception("This activity requires user2 field in intent extras.")
         showMessageType = intent.getStringExtra("view-type")
+
+        dismissNotifications()
 
         messages = realm.where(Message::class.java).equalTo("thread.user2", user2)
             .sort("timestamp", Sort.ASCENDING).findAllAsync()
@@ -337,5 +338,10 @@ class ActivityMessage : ActivityBase() {
         if (isRecyclerViewScrolledToEnd) {
             recycler_view_messages.scrollToPosition(messages.size - 1)
         }
+    }
+
+    private fun dismissNotifications() {
+        val ns = NotificationSender(this)
+        ns.cancelNotificationByTag(user2)
     }
 }

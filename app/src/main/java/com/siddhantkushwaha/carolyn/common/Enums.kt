@@ -1,5 +1,6 @@
 package com.siddhantkushwaha.carolyn.common
 
+
 object Enums {
 
     object MessageType {

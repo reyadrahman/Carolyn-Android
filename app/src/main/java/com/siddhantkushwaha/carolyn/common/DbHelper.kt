@@ -5,6 +5,7 @@ import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import com.siddhantkushwaha.carolyn.entity.*
 import io.realm.Realm
 
+
 object DbHelper {
 
     private const val unsavedNumberClassificationRuleAttrName = "UNKNOWN_NUMBER_CLASSIFICATION"

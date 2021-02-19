@@ -13,6 +13,7 @@ import com.siddhantkushwaha.carolyn.entity.Contact
 import io.realm.OrderedRealmCollection
 import io.realm.RealmRecyclerViewAdapter
 
+
 class ContactAdapter(
     val context: Context,
     data: OrderedRealmCollection<Contact>,
@@ -32,7 +33,7 @@ class ContactAdapter(
 
     private class ContactHolder(val context: Context, itemView: View) :
         RecyclerView.ViewHolder(itemView) {
-        fun bind(contact: Contact, clickListener: (View, Contact) -> Unit){
+        fun bind(contact: Contact, clickListener: (View, Contact) -> Unit) {
             val contactName = itemView.findViewById<TextView>(R.id.contact_name)
             val contactImage = itemView.findViewById<ImageView>(R.id.icon_contact)
             val contactNumber = itemView.findViewById<TextView>(R.id.contact_number)

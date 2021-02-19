@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
+import com.siddhantkushwaha.carolyn.activity.ActivityMessage
+import com.siddhantkushwaha.carolyn.common.ActivityTracker
 import com.siddhantkushwaha.carolyn.common.DbHelper
 import com.siddhantkushwaha.carolyn.common.Enums
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil
@@ -16,6 +18,7 @@ import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import com.siddhantkushwaha.carolyn.notification.NotificationSender
 import java.time.Instant
 import java.util.*
+
 
 class SMSReceiver : BroadcastReceiver() {
 
@@ -88,6 +91,14 @@ class SMSReceiver : BroadcastReceiver() {
             val user2 = CommonUtil.normalizePhoneNumber(message.user2)
                 ?: message.user2.replace("-", "").toLowerCase(Locale.getDefault())
 
+            val isMessageActivityForCurrentUserActive =
+                ActivityTracker.getActivityName() == ActivityMessage::class.java.toString()
+                        && ActivityTracker.getActivityExtras()?.get("user2") == user2
+            if (isMessageActivityForCurrentUserActive) {
+                Log.d(tag, "Activity already active for user $user2, notification not needed.")
+                return@Thread
+            }
+
             val contact = DbHelper.getContactObject(realm, user2)
             val rule = DbHelper.getRuleObject(realm, user2)
 
@@ -148,7 +159,6 @@ class SMSReceiver : BroadcastReceiver() {
                 messageClass
             )
         }
-
         thread.start()
     }
 }

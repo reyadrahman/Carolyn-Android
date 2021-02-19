@@ -2,7 +2,6 @@ package com.siddhantkushwaha.carolyn.activity
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
@@ -13,7 +12,7 @@ import io.realm.*
 import kotlinx.android.synthetic.main.activity_send_new_message.*
 
 
-class ActivitySendNewMessage : AppCompatActivity() {
+class ActivitySendNewMessage : ActivityBase() {
 
     private lateinit var realm: Realm
     private lateinit var contacts: RealmResults<Contact>

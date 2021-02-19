@@ -43,10 +43,10 @@ class ActivityLogin : ActivityBase() {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
                 val account = task.getResult(ApiException::class.java)!!
-                Log.d(TAG, "firebaseAuthWithGoogle:" + account.id)
+                Log.d(tag, "firebaseAuthWithGoogle:" + account.id)
                 firebaseAuthWithGoogle(account.idToken!!)
             } catch (e: ApiException) {
-                Log.e(TAG, "Google sign in failed", e)
+                Log.e(tag, "Google sign in failed", e)
             }
         }
     }
@@ -56,10 +56,10 @@ class ActivityLogin : ActivityBase() {
         mAuth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    Log.d(TAG, "signInWithCredential:success")
+                    Log.d(tag, "signInWithCredential:success")
                     moveToHomeActivity()
                 } else {
-                    Log.w(TAG, "signInWithCredential:failure", task.exception)
+                    Log.w(tag, "signInWithCredential:failure", task.exception)
                     Snackbar.make(root, "Authentication Failed.", Snackbar.LENGTH_SHORT).show()
                 }
             }
