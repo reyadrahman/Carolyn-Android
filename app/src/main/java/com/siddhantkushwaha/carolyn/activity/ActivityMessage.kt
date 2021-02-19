@@ -8,6 +8,7 @@ import android.telephony.SmsManager
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.MessageAdapter
 import com.siddhantkushwaha.carolyn.common.DbHelper
@@ -23,6 +24,10 @@ import io.realm.Realm
 import io.realm.RealmResults
 import io.realm.Sort
 import kotlinx.android.synthetic.main.activity_message.*
+import kotlinx.android.synthetic.main.activity_message.header_title
+import kotlinx.android.synthetic.main.activity_message.root
+import kotlinx.android.synthetic.main.activity_message.toolbar
+import kotlinx.android.synthetic.main.activity_settings.*
 import java.time.Instant
 import java.util.*
 import kotlin.collections.ArrayList
@@ -217,24 +222,27 @@ class ActivityMessage : ActivityBase() {
         messageTimestamp: Long,
         messageBody: String
     ) {
-
-        realm.executeTransaction { realmT ->
-            var message = realmT.where(Message::class.java).equalTo("id", messageId).findFirst()
+        val realmInThread = RealmUtil.getCustomRealmInstance(this)
+        realmInThread.executeTransaction { realmT ->
+            var message = DbHelper.getMessageObject(realmT, messageId)
             if (message == null) {
-                message = DbHelper.createMessageObject(realm, messageId)
+                message = DbHelper.createMessageObject(realmT, messageId)
             }
             message.user1 = user1
 
             val thread = DbHelper.getOrCreateThreadObject(realmT, user2)
             thread.contact = DbHelper.getContactObject(realmT, user2)
-
+            if (thread.timestamp ?: 0 < messageTimestamp)
+                thread.timestamp = messageTimestamp
             message.thread = thread
 
             message.timestamp = messageTimestamp
             message.body = messageBody
             message.status = MessageStatus.pending
+
             realmT.insertOrUpdate(message)
         }
+        realmInThread.close()
     }
 
     private fun sendMessage(subId: Int, user1: String, messageTimestamp: Long, message: String) {
@@ -257,6 +265,7 @@ class ActivityMessage : ActivityBase() {
             intent.putExtra("messageId", messageId)
             intent.putExtra("partIndex", index)
             intent.putExtra("numParts", numParts)
+            intent.putExtra("subId", subId)
 
             val reqCode = Random.nextInt()
             PendingIntent.getBroadcast(this, reqCode, intent, 0)
@@ -266,6 +275,7 @@ class ActivityMessage : ActivityBase() {
             intent.putExtra("messageId", messageId)
             intent.putExtra("partIndex", index)
             intent.putExtra("numParts", numParts)
+            intent.putExtra("subId", subId)
 
             val reqCode = Random.nextInt()
             PendingIntent.getBroadcast(this, reqCode, intent, 0)
@@ -281,10 +291,10 @@ class ActivityMessage : ActivityBase() {
         )
     }
 
-
     private fun pickDataFromUIAndSend() {
 
         if (!TelephonyUtil.isDefaultSmsApp(this)) {
+            showStatus("Set Carolyn as Default SMS app from Dashboard.")
             return
         }
 
@@ -293,14 +303,21 @@ class ActivityMessage : ActivityBase() {
         }
 
         val subId = subscriptions[senderSimIndex].subId
-
         val user1 = subscriptions[senderSimIndex].number
-
         val messageTimestamp = Instant.now().toEpochMilli()
-
         val message = edit_text_message.text.toString()
+
         edit_text_message.setText("")
 
-        sendMessage(subId, user1, messageTimestamp, message)
+        val th = Thread {
+            sendMessage(subId, user1, messageTimestamp, message)
+        }
+        th.start()
+    }
+
+    private fun showStatus(message: String, modifySnackbar: ((Snackbar) -> Unit)? = null) {
+        val snackbar = Snackbar.make(root, message, Snackbar.LENGTH_LONG)
+        modifySnackbar?.invoke(snackbar)
+        snackbar.show()
     }
 }

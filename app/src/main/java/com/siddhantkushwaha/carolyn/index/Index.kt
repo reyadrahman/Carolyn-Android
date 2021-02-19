@@ -116,7 +116,7 @@ class Index(
         message: TelephonyUtil.SMSMessage,
         subscriptions: HashMap<Int, TelephonyUtil.SubscriptionInfo>
     ): Int {
-        val user1 = subscriptions[message.subId]?.number ?: "unknown"
+        val user1 = subscriptions[message.subId]?.number ?: "UNKNOWN"
         val user2 = CommonUtil.normalizePhoneNumber(message.user2)
             ?: message.user2.replace("-", "").toLowerCase(Locale.getDefault())
 
@@ -139,7 +139,10 @@ class Index(
             }
 
             realmMessage.smsId = message.id
-            realmMessage.user1 = user1
+
+            // TODO - sub id might change when sims are changed, workaround for now, don't overwrite
+            if (realmMessage.user1 == null)
+                realmMessage.user1 = user1
 
             // received sms
             if (realmMessage.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX) {
