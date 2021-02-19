@@ -118,7 +118,7 @@ class MessageAdapter(
             // honor value already present in map to maintain current status
             val showMessage: Boolean =
                 isMessageShownMap[messageId]
-                    ?: (messageType == "view-all" || messageType == message.type)
+                    ?: (messageType == "all" || messageType == message.type)
 
             bindMessage(message, showMessage = showMessage)
 

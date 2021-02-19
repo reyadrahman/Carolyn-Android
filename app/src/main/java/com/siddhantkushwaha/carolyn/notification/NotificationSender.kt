@@ -100,6 +100,7 @@ class NotificationSender(val context: Context) {
 
         val activityMessageIntent = Intent(context, ActivityMessage::class.java)
         activityMessageIntent.putExtra("user2", user2)
+        activityMessageIntent.putExtra("view-type", type)
 
         val contentPendingIntent: PendingIntent = TaskStackBuilder.create(context)
             .addNextIntentWithParentStack(activityMessageIntent)
