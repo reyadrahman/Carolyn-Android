@@ -36,6 +36,8 @@ import kotlin.random.Random
 
 class ActivityMessage : ActivityBase() {
 
+    private val tag = "ActivityMessage"
+
     private lateinit var realm: Realm
 
     private lateinit var messages: RealmResults<Message>
@@ -56,6 +58,8 @@ class ActivityMessage : ActivityBase() {
     private var timer: Timer? = null
     private val delay = 1 * 1000L
     private val taskInterval = 60 * 1000L
+
+    private var isRecyclerViewScrolledToEnd = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,7 +104,7 @@ class ActivityMessage : ActivityBase() {
         )
 
         messagesChangeListener = OrderedRealmCollectionChangeListener { _, _ ->
-            messageAdapter.notifyDataSetChanged()
+            notifyAdapterAndUpdateScrollStatus()
 
             val markAsRead = TaskUtil {
                 val realmLocal = RealmUtil.getCustomRealmInstance(this)
@@ -138,6 +142,14 @@ class ActivityMessage : ActivityBase() {
         recycler_view_messages.layoutManager = layoutManager
         recycler_view_messages.adapter = messageAdapter
 
+        recycler_view_messages.setOnScrollChangeListener { v, _, scrollY, _, oldScrollY ->
+            val dy = scrollY - oldScrollY
+            val canScrollDown = v.canScrollVertically(1)
+
+            Log.d(tag, "Recycler view scrolling - $dy $canScrollDown")
+            isRecyclerViewScrolledToEnd = !canScrollDown
+        }
+
         populateSimInfo()
 
         header_title.setOnClickListener {
@@ -155,7 +167,7 @@ class ActivityMessage : ActivityBase() {
         super.onResume()
 
         // Update adapter for changes that were made while activity was paused
-        messageAdapter.notifyDataSetChanged()
+        notifyAdapterAndUpdateScrollStatus()
         messages.addChangeListener(messagesChangeListener)
 
         timer = Timer()
@@ -252,7 +264,7 @@ class ActivityMessage : ActivityBase() {
         // Send messages
         val messageId = DbHelper.getMessageId(messageTimestamp, message)
 
-        Log.d("ActivityMessage", "Sending message $messageId $message $messageTimestamp")
+        Log.d(tag, "Sending message $messageId $message $messageTimestamp")
 
         pushMessageToUI(messageId, user1, messageTimestamp, message)
 
@@ -319,5 +331,12 @@ class ActivityMessage : ActivityBase() {
         val snackbar = Snackbar.make(root, message, Snackbar.LENGTH_LONG)
         modifySnackbar?.invoke(snackbar)
         snackbar.show()
+    }
+
+    private fun notifyAdapterAndUpdateScrollStatus() {
+        messageAdapter.notifyDataSetChanged()
+        if (isRecyclerViewScrolledToEnd) {
+            recycler_view_messages.scrollToPosition(messages.size - 1)
+        }
     }
 }
