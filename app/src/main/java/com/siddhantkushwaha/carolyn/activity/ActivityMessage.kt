@@ -227,7 +227,6 @@ class ActivityMessage : ActivityBase() {
             ContextCompat.getColorStateList(this, subColors[senderSimIndex])
     }
 
-
     private fun pushMessageToUI(
         messageId: String,
         user1: String,

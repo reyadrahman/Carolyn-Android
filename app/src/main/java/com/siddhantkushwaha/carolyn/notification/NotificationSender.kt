@@ -2,8 +2,11 @@ package com.siddhantkushwaha.carolyn.notification
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.TaskStackBuilder
 import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.media.AudioAttributes
 import android.net.Uri
@@ -12,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.bumptech.glide.Glide
 import com.siddhantkushwaha.carolyn.R
+import com.siddhantkushwaha.carolyn.activity.ActivityMessage
 
 
 class NotificationSender(val context: Context) {
@@ -94,6 +98,13 @@ class NotificationSender(val context: Context) {
         type: String?
     ) {
 
+        val activityMessageIntent = Intent(context, ActivityMessage::class.java)
+        activityMessageIntent.putExtra("user2", user2)
+
+        val contentPendingIntent: PendingIntent = TaskStackBuilder.create(context)
+            .addNextIntentWithParentStack(activityMessageIntent)
+            .getPendingIntent(notificationId, PendingIntent.FLAG_ONE_SHOT)
+
         val channelId = type ?: "personal"
 
         val notificationIcon = if (iconUri != null) {
@@ -113,6 +124,7 @@ class NotificationSender(val context: Context) {
         val notificationStyle = NotificationCompat.BigTextStyle().bigText(cleanedBody)
 
         val notification = NotificationCompat.Builder(context, channelId)
+            .setContentIntent(contentPendingIntent)
             .setSmallIcon(R.drawable.logo_caroyln)
             .setContentTitle(subject)
             .setContentText(cleanedBody)
@@ -120,6 +132,10 @@ class NotificationSender(val context: Context) {
             .setStyle(notificationStyle)
             .build()
 
-        notificationManager.notify(user2, notificationId, notification)
+        notificationManager.notify(
+            user2,
+            notificationId,
+            notification
+        )
     }
 }
