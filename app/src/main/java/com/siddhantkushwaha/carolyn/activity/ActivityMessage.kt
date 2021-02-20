@@ -14,12 +14,12 @@ import com.siddhantkushwaha.carolyn.adapter.MessageAdapter
 import com.siddhantkushwaha.carolyn.common.DbHelper
 import com.siddhantkushwaha.carolyn.common.Enums.MessageStatus
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
-import com.siddhantkushwaha.carolyn.common.util.TaskUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.entity.Message
-import com.siddhantkushwaha.carolyn.index.IndexTask
 import com.siddhantkushwaha.carolyn.notification.NotificationSender
 import com.siddhantkushwaha.carolyn.receiver.SMSStatusReceiver
+import com.siddhantkushwaha.carolyn.tasks.IndexTask
+import com.siddhantkushwaha.carolyn.tasks.MarkMessagesAsReadTask
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.Realm
 import io.realm.RealmResults
@@ -107,7 +107,7 @@ class ActivityMessage : ActivityBase() {
         messagesChangeListener = OrderedRealmCollectionChangeListener { _, _ ->
             notifyAdapterAndUpdateScrollStatus()
 
-            val markAsRead = TaskUtil {
+            val markAsRead = MarkMessagesAsReadTask {
                 val realmLocal = RealmUtil.getCustomRealmInstance(this)
 
                 realmLocal.executeTransaction { realmT ->
@@ -174,7 +174,7 @@ class ActivityMessage : ActivityBase() {
         timer = Timer()
         val timerTask = object : TimerTask() {
             override fun run() {
-                IndexTask(this@ActivityMessage, false).start()
+                IndexTask(this@ActivityMessage).start()
             }
         }
         timer?.scheduleAtFixedRate(timerTask, delay, taskInterval)

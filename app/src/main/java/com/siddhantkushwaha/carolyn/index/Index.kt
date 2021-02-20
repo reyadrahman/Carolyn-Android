@@ -14,46 +14,49 @@ import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.ml.LanguageId
 import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import io.realm.Realm
-import io.realm.Sort
 import java.io.File
+import java.time.Instant
 import java.util.*
 
 
-class Index(
-    private val optimized: Boolean
-) {
+class Index(private val optimized: Boolean) {
 
-    private val tag: String = this::class.java.toString()
+    private val tag: String = "Index"
 
     public fun run(context: Context) {
         val realm = RealmUtil.getCustomRealmInstance(context)
 
-        if (!optimized) {
-            indexContacts(context, realm)
-        }
-
-        indexMessages(context, realm)
+        if (!optimized) indexContacts(context, realm)
+        fetchAndIndexMessages(context, realm)
 
         realm.close()
     }
 
-    private fun indexMessages(context: Context, realm: Realm) {
+    private fun fetchAndIndexMessages(context: Context, realm: Realm) {
 
-        val messages = TelephonyUtil.getAllSms(context)
+        // only index messages from last 1 hour if optimized version is running
+        val fromTime = if (!optimized) -1 else Instant.now().toEpochMilli() - (1 * 60 * 60 * 1000)
+
+        val messages = TelephonyUtil.getAllSms(context, fromTime)
         val subscriptions = TelephonyUtil.getSubscriptions(context)
 
         if (messages == null || subscriptions == null)
             return
 
-        addMessages(context, realm, messages, subscriptions)
+        Log.d(tag, "Number of messages after $fromTime: ${messages.size}")
 
+        // index from sms provider to realm db
+        messages.forEach { message ->
+            indexMessage(context, realm, message, subscriptions)
+        }
+
+        // if fromTime is -1, when not optimized, then all messages will be here
+        // be careful, pruneMessage should get all messages, otherwise older messages will start disappearing !!
         if (!optimized) {
             pruneMessages(realm, messages)
             pruneThreads(realm)
-
-            if (TelephonyUtil.isDefaultSmsApp(context)) {
+            if (TelephonyUtil.isDefaultSmsApp(context))
                 markSmsReadInContentProvider(context, realm)
-            }
         }
     }
 
@@ -88,28 +91,6 @@ class Index(
         }
     }
 
-    private fun addMessages(
-        context: Context,
-        realm: Realm,
-        messages: ArrayList<TelephonyUtil.SMSMessage>,
-        subscriptions: HashMap<Int, TelephonyUtil.SubscriptionInfo>
-    ) {
-        val breakpoint = if (optimized) {
-            realm.where(Message::class.java).sort("timestamp", Sort.DESCENDING)
-                .findFirst()?.timestamp ?: -1
-        } else {
-            -1
-        }
-
-        for (message in messages) {
-            if (message.timestamp < breakpoint) {
-                break
-            }
-
-            indexMessage(context, realm, message, subscriptions)
-        }
-    }
-
     private fun indexMessage(
         context: Context,
         realm: Realm,
@@ -122,9 +103,8 @@ class Index(
 
         realm.executeTransaction { realmT ->
             val realmThread = DbHelper.getOrCreateThreadObject(realmT, user2)
-            if (realmThread.contact == null) {
+            if (realmThread.contact == null)
                 realmThread.contact = DbHelper.getContactObject(realmT, user2)
-            }
 
             realmThread.user2DisplayName = message.user2
 
@@ -160,9 +140,8 @@ class Index(
                     realmMessage.status = Enums.MessageStatus.sent
             }
 
-            if (message.timestamp > realmThread.timestamp ?: 0) {
+            if (message.timestamp > realmThread.timestamp ?: 0)
                 realmThread.timestamp = message.timestamp
-            }
 
             /******************************** This is the real deal *******************************/
 

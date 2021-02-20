@@ -20,8 +20,8 @@ import com.siddhantkushwaha.carolyn.common.RequestCodes
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.entity.Message
-import com.siddhantkushwaha.carolyn.index.IndexTask
 import com.siddhantkushwaha.carolyn.ml.MessageClassifier
+import com.siddhantkushwaha.carolyn.tasks.IndexTask
 import kotlinx.android.synthetic.main.activity_settings.*
 
 
@@ -170,7 +170,7 @@ class ActivitySettings : ActivityBase() {
             realmL.close()
 
             // re index
-            IndexTask(this, false).start()
+            IndexTask(this).start()
         }
 
         clearAllMessages.start()

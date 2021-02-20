@@ -14,7 +14,7 @@ import com.siddhantkushwaha.carolyn.adapter.ThreadAdapter
 import com.siddhantkushwaha.carolyn.common.*
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.entity.MessageThread
-import com.siddhantkushwaha.carolyn.index.IndexTask
+import com.siddhantkushwaha.carolyn.tasks.IndexTask
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.Realm
 import io.realm.RealmResults
@@ -109,7 +109,7 @@ class ActivityHome : ActivityBase() {
         timer = Timer()
         val timerTask = object : TimerTask() {
             override fun run() {
-                IndexTask(this@ActivityHome, false).start()
+                IndexTask(this@ActivityHome).start()
             }
         }
         timer?.scheduleAtFixedRate(timerTask, delay, taskInterval)
@@ -157,7 +157,7 @@ class ActivityHome : ActivityBase() {
             ), RequestCodes.REQUEST_CODE_PERMISSION_BASIC
         ) { granted ->
             if (granted)
-                IndexTask(this@ActivityHome, false).start()
+                IndexTask(this@ActivityHome).start()
         }
     }
 
@@ -199,7 +199,7 @@ class ActivityHome : ActivityBase() {
             startActivityForResult(intent, requestCode) {
                 // Run index task only if app got white listed
                 if (powerManager.isIgnoringBatteryOptimizations(packageName))
-                    IndexTask(this@ActivityHome, false).start()
+                    IndexTask(this@ActivityHome).start()
             }
         }
     }

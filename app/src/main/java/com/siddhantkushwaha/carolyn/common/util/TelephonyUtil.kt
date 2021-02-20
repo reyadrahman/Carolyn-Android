@@ -73,17 +73,22 @@ object TelephonyUtil {
         return subId
     }
 
-    public fun getAllSms(context: Context): ArrayList<SMSMessage>? {
+    public fun getAllSms(
+        context: Context,
+        fromTimeMillis: Long = -1
+    ): ArrayList<SMSMessage>? {
+
         var messages: ArrayList<SMSMessage>? = null
         if (checkPermissions(context, arrayOf(Manifest.permission.READ_SMS)).isEmpty()) {
             messages = ArrayList()
             val cursor = context.contentResolver.query(
                 Telephony.Sms.CONTENT_URI,
                 null,
+                "${Telephony.Sms.DATE} >= $fromTimeMillis", // get messages after from time
                 null,
-                null,
-                null
+                "${Telephony.Sms.DATE} DESC" // latest messages at the top
             )
+
             if (cursor != null) {
                 while (cursor.moveToNext()) {
 
@@ -131,7 +136,7 @@ object TelephonyUtil {
                         isRead = isRead == 1
                     )
 
-                    // this list will have latest messages at the top
+                    // in the decreasing order of timestamps
                     messages.add(message)
                 }
                 cursor.close()

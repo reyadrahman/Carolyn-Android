@@ -12,7 +12,7 @@ import com.siddhantkushwaha.carolyn.common.Enums
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
-import com.siddhantkushwaha.carolyn.index.IndexTask
+import com.siddhantkushwaha.carolyn.index.Index
 import com.siddhantkushwaha.carolyn.ml.LanguageId
 import com.siddhantkushwaha.carolyn.ml.MessageClassifier
 import com.siddhantkushwaha.carolyn.notification.NotificationSender
@@ -23,6 +23,12 @@ import java.util.*
 class SMSReceiver : BroadcastReceiver() {
 
     private val tag = "SMSReceiver"
+
+    companion object {
+
+        @JvmStatic
+        private val index = Index(true)
+    }
 
     override fun onReceive(context: Context, intent: Intent) {
 
@@ -74,8 +80,12 @@ class SMSReceiver : BroadcastReceiver() {
                 processMessage(context, details)
             }
 
-            // refresh the local database
-            IndexTask(context, true).start()
+            // ********* Can't use IndexTask here because it only runs one instance at a time
+            // ********* if multiple messages received simultaneously, data will not be show immediately
+            val indexThread = Thread {
+                index.run(context)
+            }
+            indexThread.start()
         }
     }
 
@@ -83,81 +93,82 @@ class SMSReceiver : BroadcastReceiver() {
         context: Context,
         message: TelephonyUtil.SMSMessage
     ) {
-        // thread to classify and send notification
         val thread = Thread {
-
             val realm = RealmUtil.getCustomRealmInstance(context)
 
+            // decide and send notification if needed
             val user2 = CommonUtil.normalizePhoneNumber(message.user2)
                 ?: message.user2.replace("-", "").toLowerCase(Locale.getDefault())
-
             val isMessageActivityForCurrentUserActive =
                 ActivityTracker.getActivityName() == ActivityMessage::class.java.toString()
                         && ActivityTracker.getActivityExtras()?.get("user2") == user2
-            if (isMessageActivityForCurrentUserActive) {
-                Log.d(tag, "Activity already active for user $user2, notification not needed.")
-                return@Thread
+
+            if (!isMessageActivityForCurrentUserActive) {
+                Log.d(tag, "Activity not active for user $user2, sending notification.")
+
+                val contact = DbHelper.getContactObject(realm, user2)
+                val rule = DbHelper.getRuleObject(realm, user2)
+
+                val messageClass =
+
+                    // rule has the highest priority
+                    if (rule != null) {
+                        rule.type
+                    }
+
+                    // If message is in contacts, always treat all messages as personal
+                    else if (contact != null) {
+                        null
+                    }
+
+                    // If number has 10 digits and classification not enabled on unsaved numbers,
+                    // we have decided to mark the message as personal
+                    else if (user2.length == 13 && !DbHelper.getUnsavedNumberClassificationRule(
+                            context
+                        )
+                    ) {
+                        null
+                    }
+
+                    // If prediction needs to be applied
+                    else {
+
+                        // If language is not english, mark it spam
+                        if (LanguageId.getLanguage(message.body) != Enums.LanguageType.en) {
+                            Enums.MessageType.spam
+                        }
+
+                        // Use model
+                        else {
+                            MessageClassifier.doClassification(
+                                context,
+                                message.body,
+                                skipIfNotDownloaded = true
+                            )
+                        }
+                    }
+
+                // Details required for sending notification
+                val photoUri = contact?.photoUri
+                val user2DisplayName = contact?.name ?: contact?.number ?: message.user2
+
+                Log.d(tag, "${message.body} - $messageClass")
+
+                // This workaround should do for now
+                val notificationId = message.timestamp.toInt()
+
+                val notificationSender = NotificationSender(context)
+                notificationSender.sendNotification(
+                    notificationId,
+                    user2,
+                    user2DisplayName,
+                    message.body,
+                    photoUri,
+                    messageClass
+                )
             }
 
-            val contact = DbHelper.getContactObject(realm, user2)
-            val rule = DbHelper.getRuleObject(realm, user2)
-
-            val messageClass =
-
-                // rule has the highest priority
-                if (rule != null) {
-                    rule.type
-                }
-
-                // If message is in contacts, always treat all messages as personal
-                else if (contact != null) {
-                    null
-                }
-
-                // If number has 10 digits and classification not enabled on unsaved numbers,
-                // we have decided to mark the message as personal
-                else if (user2.length == 13 && !DbHelper.getUnsavedNumberClassificationRule(context)) {
-                    null
-                }
-
-                // If prediction needs to be applied
-                else {
-
-                    // If language is not english, mark it spam
-                    if (LanguageId.getLanguage(message.body) != Enums.LanguageType.en) {
-                        Enums.MessageType.spam
-                    }
-
-                    // Use model
-                    else {
-                        MessageClassifier.doClassification(
-                            context,
-                            message.body,
-                            skipIfNotDownloaded = true
-                        )
-                    }
-                }
-
-            // Details required for sending notification
-            val photoUri = contact?.photoUri
-            val user2DisplayName = contact?.name ?: contact?.number ?: message.user2
-
             realm.close()
-
-            Log.d(tag, "${message.body} - $messageClass")
-
-            // This workaround should do for now
-            val notificationId = message.timestamp.toInt()
-
-            val notificationSender = NotificationSender(context)
-            notificationSender.sendNotification(
-                notificationId,
-                user2,
-                user2DisplayName,
-                message.body,
-                photoUri,
-                messageClass
-            )
         }
         thread.start()
     }

@@ -1,17 +1,18 @@
-package com.siddhantkushwaha.carolyn.index
+package com.siddhantkushwaha.carolyn.tasks
 
 import android.content.Context
 import android.util.Log
+import com.siddhantkushwaha.carolyn.index.Index
 
 
-class IndexTask(private val context: Context, private val optimized: Boolean) : Thread() {
+class IndexTask(private val context: Context) : Thread() {
 
     companion object {
         @JvmStatic
         private var inProgress = false
 
         @JvmStatic
-        private var index: Index? = null
+        private val index = Index(false)
     }
 
     override fun run() {
@@ -20,12 +21,9 @@ class IndexTask(private val context: Context, private val optimized: Boolean) : 
 
         inProgress = true
 
-        if (index == null)
-            index = Index(optimized)
-
         val startTime = System.nanoTime()
 
-        index?.run(context)
+        index.run(context)
 
         val endTime = System.nanoTime()
         val duration = endTime - startTime

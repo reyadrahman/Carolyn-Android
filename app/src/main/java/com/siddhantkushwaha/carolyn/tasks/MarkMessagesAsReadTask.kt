@@ -1,7 +1,7 @@
-package com.siddhantkushwaha.carolyn.common.util
+package com.siddhantkushwaha.carolyn.tasks
 
 
-class TaskUtil(private val task: () -> Unit) : Thread() {
+class MarkMessagesAsReadTask(private val task: () -> Unit) : Thread() {
 
     companion object {
         @JvmStatic
