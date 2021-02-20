@@ -24,26 +24,33 @@ class Index(private val optimized: Boolean) {
     private val tag: String = "Index"
 
     public fun run(context: Context) {
+        val indexingStartTimeMillis = Instant.now().toEpochMilli()
+
         val realm = RealmUtil.getCustomRealmInstance(context)
 
         if (!optimized) indexContacts(context, realm)
-        fetchAndIndexMessages(context, realm)
+        fetchAndIndexMessages(context, realm, indexingStartTimeMillis)
 
         realm.close()
     }
 
-    private fun fetchAndIndexMessages(context: Context, realm: Realm) {
+    private fun fetchAndIndexMessages(
+        context: Context,
+        realm: Realm,
+        indexingStartTimeMillis: Long
+    ) {
 
         // only index messages from last 1 hour if optimized version is running
-        val fromTime = if (!optimized) -1 else Instant.now().toEpochMilli() - (1 * 60 * 60 * 1000)
+        val fromTimeMillis = if (!optimized) -1 else indexingStartTimeMillis - (1 * 60 * 60 * 1000)
 
-        val messages = TelephonyUtil.getAllSms(context, fromTime)
+        val messages = TelephonyUtil.getAllSms(context, fromTimeMillis)
+
         val subscriptions = TelephonyUtil.getSubscriptions(context)
 
         if (messages == null || subscriptions == null)
             return
 
-        Log.d(tag, "Number of messages after $fromTime: ${messages.size}")
+        Log.d(tag, "Number of messages after $fromTimeMillis: ${messages.size}")
 
         // index from sms provider to realm db
         messages.forEach { message ->
@@ -53,25 +60,34 @@ class Index(private val optimized: Boolean) {
         // if fromTime is -1, when not optimized, then all messages will be here
         // be careful, pruneMessage should get all messages, otherwise older messages will start disappearing !!
         if (!optimized) {
-            pruneMessages(realm, messages)
+            pruneMessages(realm, messages, indexingStartTimeMillis)
             pruneThreads(realm)
             if (TelephonyUtil.isDefaultSmsApp(context))
                 markSmsReadInContentProvider(context, realm)
         }
     }
 
-    private fun pruneMessages(realm: Realm, messages: ArrayList<TelephonyUtil.SMSMessage>) {
+    private fun pruneMessages(
+        realm: Realm,
+        messages: ArrayList<TelephonyUtil.SMSMessage>,
+        indexingStartTimeMillis: Long
+    ) {
         val allMessages = realm.where(Message::class.java).findAll()
         val messageIds = messages.map { message ->
             DbHelper.getMessageId(message.timestamp, message.body)
         }.toHashSet()
 
         for (indexedMessage in allMessages) {
-            // We need to retain these messages
-            if (indexedMessage.status == Enums.MessageStatus.notSent || indexedMessage.status == Enums.MessageStatus.pending)
-                continue
 
-            if (!messageIds.contains(indexedMessage.id)) {
+            val shouldBePruned = !messageIds.contains(indexedMessage.id)
+                    && indexedMessage.status != Enums.MessageStatus.notSent
+                    && indexedMessage.status != Enums.MessageStatus.pending
+                    // ***** message should be older than when indexing started ****
+                    // case where new message came in after indexing started (so the message won't be in messages list)
+                    // it will deleted, and added again in second fetch, lol, like a glitch
+                    && indexedMessage.timestamp ?: 0 < indexingStartTimeMillis
+
+            if (shouldBePruned) {
                 Log.d(tag, "Deleting message: ${indexedMessage.body}")
                 realm.executeTransaction {
                     indexedMessage.deleteFromRealm()

@@ -90,14 +90,13 @@ class ActivityMessage : ActivityBase() {
             longClickListener = {
                 // TODO, TEST FEATURE, ******* Experimental *********
                 val smsId = it.smsId
-                if (smsId != null) {
-                    TelephonyUtil.deleteSMS(this, smsId)
-                }
-
                 val messageId = it.id
-                if (messageId != null) {
-                    realm.executeTransactionAsync { rt ->
-                        DbHelper.getMessageObject(rt, messageId)?.deleteFromRealm()
+                if (smsId != null && messageId != null) {
+                    val deleted = TelephonyUtil.deleteSMS(this, smsId)
+                    if (deleted) {
+                        realm.executeTransactionAsync { rt ->
+                            DbHelper.getMessageObject(rt, messageId)?.deleteFromRealm()
+                        }
                     }
                 }
             },
