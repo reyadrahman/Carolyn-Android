@@ -126,7 +126,7 @@ class NotificationSender(val context: Context) {
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setContentIntent(contentPendingIntent)
-            .setSmallIcon(R.drawable.logo_caroyln)
+            .setSmallIcon(R.drawable.logo_carolyn)
             .setContentTitle(subject)
             .setContentText(cleanedBody)
             .setLargeIcon(notificationIcon)

@@ -10,14 +10,14 @@
 
     <ImageView
         android:id="@+id/textview_main"
-        android:layout_width="192dp"
-        android:layout_height="192dp"
-        android:src="@drawable/logo_caroyln"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:src="@drawable/logo_carolyn"
         app:layout_constraintBottom_toTopOf="@+id/button_login"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.5" />
 
     <Button
         android:id="@+id/button_login"
