@@ -269,7 +269,7 @@ class ActivityMessage : ActivityBase() {
 
         pushMessageToUI(messageId, user1, messageTimestamp, message)
 
-        val messageParts = ArrayList(message.chunked(150))
+        val messageParts = ArrayList(message.chunked(100))
         val numParts = messageParts.size
 
         val scAddress = if (user1 == "UNKNOWN") null else user1

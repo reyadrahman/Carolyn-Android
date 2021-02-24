@@ -67,10 +67,11 @@
         android:layout_marginBottom="24dp"
         android:backgroundTint="@color/colorAccent"
         android:padding="0dp"
-        android:src="@drawable/logo_carolyn"
+        android:src="@drawable/icon_carolyn_basic"
         app:borderWidth="0dp"
         app:layout_constraintBottom_toBottomOf="@+id/recycler_view_threads"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@android:color/white" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_nav_filter"
