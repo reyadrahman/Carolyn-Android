@@ -133,7 +133,12 @@ class SMSStatusReceiver private constructor() : BroadcastReceiver() {
                     }
                 }
 
-                // update in realm db
+                /*
+                    sent intent (for message part j) ) might come up after delivered intent (for message part i) for long texts,
+                    where j > i
+                    if updateMessageStatusInDbs called for every part, that will lead to cris - cross
+                    TODO - decide on how to handle this
+                 */
                 message.status = status
                 realmT.insertOrUpdate(message)
             }
