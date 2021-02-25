@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.provider.Telephony
 import android.telephony.SmsManager
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
@@ -88,19 +90,7 @@ class ActivityMessage : ActivityBase() {
             messages,
             true,
             longClickListener = {
-                // TODO, TEST FEATURE, ******* Experimental *********
-                var deleted = true
-
-                val smsId = it.smsId
-                if (smsId != null && smsId > 0) {
-                    deleted = TelephonyUtil.deleteSMS(this, smsId)
-                }
-                val messageId = it.id
-                if (messageId != null && deleted) {
-                    realm.executeTransactionAsync { rt ->
-                        DbHelper.getMessageObject(rt, messageId)?.deleteFromRealm()
-                    }
-                }
+                deleteMessage(realm, it.smsId, it.id)
             },
             messageType = showMessageType
         )
@@ -191,6 +181,22 @@ class ActivityMessage : ActivityBase() {
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
         return true
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_message, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.clear_all -> {
+                deleteAll()
+            }
+        }
+
+        // handle back button case separately
+        return super.onOptionsItemSelected(item)
     }
 
     private fun populateSimInfo() {
@@ -353,5 +359,30 @@ class ActivityMessage : ActivityBase() {
     private fun dismissNotifications() {
         val ns = NotificationSender(this)
         ns.cancelNotificationByTag(user2)
+    }
+
+    private fun deleteMessage(realm: Realm, smsId: Int?, messageId: String?) {
+        var deleted = true
+        if (smsId != null && smsId > 0) {
+            deleted = TelephonyUtil.deleteSMS(this, smsId)
+        }
+        if (messageId != null && deleted) {
+            // single sync op on UI thread should be OK
+            realm.executeTransaction { rt ->
+                DbHelper.getMessageObject(rt, messageId)?.deleteFromRealm()
+            }
+        }
+    }
+
+    private fun deleteAll() {
+        val clearAllTask = Thread {
+            val realm = RealmUtil.getCustomRealmInstance(this)
+            val messages = realm.where(Message::class.java).equalTo("thread.user2", user2).findAll()
+            messages.forEach {
+                deleteMessage(realm, it.smsId, it.id)
+            }
+            realm.close()
+        }
+        clearAllTask.start()
     }
 }
