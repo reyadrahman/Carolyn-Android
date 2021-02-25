@@ -235,6 +235,10 @@ class ActivityMessage : ActivityBase() {
         messageTimestamp: Long,
         messageBody: String
     ) {
+        // scroll to end
+        // notifyAdapterAndUpdateScrollStatus will do the job
+        scrollToEnd()
+
         val realmInThread = RealmUtil.getCustomRealmInstance(this)
         realmInThread.executeTransaction { realmT ->
             var message = DbHelper.getMessageObject(realmT, messageId)
@@ -336,7 +340,12 @@ class ActivityMessage : ActivityBase() {
 
     private fun notifyAdapterAndUpdateScrollStatus() {
         messageAdapter.notifyDataSetChanged()
-        if (isRecyclerViewScrolledToEnd) {
+        if (isRecyclerViewScrolledToEnd)
+            scrollToEnd()
+    }
+
+    private fun scrollToEnd() {
+        runOnUiThread {
             recycler_view_messages.scrollToPosition(messages.size - 1)
         }
     }
