@@ -117,13 +117,13 @@ class SMSStatusReceiver private constructor() : BroadcastReceiver() {
                     therefore updateMessageStatusInDbs called for last part only, that will avoid cris - cross
                  */
 
-                if (message.status == Enums.MessageStatus.notSent) {
+                if (status == Enums.MessageStatus.notSent) {
                     val ret = TelephonyUtil.markMessageAsSendFailed(context, smsId)
                     if (ret == 0)
                         return@executeTransactionAsync
                 }
 
-                if (message.status == Enums.MessageStatus.sent || message.status == Enums.MessageStatus.delivered) {
+                if (status == Enums.MessageStatus.sent || status == Enums.MessageStatus.delivered) {
                     val ret = TelephonyUtil.markMessageAsSendSuccess(context, smsId)
                     if (ret == 0)
                         return@executeTransactionAsync

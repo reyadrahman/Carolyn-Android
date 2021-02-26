@@ -140,6 +140,8 @@ class Index(private val optimized: Boolean) {
             if (realmMessage.user1 == null)
                 realmMessage.user1 = user1
 
+            Log.d(tag, "${message.body} ${message.type}")
+
             when (realmMessage.smsType) {
                 // received messages
                 Telephony.Sms.MESSAGE_TYPE_INBOX -> {

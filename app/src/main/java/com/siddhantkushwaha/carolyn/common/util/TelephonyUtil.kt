@@ -179,7 +179,7 @@ object TelephonyUtil {
             null
         )
 
-        Log.d(tag, "Message updated at URI: $uri $smsId")
+        Log.d(tag, "Message marked as failed at URI?: $uri $smsId $numUpdated")
 
         return numUpdated
     }
@@ -197,7 +197,7 @@ object TelephonyUtil {
             null
         )
 
-        Log.d(tag, "Message updated at URI: $uri $smsId")
+        Log.d(tag, "Message marked as sent at URI?: $uri $smsId $numUpdated")
 
         return numUpdated
     }

@@ -53,7 +53,7 @@ class ActivitySettings : ActivityBase() {
                 when (it) {
                     0 -> Helper.showStatus(root, "Not changed to default SMS app.")
                     1 -> Helper.showStatus(root, "Changed to default SMS app.")
-                    2 -> Helper.showStatus(root, "Already set as deafault.")
+                    2 -> Helper.showStatus(root, "Already set as default.")
                 }
             }
         }

@@ -148,23 +148,22 @@ class ActivityHome : ActivityBase() {
     }
 
     private fun checkPermissions() {
-
         if (!TelephonyUtil.isDefaultSmsApp(this)) {
-            Helper.setAsDefault(this, root) {}
-            return
-        }
-
-        requestPermissions(
-            arrayOf(
-                android.Manifest.permission.READ_SMS,
-                android.Manifest.permission.RECEIVE_SMS,
-                android.Manifest.permission.SEND_SMS,
-                android.Manifest.permission.READ_CONTACTS,
-                android.Manifest.permission.READ_PHONE_STATE
-            ), RequestCodes.REQUEST_CODE_PERMISSION_BASIC
-        ) { granted ->
-            if (granted)
-                IndexTask(this@ActivityHome).start()
+            Helper.setAsDefault(this, root) {
+                // request for permissions if needed irrespective of whether it fails or succeeds
+                requestPermissions(
+                    arrayOf(
+                        android.Manifest.permission.READ_SMS,
+                        android.Manifest.permission.RECEIVE_SMS,
+                        android.Manifest.permission.SEND_SMS,
+                        android.Manifest.permission.READ_CONTACTS,
+                        android.Manifest.permission.READ_PHONE_STATE
+                    ), RequestCodes.REQUEST_CODE_PERMISSION_BASIC
+                ) { granted ->
+                    if (granted)
+                        IndexTask(this@ActivityHome).start()
+                }
+            }
         }
     }
 
