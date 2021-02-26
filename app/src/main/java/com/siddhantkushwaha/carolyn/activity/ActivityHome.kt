@@ -98,7 +98,7 @@ class ActivityHome : ActivityBase() {
             startActivity(intent)
         }
 
-        requestDisableBatteryOptimization()
+        // requestDisableBatteryOptimization()
     }
 
     override fun onResume() {
@@ -189,7 +189,7 @@ class ActivityHome : ActivityBase() {
         Firebase model doesn't download and SMS receiver notifications don't work without
         this exemption on certain OEMs such as SAMSUNG and XIAOMI
     */
-    private fun requestDisableBatteryOptimization() {
+    /*private fun requestDisableBatteryOptimization() {
         val requestCode = RequestCodes.REQUEST_CODE_DISABLE_BATTERY_OPTIMIZATION
         val powerManager = getSystemService(POWER_SERVICE) as PowerManager
         if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
@@ -202,7 +202,7 @@ class ActivityHome : ActivityBase() {
                     IndexTask(this@ActivityHome).start()
             }
         }
-    }
+    }*/
 
     private fun getMessageTypeByView(id: Int): String? {
         return when (id) {

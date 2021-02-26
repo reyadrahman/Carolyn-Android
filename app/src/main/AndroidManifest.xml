@@ -13,7 +13,7 @@
 
     <!-- Firebase model doesn't download and SMS receiver notifications don't work without
          this exemption on certain OEMs such as SAMSUNG and XIAOMI -->
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />-->
 
     <application
         android:name=".Carolyn"

@@ -38,7 +38,8 @@ class ActivitySettings : ActivityBase() {
 
         firebaseStorage = FirebaseStorage.getInstance()
 
-        checkbox_enable_unsaved_number_classification.isChecked = DbHelper.getUnsavedNumberClassificationRule(this)
+        checkbox_enable_unsaved_number_classification.isChecked =
+            DbHelper.getUnsavedNumberClassificationRule(this)
 
         button_download_assets.setOnClickListener {
             downloadAssetsUpdateUi()
@@ -125,7 +126,7 @@ class ActivitySettings : ActivityBase() {
 
     private fun deleteSpamOtpUpdateUi() {
         if (!TelephonyUtil.isDefaultSmsApp(this)) {
-            showStatus("Carolyn is not the default SMS app.") { snackbar ->
+            showStatus("This is not the default SMS app.") { snackbar ->
                 snackbar.setAction("MAKE DEFAULT") {
                     setAsDefault()
                 }
@@ -185,7 +186,7 @@ class ActivitySettings : ActivityBase() {
         val requestCode = RequestCodes.REQUEST_CHANGE_DEFAULT
         val callback: (Intent?) -> Unit = {
             if (TelephonyUtil.isDefaultSmsApp(this)) {
-                showStatus("Carolyn is now default SMS app.")
+                showStatus("This is now default SMS app.")
             }
         }
 
