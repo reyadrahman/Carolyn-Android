@@ -116,8 +116,6 @@ object TelephonyUtil {
 
                     val isRead = cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Sms.READ))
 
-                    val status = cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Sms.STATUS))
-
                     val subId =
                         if (cursor.columnNames.find { it == Telephony.Sms.SUBSCRIPTION_ID } != null) {
                             cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Sms.SUBSCRIPTION_ID))
@@ -166,6 +164,42 @@ object TelephonyUtil {
         Log.d(tag, "Message added at URI: $uri $smsId")
 
         return smsId
+    }
+
+    public fun markMessageAsSendFailed(context: Context, smsId: Int): Int {
+        val uri = Uri.parse("${Telephony.Sms.CONTENT_URI}/$smsId")
+
+        val values = ContentValues()
+        values.put(Telephony.Sms.TYPE, Telephony.Sms.MESSAGE_TYPE_FAILED)
+
+        val numUpdated = context.contentResolver.update(
+            uri,
+            values,
+            null,
+            null
+        )
+
+        Log.d(tag, "Message updated at URI: $uri $smsId")
+
+        return numUpdated
+    }
+
+    public fun markMessageAsSendSuccess(context: Context, smsId: Int): Int {
+        val uri = Uri.parse("${Telephony.Sms.CONTENT_URI}/$smsId")
+
+        val values = ContentValues()
+        values.put(Telephony.Sms.TYPE, Telephony.Sms.MESSAGE_TYPE_SENT)
+
+        val numUpdated = context.contentResolver.update(
+            uri,
+            values,
+            null,
+            null
+        )
+
+        Log.d(tag, "Message updated at URI: $uri $smsId")
+
+        return numUpdated
     }
 
     public fun markMessageAsRead(context: Context, smsId: Int): Int {

@@ -130,30 +130,38 @@ class Index(private val optimized: Boolean) {
                 realmMessage = DbHelper.createMessageObject(realmT, messageId)
                 realmMessage.body = message.body
                 realmMessage.timestamp = message.timestamp
-                realmMessage.smsType = message.type
                 realmMessage.language = LanguageId.getLanguage(message.body)
             }
 
             realmMessage.smsId = message.id
+            realmMessage.smsType = message.type
 
             // TODO - sub id might change when sims are changed, workaround for now, don't overwrite
             if (realmMessage.user1 == null)
                 realmMessage.user1 = user1
 
-            // received sms
-            if (realmMessage.smsType == Telephony.Sms.MESSAGE_TYPE_INBOX) {
-                // don't update status of read messages
-                if (realmMessage.status != Enums.MessageStatus.read) {
-                    realmMessage.status =
-                        if (message.isRead) Enums.MessageStatus.read else Enums.MessageStatus.notRead
+            when (realmMessage.smsType) {
+                // received messages
+                Telephony.Sms.MESSAGE_TYPE_INBOX -> {
+                    // don't update status of read messages
+                    if (realmMessage.status != Enums.MessageStatus.read) {
+                        realmMessage.status =
+                            if (message.isRead) Enums.MessageStatus.read else Enums.MessageStatus.notRead
+                    }
                 }
-            }
-            // sent sms
-            else {
-                // if present here, assume sent
-                // if marked as delivered, leave as is, that's even better!
-                if (realmMessage.status != Enums.MessageStatus.delivered)
-                    realmMessage.status = Enums.MessageStatus.sent
+                // pending
+                Telephony.Sms.MESSAGE_TYPE_OUTBOX -> {
+                    realmMessage.status = Enums.MessageStatus.pending
+                }
+                // failed
+                Telephony.Sms.MESSAGE_TYPE_FAILED -> {
+                    realmMessage.status = Enums.MessageStatus.notSent
+                }
+                // assume message sent
+                else -> {
+                    if (realmMessage.status != Enums.MessageStatus.delivered)
+                        realmMessage.status = Enums.MessageStatus.sent
+                }
             }
 
             if (message.timestamp > realmThread.timestamp ?: 0)

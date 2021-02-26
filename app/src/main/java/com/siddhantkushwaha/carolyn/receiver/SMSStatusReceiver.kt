@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.provider.Telephony
 import android.util.Log
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.common.DbHelper
@@ -53,21 +52,21 @@ class SMSStatusReceiver private constructor() : BroadcastReceiver() {
                 when (resultCode) {
                     Activity.RESULT_OK -> {
                         Log.d(tag, "Message sent: $messageId")
-                        updateMessageStatusInDbs(
-                            context,
-                            subId,
-                            messageId,
-                            Enums.MessageStatus.sent
-                        )
+                        if (partIndex == numParts - 1)
+                            updateMessageStatusInDbs(
+                                context,
+                                messageId,
+                                Enums.MessageStatus.sent
+                            )
                     }
                     else -> {
                         Log.d(tag, "Message send failed: $messageId, $resultCode")
-                        updateMessageStatusInDbs(
-                            context,
-                            subId,
-                            messageId,
-                            Enums.MessageStatus.notSent
-                        )
+                        if (partIndex == numParts - 1)
+                            updateMessageStatusInDbs(
+                                context,
+                                messageId,
+                                Enums.MessageStatus.notSent
+                            )
                     }
                 }
             }
@@ -77,21 +76,21 @@ class SMSStatusReceiver private constructor() : BroadcastReceiver() {
                 when (resultCode) {
                     Activity.RESULT_OK -> {
                         Log.d(tag, "Message delivered: $messageId")
-                        updateMessageStatusInDbs(
-                            context,
-                            subId,
-                            messageId,
-                            Enums.MessageStatus.delivered
-                        )
+                        if (partIndex == numParts - 1)
+                            updateMessageStatusInDbs(
+                                context,
+                                messageId,
+                                Enums.MessageStatus.delivered
+                            )
                     }
                     else -> {
                         Log.d(tag, "Message not delivered: $messageId $resultCode")
-                        updateMessageStatusInDbs(
-                            context,
-                            subId,
-                            messageId,
-                            Enums.MessageStatus.notSent
-                        )
+                        if (partIndex == numParts - 1)
+                            updateMessageStatusInDbs(
+                                context,
+                                messageId,
+                                Enums.MessageStatus.notSent
+                            )
                     }
                 }
             }
@@ -100,7 +99,6 @@ class SMSStatusReceiver private constructor() : BroadcastReceiver() {
 
     private fun updateMessageStatusInDbs(
         context: Context,
-        subId: Int,
         messageId: String,
         status: String
     ) {
@@ -111,34 +109,26 @@ class SMSStatusReceiver private constructor() : BroadcastReceiver() {
                 Log.e(tag, "Message object not found for message id $messageId.")
             } else {
 
-                // write in SMS provider only when not present already AND (sent OR delivered) successfully
-                if (message.smsId ?: 0 < 1 && (status == Enums.MessageStatus.sent || status == Enums.MessageStatus.delivered)) {
-                    val user2 = message.thread?.user2
-                    val messageBody = message.body
-                    val messageTimestamp = message.timestamp
-                    if (user2 != null && messageBody != null && messageTimestamp != null) {
-                        val smsMessage = TelephonyUtil.SMSMessage(
-                            id = 0,
-                            threadId = 0,
-                            user2 = user2,
-                            body = messageBody,
-                            timestamp = messageTimestamp,
-                            type = Telephony.Sms.MESSAGE_TYPE_SENT,
-                            subId = subId,
-                            isRead = false
-                        )
-                        val smsId = TelephonyUtil.saveSms(context, smsMessage)
-                        if (smsId > 0)
-                            message.smsId = smsId
-                    }
-                }
+                val smsId = message.smsId ?: return@executeTransactionAsync
 
                 /*
                     sent intent (for message part j) ) might come up after delivered intent (for message part i) for long texts,
                     where j > i
-                    if updateMessageStatusInDbs called for every part, that will lead to cris - cross
-                    TODO - decide on how to handle this
+                    therefore updateMessageStatusInDbs called for last part only, that will avoid cris - cross
                  */
+
+                if (message.status == Enums.MessageStatus.notSent) {
+                    val ret = TelephonyUtil.markMessageAsSendFailed(context, smsId)
+                    if (ret == 0)
+                        return@executeTransactionAsync
+                }
+
+                if (message.status == Enums.MessageStatus.sent || message.status == Enums.MessageStatus.delivered) {
+                    val ret = TelephonyUtil.markMessageAsSendSuccess(context, smsId)
+                    if (ret == 0)
+                        return@executeTransactionAsync
+                }
+
                 message.status = status
                 realmT.insertOrUpdate(message)
             }

@@ -1,10 +1,7 @@
 package com.siddhantkushwaha.carolyn.activity
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.os.PowerManager
-import android.provider.Settings
 import android.view.Menu
 import android.view.MenuItem
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -13,6 +10,7 @@ import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.ThreadAdapter
 import com.siddhantkushwaha.carolyn.common.*
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
+import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.entity.MessageThread
 import com.siddhantkushwaha.carolyn.tasks.IndexTask
 import io.realm.OrderedRealmCollectionChangeListener
@@ -20,6 +18,9 @@ import io.realm.Realm
 import io.realm.RealmResults
 import io.realm.Sort
 import kotlinx.android.synthetic.main.activity_home.*
+import kotlinx.android.synthetic.main.activity_home.root
+import kotlinx.android.synthetic.main.activity_home.toolbar
+import kotlinx.android.synthetic.main.activity_settings.*
 import java.util.*
 
 
@@ -147,6 +148,12 @@ class ActivityHome : ActivityBase() {
     }
 
     private fun checkPermissions() {
+
+        if (!TelephonyUtil.isDefaultSmsApp(this)) {
+            Helper.setAsDefault(this, root) {}
+            return
+        }
+
         requestPermissions(
             arrayOf(
                 android.Manifest.permission.READ_SMS,

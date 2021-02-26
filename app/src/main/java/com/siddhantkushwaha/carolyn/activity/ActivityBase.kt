@@ -79,7 +79,7 @@ open class ActivityBase : AppCompatActivity() {
         }
     }
 
-    protected fun startActivityForResult(
+    public fun startActivityForResult(
         intent: Intent,
         requestCode: Int,
         callback: (Intent?) -> Unit

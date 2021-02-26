@@ -1,22 +1,17 @@
 package com.siddhantkushwaha.carolyn.activity
 
-import android.app.role.RoleManager
-import android.content.Intent
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
-import android.provider.Telephony
 import androidx.core.content.ContextCompat
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
-import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.storage.FirebaseStorage
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.common.DbHelper
 import com.siddhantkushwaha.carolyn.common.Enums
-import com.siddhantkushwaha.carolyn.common.RequestCodes
+import com.siddhantkushwaha.carolyn.common.Helper
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.entity.Message
@@ -54,7 +49,13 @@ class ActivitySettings : ActivityBase() {
         }
 
         button_default_sms_app.setOnClickListener {
-            setAsDefault()
+            Helper.setAsDefault(this, root) {
+                when (it) {
+                    0 -> Helper.showStatus(root, "Not changed to default SMS app.")
+                    1 -> Helper.showStatus(root, "Changed to default SMS app.")
+                    2 -> Helper.showStatus(root, "Already set as deafault.")
+                }
+            }
         }
 
         populatePie()
@@ -119,23 +120,28 @@ class ActivitySettings : ActivityBase() {
                 else
                     "Download failed."
             runOnUiThread {
-                showStatus(message)
+                Helper.showStatus(root, message)
             }
         }
     }
 
     private fun deleteSpamOtpUpdateUi() {
         if (!TelephonyUtil.isDefaultSmsApp(this)) {
-            showStatus("This is not the default SMS app.") { snackbar ->
+            Helper.showStatus(root, "Set as default SMS app.") { snackbar ->
                 snackbar.setAction("MAKE DEFAULT") {
-                    setAsDefault()
+                    Helper.setAsDefault(this, root) {
+                        when (it) {
+                            // not need to handle other cases here
+                            0 -> Helper.showStatus(root, "Not changed to default SMS app.")
+                        }
+                    }
                 }
                 snackbar.setActionTextColor(Color.WHITE)
             }
             return
         }
 
-        showStatus("Clearing all OTPs and Spam.")
+        Helper.showStatus(root, "Clearing all OTPs and Spam.")
 
         val clearAllMessages = Thread {
 
@@ -165,7 +171,7 @@ class ActivitySettings : ActivityBase() {
             }
 
             if (!deleted) {
-                showStatus("Failed to delete all spam and OTPs.")
+                Helper.showStatus(root, "Failed to delete all spam and OTPs.")
             }
 
             realmL.close()
@@ -175,35 +181,5 @@ class ActivitySettings : ActivityBase() {
         }
 
         clearAllMessages.start()
-    }
-
-    private fun setAsDefault() {
-        if (TelephonyUtil.isDefaultSmsApp(this)) {
-            showStatus("Already set as default.")
-            return
-        }
-
-        val requestCode = RequestCodes.REQUEST_CHANGE_DEFAULT
-        val callback: (Intent?) -> Unit = {
-            if (TelephonyUtil.isDefaultSmsApp(this)) {
-                showStatus("This is now default SMS app.")
-            }
-        }
-
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-            val roleManager = getSystemService(RoleManager::class.java)
-            val roleRequestIntent = roleManager.createRequestRoleIntent(RoleManager.ROLE_SMS)
-            startActivityForResult(roleRequestIntent, requestCode, callback)
-        } else {
-            val intent = Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT)
-            intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, packageName)
-            startActivityForResult(intent, requestCode, callback)
-        }
-    }
-
-    private fun showStatus(message: String, modifySnackbar: ((Snackbar) -> Unit)? = null) {
-        val snackbar = Snackbar.make(root, message, Snackbar.LENGTH_LONG)
-        modifySnackbar?.invoke(snackbar)
-        snackbar.show()
     }
 }

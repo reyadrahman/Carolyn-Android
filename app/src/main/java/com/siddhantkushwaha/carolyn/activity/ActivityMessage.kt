@@ -2,6 +2,7 @@ package com.siddhantkushwaha.carolyn.activity
 
 import android.app.PendingIntent
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.provider.Telephony
 import android.telephony.SmsManager
@@ -10,11 +11,11 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.snackbar.Snackbar
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.adapter.MessageAdapter
 import com.siddhantkushwaha.carolyn.common.DbHelper
 import com.siddhantkushwaha.carolyn.common.Enums.MessageStatus
+import com.siddhantkushwaha.carolyn.common.Helper
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.entity.Message
@@ -237,6 +238,7 @@ class ActivityMessage : ActivityBase() {
 
     private fun pushMessageToUI(
         messageId: String,
+        smsId: Int,
         user1: String,
         messageTimestamp: Long,
         messageBody: String
@@ -262,10 +264,29 @@ class ActivityMessage : ActivityBase() {
             message.timestamp = messageTimestamp
             message.body = messageBody
             message.status = MessageStatus.pending
+            message.smsId = smsId
 
             realmT.insertOrUpdate(message)
         }
         realmInThread.close()
+    }
+
+    private fun pushMessageToSMSProvider(
+        subId: Int,
+        messageTimestamp: Long,
+        messageBody: String
+    ): Int {
+        val smsMessage = TelephonyUtil.SMSMessage(
+            id = 0,
+            threadId = 0,
+            user2 = user2,
+            body = messageBody,
+            timestamp = messageTimestamp,
+            type = Telephony.Sms.MESSAGE_TYPE_OUTBOX,
+            subId = subId,
+            isRead = false
+        )
+        return TelephonyUtil.saveSms(this, smsMessage)
     }
 
     private fun sendMessage(subId: Int, user1: String, messageTimestamp: Long, message: String) {
@@ -277,7 +298,8 @@ class ActivityMessage : ActivityBase() {
 
         Log.d(tag, "Sending message $messageId $message $messageTimestamp")
 
-        pushMessageToUI(messageId, user1, messageTimestamp, message)
+        val smsId = pushMessageToSMSProvider(subId, messageTimestamp, message)
+        pushMessageToUI(messageId, smsId, user1, messageTimestamp, message)
 
         val messageParts = ArrayList(message.chunked(100))
         val numParts = messageParts.size
@@ -317,7 +339,17 @@ class ActivityMessage : ActivityBase() {
     private fun pickDataFromUIAndSend() {
 
         if (!TelephonyUtil.isDefaultSmsApp(this)) {
-            showStatus("Set Carolyn as Default SMS app from Dashboard.")
+            Helper.showStatus(root, "Set as default SMS app to send messages.") { snackbar ->
+                snackbar.setAction("MAKE DEFAULT") {
+                    Helper.setAsDefault(this, root) {
+                        when (it) {
+                            // no need to handle other cases here
+                            0 -> Helper.showStatus(root, "Not changed to default SMS app.")
+                        }
+                    }
+                }
+                snackbar.setActionTextColor(Color.WHITE)
+            }
             return
         }
 
@@ -327,8 +359,8 @@ class ActivityMessage : ActivityBase() {
 
         val subId = subscriptions[senderSimIndex].subId
         val user1 = subscriptions[senderSimIndex].number
-        val messageTimestamp = Instant.now().toEpochMilli()
         val message = edit_text_message.text.toString()
+        val messageTimestamp = Instant.now().toEpochMilli()
 
         edit_text_message.setText("")
 
@@ -336,12 +368,6 @@ class ActivityMessage : ActivityBase() {
             sendMessage(subId, user1, messageTimestamp, message)
         }
         th.start()
-    }
-
-    private fun showStatus(message: String, modifySnackbar: ((Snackbar) -> Unit)? = null) {
-        val snackbar = Snackbar.make(root, message, Snackbar.LENGTH_LONG)
-        modifySnackbar?.invoke(snackbar)
-        snackbar.show()
     }
 
     private fun notifyAdapterAndUpdateScrollStatus() {
