@@ -48,11 +48,11 @@ class ActivityProfile : ActivityBase() {
 
         group_message_type.setOnCheckedChangeListener { _, checkedId ->
             realm.executeTransactionAsync { realmA ->
-                var ruleA = DbHelper.getRuleObject(realm, user2)
+                var ruleA = DbHelper.getRuleObject(realmA, user2)
                 if (checkedId == R.id.button_type_default) {
                     ruleA?.deleteFromRealm()
                 } else {
-                    if (ruleA == null) ruleA = DbHelper.createRuleObject(realm, user2)
+                    if (ruleA == null) ruleA = DbHelper.createRuleObject(realmA, user2)
                     when (checkedId) {
                         R.id.button_type_personal -> ruleA.type = null
                         R.id.button_type_otp -> ruleA.type = MessageType.otp
