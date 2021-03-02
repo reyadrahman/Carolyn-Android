@@ -33,6 +33,7 @@ import kotlinx.android.synthetic.main.activity_message.header_title
 import kotlinx.android.synthetic.main.activity_message.root
 import kotlinx.android.synthetic.main.activity_message.toolbar
 import kotlinx.android.synthetic.main.activity_settings.*
+import java.net.URLDecoder
 import java.time.Instant
 import java.util.*
 import kotlin.collections.ArrayList
@@ -71,15 +72,20 @@ class ActivityMessage : ActivityBase() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        if (intent.action == Intent.ACTION_SENDTO) {
-            val user2NotNormalized = intent.dataString?.split(":")?.last()
-            if (user2NotNormalized != null)
-                user2 = CommonUtil.normalizePhoneNumber(user2NotNormalized)
+        user2 =
+            if (intent.action == Intent.ACTION_SENDTO) {
+                // when activity opened via other apps
+                val decodedData = URLDecoder.decode(intent.dataString, "UTF-8")
+                val user2NotNormalized = decodedData
+                    .split(":").last()
+                    .replace(" ", "")
+                CommonUtil.normalizePhoneNumber(user2NotNormalized)
                     ?: throw Exception("Invalid user2 field was sent intent data: $user2NotNormalized")
-        } else {
-            user2 = intent.getStringExtra("user2")
-                ?: throw Exception("This activity requires user2 field in intent extras.")
-        }
+            } else {
+                // when activity opened via app
+                intent.getStringExtra("user2")
+                    ?: throw Exception("This activity requires user2 field in intent extras.")
+            }
 
         realm = RealmUtil.getCustomRealmInstance(this)
 
@@ -93,7 +99,8 @@ class ActivityMessage : ActivityBase() {
         realm.executeTransaction { realmT ->
             val thread = DbHelper.getThreadObject(realmT, user2)
             val contact = thread?.contact ?: DbHelper.getContactObject(realmT, user2)
-            header_title.text = contact?.name ?: contact?.number ?: thread?.getDisplayName() ?:user2
+            header_title.text =
+                contact?.name ?: contact?.number ?: thread?.getDisplayName() ?: user2
         }
 
         messageAdapter = MessageAdapter(

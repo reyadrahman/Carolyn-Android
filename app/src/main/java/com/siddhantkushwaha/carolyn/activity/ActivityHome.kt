@@ -42,7 +42,7 @@ class ActivityHome : ActivityBase() {
 
         setSupportActionBar(toolbar)
 
-        checkPermissions()
+        checkIsDefaultOrHasPermissions()
 
         FirebaseCrashlytics.getInstance()
             .setCustomKey("userEmail", mAuth.currentUser?.email ?: "null")
@@ -147,10 +147,13 @@ class ActivityHome : ActivityBase() {
         return true
     }
 
-    private fun checkPermissions() {
+    private fun checkIsDefaultOrHasPermissions() {
         if (!TelephonyUtil.isDefaultSmsApp(this)) {
             Helper.setAsDefault(this, root) {
-                // request for permissions if needed irrespective of whether it fails or succeeds
+
+                // request for permissions
+                // If app was not chosen as default, permissions will be needed
+                // If app was chosen default, these permissions are already granted
                 requestPermissions(
                     arrayOf(
                         android.Manifest.permission.READ_SMS,
@@ -163,6 +166,7 @@ class ActivityHome : ActivityBase() {
                     if (granted)
                         IndexTask(this@ActivityHome).start()
                 }
+
             }
         }
     }
