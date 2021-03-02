@@ -9,7 +9,7 @@ import com.siddhantkushwaha.carolyn.activity.ActivityMessage
 import com.siddhantkushwaha.carolyn.common.ActivityTracker
 import com.siddhantkushwaha.carolyn.common.DbHelper
 import com.siddhantkushwaha.carolyn.common.Enums
-import com.siddhantkushwaha.carolyn.common.util.CommonUtil
+import com.siddhantkushwaha.carolyn.common.Helper
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.index.Index
@@ -97,8 +97,7 @@ class SMSReceiver : BroadcastReceiver() {
             val realm = RealmUtil.getCustomRealmInstance(context)
 
             // decide and send notification if needed
-            val user2 = CommonUtil.normalizePhoneNumber(message.user2)
-                ?: message.user2.replace("-", "").toLowerCase(Locale.getDefault())
+            val user2 = Helper.normalizeUser2(message.user2)
             val isMessageActivityForCurrentUserActive =
                 ActivityTracker.getActivityName() == ActivityMessage::class.java.toString()
                         && ActivityTracker.getActivityExtras()?.get("user2") == user2

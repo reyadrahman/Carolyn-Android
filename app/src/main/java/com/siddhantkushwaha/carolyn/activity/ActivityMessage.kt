@@ -16,6 +16,7 @@ import com.siddhantkushwaha.carolyn.adapter.MessageAdapter
 import com.siddhantkushwaha.carolyn.common.DbHelper
 import com.siddhantkushwaha.carolyn.common.Enums.MessageStatus
 import com.siddhantkushwaha.carolyn.common.Helper
+import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.entity.Message
@@ -70,10 +71,18 @@ class ActivityMessage : ActivityBase() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+        if (intent.action == Intent.ACTION_SENDTO) {
+            val user2NotNormalized = intent.dataString?.split(":")?.last()
+            if (user2NotNormalized != null)
+                user2 = CommonUtil.normalizePhoneNumber(user2NotNormalized)
+                    ?: throw Exception("Invalid user2 field was sent intent data: $user2NotNormalized")
+        } else {
+            user2 = intent.getStringExtra("user2")
+                ?: throw Exception("This activity requires user2 field in intent extras.")
+        }
+
         realm = RealmUtil.getCustomRealmInstance(this)
 
-        user2 = intent.getStringExtra("user2")
-            ?: throw Exception("This activity requires user2 field in intent extras.")
         showMessageType = intent.getStringExtra("view-type")
 
         dismissNotifications()
@@ -84,7 +93,7 @@ class ActivityMessage : ActivityBase() {
         realm.executeTransaction { realmT ->
             val thread = DbHelper.getThreadObject(realmT, user2)
             val contact = thread?.contact ?: DbHelper.getContactObject(realmT, user2)
-            header_title.text = contact?.name ?: contact?.number ?: thread?.getDisplayName()
+            header_title.text = contact?.name ?: contact?.number ?: thread?.getDisplayName() ?:user2
         }
 
         messageAdapter = MessageAdapter(

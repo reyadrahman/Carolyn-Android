@@ -39,7 +39,12 @@
             android:name=".activity.ActivityMessage"
             android:parentActivityName=".activity.ActivityHome">
             <intent-filter>
+
+                <!-- This will not have sender specified  -->
+                <!-- TODO - Should probably exist with ActivitySendNewMessage  -->
                 <action android:name="android.intent.action.SEND" />
+
+                <!-- This will have sender specified -->
                 <action android:name="android.intent.action.SENDTO" />
 
                 <category android:name="android.intent.category.DEFAULT" />

@@ -11,7 +11,7 @@ open class MessageThread : RealmObject() {
     @PrimaryKey
     var user2: String? = null
 
-    var user2DisplayName: String? = null
+    var user2NotNormalized: String? = null
 
     var contact: Contact? = null
 
@@ -25,7 +25,7 @@ open class MessageThread : RealmObject() {
     }
 
     fun getDisplayName(): String {
-        return contact?.name ?: contact?.number ?: user2DisplayName ?: "Anonymous"
+        return contact?.name ?: contact?.number ?: user2NotNormalized ?: "Anonymous"
     }
 
     fun numMessages(): Int {

@@ -5,7 +5,7 @@ import android.provider.Telephony
 import android.util.Log
 import com.siddhantkushwaha.carolyn.common.DbHelper
 import com.siddhantkushwaha.carolyn.common.Enums
-import com.siddhantkushwaha.carolyn.common.util.CommonUtil
+import com.siddhantkushwaha.carolyn.common.Helper
 import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.entity.Contact
@@ -114,15 +114,14 @@ class Index(private val optimized: Boolean) {
         subscriptions: HashMap<Int, TelephonyUtil.SubscriptionInfo>
     ): Int {
         val user1 = subscriptions[message.subId]?.number ?: "UNKNOWN"
-        val user2 = CommonUtil.normalizePhoneNumber(message.user2)
-            ?: message.user2.replace("-", "").toLowerCase(Locale.getDefault())
+        val user2 = Helper.normalizeUser2(message.user2)
 
         realm.executeTransaction { realmT ->
             val realmThread = DbHelper.getOrCreateThreadObject(realmT, user2)
             if (realmThread.contact == null)
                 realmThread.contact = DbHelper.getContactObject(realmT, user2)
 
-            realmThread.user2DisplayName = message.user2
+            realmThread.user2NotNormalized = message.user2
 
             val messageId = DbHelper.getMessageId(message.timestamp, message.body)
             var realmMessage = DbHelper.getMessageObject(realmT, messageId)

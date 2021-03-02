@@ -7,7 +7,9 @@ import android.provider.Telephony
 import android.view.View
 import com.google.android.material.snackbar.Snackbar
 import com.siddhantkushwaha.carolyn.activity.ActivityBase
+import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
+import java.util.*
 
 
 object Helper {
@@ -50,5 +52,11 @@ object Helper {
         val snackbar = Snackbar.make(view, message, Snackbar.LENGTH_LONG)
         modifySnackbar?.invoke(snackbar)
         snackbar.show()
+    }
+
+    public fun normalizeUser2(user2NotNormalized: String): String {
+        return CommonUtil.normalizePhoneNumber(user2NotNormalized)
+            ?: user2NotNormalized.replace("-", "")
+                .toLowerCase(Locale.getDefault())
     }
 }
