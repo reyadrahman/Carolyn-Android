@@ -157,14 +157,35 @@ class SMSReceiver : BroadcastReceiver() {
                 val notificationId = message.timestamp.toInt()
 
                 val notificationSender = NotificationSender(context)
-                notificationSender.sendNotification(
-                    notificationId,
-                    user2,
-                    user2DisplayName,
-                    message.body,
-                    photoUri,
-                    messageClass
-                )
+
+
+                var sent = false
+                when (messageClass) {
+                    Enums.MessageType.otp -> {
+                        val otp = Helper.fetchOtpFromText(message.body)
+                        if (otp != null) {
+                            sent = true
+                            notificationSender.sendNotificationOtp(
+                                notificationId,
+                                user2,
+                                user2DisplayName,
+                                otp
+                            )
+                        }
+                    }
+                }
+
+                if (!sent) {
+                    sent = true
+                    notificationSender.sendNotification(
+                        notificationId,
+                        user2,
+                        user2DisplayName,
+                        message.body,
+                        photoUri,
+                        messageClass
+                    )
+                }
             }
 
             realm.close()

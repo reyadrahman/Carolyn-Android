@@ -13,4 +13,8 @@
     <color name="color6">#E64A19</color>
     <color name="color7">#2196F3</color>
 
+    <color name="notificationLogo">#000000</color>
+    <color name="notificationTitle">#000000</color>
+    <color name="notificationText">#000000</color>
+    <color name="notificationBackground">#FFFFFF</color>
 </resources>

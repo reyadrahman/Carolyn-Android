@@ -10,6 +10,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.media.AudioAttributes
 import android.net.Uri
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
@@ -89,6 +90,20 @@ class NotificationSender(val context: Context) {
         return channel
     }
 
+    private fun getActivityMessageIntent(
+        notificationId: Int,
+        user2: String,
+        type: String?
+    ): PendingIntent {
+        val activityMessageIntent = Intent(context, ActivityMessage::class.java)
+        activityMessageIntent.putExtra("user2", user2)
+        activityMessageIntent.putExtra("view-type", type)
+
+        return TaskStackBuilder.create(context)
+            .addNextIntentWithParentStack(activityMessageIntent)
+            .getPendingIntent(notificationId, PendingIntent.FLAG_ONE_SHOT)
+    }
+
     public fun sendNotification(
         notificationId: Int,
         user2: String,
@@ -98,13 +113,7 @@ class NotificationSender(val context: Context) {
         type: String?
     ) {
 
-        val activityMessageIntent = Intent(context, ActivityMessage::class.java)
-        activityMessageIntent.putExtra("user2", user2)
-        activityMessageIntent.putExtra("view-type", type)
-
-        val contentPendingIntent: PendingIntent = TaskStackBuilder.create(context)
-            .addNextIntentWithParentStack(activityMessageIntent)
-            .getPendingIntent(notificationId, PendingIntent.FLAG_ONE_SHOT)
+        val contentPendingIntent = getActivityMessageIntent(notificationId, user2, type)
 
         val channelId = type ?: "personal"
 
@@ -131,6 +140,31 @@ class NotificationSender(val context: Context) {
             .setContentText(cleanedBody)
             .setLargeIcon(notificationIcon)
             .setStyle(notificationStyle)
+            .build()
+
+        notificationManager.notify(
+            user2,
+            notificationId,
+            notification
+        )
+    }
+
+    public fun sendNotificationOtp(
+        notificationId: Int,
+        user2: String,
+        senderName: String,
+        otpText: String
+    ) {
+        val notificationLayout = RemoteViews(context.packageName, R.layout.notification_layout_otp)
+        notificationLayout.setTextViewText(R.id.text_view_otp, otpText)
+        notificationLayout.setTextViewText(R.id.text_view_sender, "OTP from $senderName")
+
+        val contentPendingIntent = getActivityMessageIntent(notificationId, user2, "otp")
+
+        val notification = NotificationCompat.Builder(context, "otp")
+            .setContentIntent(contentPendingIntent)
+            .setSmallIcon(R.drawable.icon_carolyn_basic)
+            .setCustomContentView(notificationLayout)
             .build()
 
         notificationManager.notify(

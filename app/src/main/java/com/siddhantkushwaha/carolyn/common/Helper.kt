@@ -59,4 +59,8 @@ object Helper {
             ?: user2NotNormalized.replace("-", "")
                 .toLowerCase(Locale.getDefault())
     }
+
+    public fun fetchOtpFromText(text: String): String? {
+        return "[0-9]+".toRegex().findAll(text).filter { it.value.length >= 4 }.firstOrNull()?.value
+    }
 }
