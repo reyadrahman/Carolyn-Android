@@ -36,6 +36,9 @@ class ActivitySettings : ActivityBase() {
         checkbox_enable_unsaved_number_classification.isChecked =
             DbHelper.getUnsavedNumberClassificationRule(this)
 
+        checkbox_enable_reply_toggle.isChecked =
+            DbHelper.getSenderSupportsReplyRule(this)
+
         button_download_assets.setOnClickListener {
             downloadAssetsUpdateUi()
         }
@@ -46,6 +49,10 @@ class ActivitySettings : ActivityBase() {
 
         checkbox_enable_unsaved_number_classification.setOnCheckedChangeListener { _, isChecked ->
             DbHelper.setUnsavedNumberClassificationRule(this, isChecked)
+        }
+
+        checkbox_enable_reply_toggle.setOnCheckedChangeListener { _, isChecked ->
+            DbHelper.setSenderSupportsReplyRule(this, isChecked)
         }
 
         button_default_sms_app.setOnClickListener {

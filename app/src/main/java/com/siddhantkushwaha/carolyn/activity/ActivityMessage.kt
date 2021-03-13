@@ -9,6 +9,7 @@ import android.telephony.SmsManager
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.siddhantkushwaha.carolyn.R
@@ -91,8 +92,6 @@ class ActivityMessage : ActivityBase() {
 
         showMessageType = intent.getStringExtra("view-type")
 
-        dismissNotifications()
-
         messages = realm.where(Message::class.java).equalTo("thread.user2", user2)
             .sort("timestamp", Sort.ASCENDING).findAllAsync()
 
@@ -170,6 +169,8 @@ class ActivityMessage : ActivityBase() {
         button_send_message.setOnClickListener {
             pickDataFromUIAndSend()
         }
+
+        toggleSenderDoesNotSupportReplies()
     }
 
     override fun onResume() {
@@ -186,6 +187,8 @@ class ActivityMessage : ActivityBase() {
             }
         }
         timer?.scheduleAtFixedRate(timerTask, delay, taskInterval)
+
+        dismissNotifications()
     }
 
     override fun onPause() {
@@ -426,5 +429,23 @@ class ActivityMessage : ActivityBase() {
             realm.close()
         }
         clearAllTask.start()
+    }
+
+    private fun toggleSenderDoesNotSupportReplies() {
+        val enableSetting = DbHelper.getSenderSupportsReplyRule(this)
+
+        val hide = if (enableSetting) {
+            val isValidPhoneNumber = CommonUtil.isValidPhoneNumber(user2)
+            !isValidPhoneNumber
+        } else
+            false
+
+        if (hide) {
+            section_send_message.visibility = View.GONE
+            section_reply_not_supported.visibility = View.VISIBLE
+        } else {
+            section_send_message.visibility = View.VISIBLE
+            section_reply_not_supported.visibility = View.GONE
+        }
     }
 }

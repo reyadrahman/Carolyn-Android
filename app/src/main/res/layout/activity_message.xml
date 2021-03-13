@@ -31,7 +31,7 @@
                 android:layout_marginEnd="50dp"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="Dianne"
+                android:text="Diane"
                 android:textColor="@android:color/white"
                 android:textSize="22sp"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -57,7 +57,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="4dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/section_reply_not_supported"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent">
@@ -114,7 +114,40 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/button_sim_picker"
             app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/section_reply_not_supported"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="4dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
+        <ImageView
+            android:id="@+id/iamge_view_broadcaster"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginBottom="4dp"
+            android:src="@drawable/icon_broadcaster"
+            android:tint="@color/colorPrimary"
+            app:layout_constraintBottom_toTopOf="@+id/text_view_reply_not_supported"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/text_view_reply_not_supported"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:text="Sender does not support replies."
+            android:textColor="#ACACAC"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

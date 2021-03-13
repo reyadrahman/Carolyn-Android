@@ -9,6 +9,7 @@ import io.realm.Realm
 object DbHelper {
 
     private const val unsavedNumberClassificationRuleAttrName = "UNKNOWN_NUMBER_CLASSIFICATION"
+    private const val senderSupportReplyRuleAttrName = "SENDER_SUPPORTS_REPLIES"
 
     public fun setUnsavedNumberClassificationRule(context: Context, isChecked: Boolean) {
         val attrVal = if (isChecked) "1" else "0"
@@ -18,6 +19,17 @@ object DbHelper {
     public fun getUnsavedNumberClassificationRule(context: Context): Boolean {
         val globalParam =
             GlobalParam.getGlobalParam(context, unsavedNumberClassificationRuleAttrName)
+        return globalParam ?: "1" == "1"
+    }
+
+    public fun setSenderSupportsReplyRule(context: Context, isChecked: Boolean) {
+        val attrVal = if (isChecked) "1" else "0"
+        GlobalParam.setGlobalParam(context, senderSupportReplyRuleAttrName, attrVal)
+    }
+
+    public fun getSenderSupportsReplyRule(context: Context): Boolean {
+        val globalParam =
+            GlobalParam.getGlobalParam(context, senderSupportReplyRuleAttrName)
         return globalParam ?: "1" == "1"
     }
 

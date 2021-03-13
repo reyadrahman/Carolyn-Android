@@ -22,6 +22,19 @@ object CommonUtil {
             .fold("", { str, it -> str + "%02x".format(it) })
     }
 
+    public fun isValidPhoneNumber(number: String): Boolean {
+        return try {
+            val phoneNumberUtil = PhoneNumberUtil.getInstance()
+            val parsedPhone = phoneNumberUtil.parse(number, "IN")
+            phoneNumberUtil.isValidNumber(parsedPhone)
+        } catch (exception: NumberParseException) {
+            false
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+            false
+        }
+    }
+
     public fun normalizePhoneNumber(number: String): String? {
         return try {
             val phoneNumberUtil = PhoneNumberUtil.getInstance()
