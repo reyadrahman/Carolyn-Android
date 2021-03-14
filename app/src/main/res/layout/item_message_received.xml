@@ -16,6 +16,7 @@
         android:autoLink="web"
         android:background="@drawable/background_message_received"
         android:padding="12dp"
+        android:textColorLink="#BEBAFF"
         android:text="Ukrainian Developer Built a $19.3 Billion App - Because Silicon Valley Was Too Ignorant to Do It"
         android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
