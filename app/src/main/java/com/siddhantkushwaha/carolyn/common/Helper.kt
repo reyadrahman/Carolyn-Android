@@ -61,6 +61,7 @@ object Helper {
     }
 
     public fun fetchOtpFromText(text: String): String? {
-        return "[0-9]+".toRegex().findAll(text).filter { it.value.length >= 4 }.firstOrNull()?.value
+        return "[0-9]+".toRegex().findAll(text)
+            .filter { it.value.length in 4..6 }.firstOrNull()?.value
     }
 }
