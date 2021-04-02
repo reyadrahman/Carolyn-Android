@@ -175,16 +175,27 @@ class ActivityHome : ActivityBase() {
         return realm
             .where(MessageThread::class.java)
             .isNull("messages.type")
-            .sort("timestamp", Sort.DESCENDING)
+            .sort("latestPersonalMessageTimestamp", Sort.DESCENDING)
             .findAllAsync()
     }
 
     private fun getThreadsForTypeQuery(type: String): RealmResults<MessageThread> {
-        return realm
+        val result = realm
             .where(MessageThread::class.java)
             .equalTo("messages.type", type)
-            .sort("timestamp", Sort.DESCENDING)
-            .findAllAsync()
+
+        when (type) {
+            Enums.MessageType.otp ->
+                result.sort("latestOtpMessageTimestamp", Sort.DESCENDING)
+            Enums.MessageType.transaction ->
+                result.sort("latestTransactionMessageTimestamp", Sort.DESCENDING)
+            Enums.MessageType.update ->
+                result.sort("latestUpdateMessageTimestamp", Sort.DESCENDING)
+            Enums.MessageType.spam ->
+                result.sort("latestSpamMessageTimestamp", Sort.DESCENDING)
+        }
+
+        return result.findAllAsync()
     }
 
     private fun updateUI(flag: Int) {

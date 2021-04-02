@@ -92,8 +92,22 @@ class ActivityMessage : ActivityBase() {
 
         showMessageType = intent.getStringExtra("view-type")
 
-        messages = realm.where(Message::class.java).equalTo("thread.user2", user2)
-            .sort("timestamp", Sort.ASCENDING).findAllAsync()
+        messages = when (showMessageType) {
+            "all" -> {
+                realm.where(Message::class.java).equalTo("thread.user2", user2)
+                    .sort("timestamp", Sort.ASCENDING).findAllAsync()
+            }
+            null -> {
+                realm.where(Message::class.java).equalTo("thread.user2", user2)
+                    .isNull("type")
+                    .sort("timestamp", Sort.ASCENDING).findAllAsync()
+            }
+            else -> {
+                realm.where(Message::class.java).equalTo("thread.user2", user2)
+                    .equalTo("type", showMessageType)
+                    .sort("timestamp", Sort.ASCENDING).findAllAsync()
+            }
+        }
 
         realm.executeTransaction { realmT ->
             val thread = DbHelper.getThreadObject(realmT, user2)
@@ -107,8 +121,7 @@ class ActivityMessage : ActivityBase() {
             true,
             longClickListener = {
                 deleteMessage(realm, it.smsId, it.id)
-            },
-            messageType = showMessageType
+            }
         )
 
         messagesChangeListener = OrderedRealmCollectionChangeListener { _, _ ->

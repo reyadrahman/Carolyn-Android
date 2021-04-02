@@ -52,7 +52,7 @@ class ThreadAdapter(
             threadTitleTextView.text = messageThread.getDisplayName()
 
             val lastMessage = messageThread.messages?.filter { m -> m.type == messageType }
-                ?.maxBy { m -> m.timestamp ?: 0 }
+                ?.maxByOrNull { m -> m.timestamp ?: 0 }
             lastMessageTextView.text = lastMessage?.body ?: "No messages."
 
             if (lastMessage != null && lastMessage.smsType != Telephony.Sms.MESSAGE_TYPE_INBOX) {

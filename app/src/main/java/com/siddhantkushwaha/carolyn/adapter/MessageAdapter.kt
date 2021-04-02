@@ -1,6 +1,5 @@
 package com.siddhantkushwaha.carolyn.adapter
 
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.provider.Telephony
 import android.text.method.LinkMovementMethod
@@ -12,7 +11,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.common.Enums
-import com.siddhantkushwaha.carolyn.common.Enums.MessageType
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import com.siddhantkushwaha.carolyn.entity.Message
 import io.realm.OrderedRealmCollection
@@ -22,14 +20,11 @@ import io.realm.RealmRecyclerViewAdapter
 class MessageAdapter(
     data: OrderedRealmCollection<Message>,
     autoUpdate: Boolean,
-    private val longClickListener: (Message) -> Unit,
-    public var messageType: String?
+    private val longClickListener: (Message) -> Unit
 ) : RealmRecyclerViewAdapter<Message, RecyclerView.ViewHolder>(data, autoUpdate) {
 
     private val TYPE_MESSAGE_SENT = 1
     private val TYPE_MESSAGE_RECEIVED = 2
-
-    private val isMessageShownMap: HashMap<String, Boolean> = HashMap()
 
     override fun getItemViewType(position: Int): Int {
         return if (data!![position].smsType != Telephony.Sms.MESSAGE_TYPE_INBOX) TYPE_MESSAGE_SENT else TYPE_MESSAGE_RECEIVED
@@ -110,23 +105,12 @@ class MessageAdapter(
     private inner class ReceivedMessageViewHolder(itemView: View) :
         RecyclerView.ViewHolder(itemView) {
         fun bind(message: Message) {
-
             val messageBodyTextView = itemView.findViewById<TextView>(R.id.textview_message_text)
 
-            val messageId = message.id
-
-            // honor value already present in map to maintain current status
-            val showMessage: Boolean =
-                isMessageShownMap[messageId]
-                    ?: (messageType == "all" || messageType == message.type)
-
-            bindMessage(message, showMessage = showMessage)
+            bindMessage(message)
 
             messageBodyTextView.setOnClickListener {
-                if (messageId != null) {
-                    val currentShownStatus = isMessageShownMap[messageId] ?: false
-                    bindMessage(message, !currentShownStatus)
-                }
+
             }
 
             messageBodyTextView.setOnLongClickListener {
@@ -135,12 +119,7 @@ class MessageAdapter(
             }
         }
 
-        private fun bindMessage(message: Message, showMessage: Boolean) {
-            val messageId = message.id
-            if (messageId != null) {
-                isMessageShownMap[messageId] = showMessage
-            }
-
+        private fun bindMessage(message: Message) {
             val messageBodyTextView = itemView.findViewById<TextView>(R.id.textview_message_text)
             val messageTimestampTextView =
                 itemView.findViewById<TextView>(R.id.textview_message_timestamp)
@@ -148,42 +127,19 @@ class MessageAdapter(
                 itemView.findViewById<TextView>(R.id.textview_message_subscription)
             val messageClassIcon = itemView.findViewById<ImageView>(R.id.image_view_message_class)
 
-            // change states to hide message
-            if (!showMessage) {
-                messageBodyTextView.text = "Hidden."
-                messageBodyTextView.setTextColor(Color.GRAY)
-                messageBodyTextView.backgroundTintList =
-                    ColorStateList.valueOf(Color.argb(255, 33, 33, 33))
+            messageBodyTextView.text = message.body
+            messageBodyTextView.setTextColor(Color.WHITE)
+            messageBodyTextView.backgroundTintList = null
+            messageBodyTextView.movementMethod = LinkMovementMethod.getInstance()
 
-                messageTimestampTextView.visibility = View.GONE
-                receivedOnNumberTextView.visibility = View.GONE
+            messageTimestampTextView.text =
+                CommonUtil.formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
+            messageTimestampTextView.visibility = View.VISIBLE
 
-                when (message.type) {
-                    MessageType.otp -> messageClassIcon.setImageResource(R.drawable.icon_message_otp)
-                    MessageType.transaction -> messageClassIcon.setImageResource(R.drawable.icon_message_transaction)
-                    MessageType.update -> messageClassIcon.setImageResource(R.drawable.icon_message_update)
-                    MessageType.spam -> messageClassIcon.setImageResource(R.drawable.icon_message_spam)
-                    null -> messageClassIcon.setImageResource(R.drawable.icon_message_personal)
-                }
-                messageClassIcon.visibility = View.VISIBLE
-            }
+            receivedOnNumberTextView.text = message.user1 ?: ""
+            receivedOnNumberTextView.visibility = View.VISIBLE
 
-            // change states to shoe message
-            else {
-                messageBodyTextView.text = message.body
-                messageBodyTextView.setTextColor(Color.WHITE)
-                messageBodyTextView.backgroundTintList = null
-                messageBodyTextView.movementMethod = LinkMovementMethod.getInstance()
-
-                messageTimestampTextView.text =
-                    CommonUtil.formatTimestamp(message.timestamp!!, "dd/MM/yy hh:mm a")
-                messageTimestampTextView.visibility = View.VISIBLE
-
-                receivedOnNumberTextView.text = message.user1 ?: ""
-                receivedOnNumberTextView.visibility = View.VISIBLE
-
-                messageClassIcon.visibility = View.GONE
-            }
+            messageClassIcon.visibility = View.GONE
         }
     }
 }

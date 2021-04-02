@@ -17,6 +17,12 @@ open class MessageThread : RealmObject() {
 
     var timestamp: Long? = null
 
+    var latestPersonalMessageTimestamp: Long? = null
+    var latestOtpMessageTimestamp: Long? = null
+    var latestTransactionMessageTimestamp: Long? = null
+    var latestUpdateMessageTimestamp: Long? = null
+    var latestSpamMessageTimestamp: Long? = null
+
     @LinkingObjects("thread")
     val messages: RealmResults<Message>? = null
 

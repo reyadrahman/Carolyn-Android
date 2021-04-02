@@ -17,6 +17,7 @@ import io.realm.Realm
 import java.io.File
 import java.time.Instant
 import java.util.*
+import kotlin.math.max
 
 
 class Index(private val optimized: Boolean) {
@@ -165,9 +166,6 @@ class Index(private val optimized: Boolean) {
                 }
             }
 
-            if (message.timestamp > realmThread.timestamp ?: 0)
-                realmThread.timestamp = message.timestamp
-
             /******************************** This is the real deal *******************************/
 
             // find the rule
@@ -224,6 +222,20 @@ class Index(private val optimized: Boolean) {
             }
 
             /******************************** ********************* *******************************/
+
+            realmThread.timestamp = max(realmThread.timestamp ?: 0, message.timestamp)
+            when (realmMessage.type) {
+                null -> realmThread.latestPersonalMessageTimestamp =
+                    max(realmThread.latestPersonalMessageTimestamp ?: 0, message.timestamp)
+                Enums.MessageType.otp -> realmThread.latestOtpMessageTimestamp =
+                    max(realmThread.latestOtpMessageTimestamp ?: 0, message.timestamp)
+                Enums.MessageType.transaction -> realmThread.latestTransactionMessageTimestamp =
+                    max(realmThread.latestTransactionMessageTimestamp ?: 0, message.timestamp)
+                Enums.MessageType.update -> realmThread.latestUpdateMessageTimestamp =
+                    max(realmThread.latestUpdateMessageTimestamp ?: 0, message.timestamp)
+                Enums.MessageType.spam -> realmThread.latestSpamMessageTimestamp =
+                    max(realmThread.latestSpamMessageTimestamp ?: 0, message.timestamp)
+            }
 
             realmMessage.thread = realmThread
 
