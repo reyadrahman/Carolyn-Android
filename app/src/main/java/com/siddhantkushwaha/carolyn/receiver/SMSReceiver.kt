@@ -115,6 +115,11 @@ class SMSReceiver : BroadcastReceiver() {
                         rule.type
                     }
 
+                    // TODO - This is temporary, need to find a better way
+                    else if (message.body.contains("297141")) {
+                        Enums.MessageType.spam
+                    }
+
                     // If message is in contacts, always treat all messages as personal
                     else if (contact != null) {
                         null

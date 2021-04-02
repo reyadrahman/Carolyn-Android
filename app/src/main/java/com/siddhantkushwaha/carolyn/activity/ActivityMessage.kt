@@ -433,10 +433,10 @@ class ActivityMessage : ActivityBase() {
     }
 
     private fun deleteAll() {
+        val messagesL = realm.copyFromRealm(messages)
         val clearAllTask = Thread {
             val realm = RealmUtil.getCustomRealmInstance(this)
-            val messages = realm.where(Message::class.java).equalTo("thread.user2", user2).findAll()
-            messages.forEach {
+            messagesL.forEach {
                 deleteMessage(realm, it.smsId, it.id)
             }
             realm.close()

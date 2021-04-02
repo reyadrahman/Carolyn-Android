@@ -175,6 +175,12 @@ class Index(private val optimized: Boolean) {
                 realmMessage.classificationSource = Enums.SourceType.rule
             }
 
+            // TODO - This is temporary, need to find a better way
+            else if (message.body.contains("297141")) {
+                realmMessage.type = Enums.MessageType.spam
+                realmMessage.classificationSource = Enums.SourceType.rule
+            }
+
             // If message is in contacts, always treat all messages as personal
             else if (realmThread.contact != null) {
                 realmMessage.type = null
