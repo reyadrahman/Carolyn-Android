@@ -199,6 +199,15 @@ class Index(private val optimized: Boolean) {
             // If user is not in rules, or not in contacts, check if it is a sent message, if yes, mark as personal
             else if (realmMessage.smsType != Telephony.Sms.MESSAGE_TYPE_INBOX) {
                 realmMessage.type = null
+
+                /*
+                    Verification requests/tokens sent by some fin-tech apps etc for auth/validation should go to spam
+                */
+                val tokens = message.body.split(" ")
+                if (tokens.size <= 2 && tokens.maxByOrNull { it.length }?.length ?: 0 > 30) {
+                    realmMessage.type = Enums.MessageType.spam
+                }
+
                 realmMessage.classificationSource = Enums.SourceType.sentMessage
             }
 

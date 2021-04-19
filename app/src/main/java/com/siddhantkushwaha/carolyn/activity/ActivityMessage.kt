@@ -297,6 +297,7 @@ class ActivityMessage : ActivityBase() {
             message.body = messageBody
             message.status = MessageStatus.pending
             message.smsId = smsId
+            message.smsType = Telephony.Sms.MESSAGE_TYPE_OUTBOX
 
             realmT.insertOrUpdate(message)
         }
