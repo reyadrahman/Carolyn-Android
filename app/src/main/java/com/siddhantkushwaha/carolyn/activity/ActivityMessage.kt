@@ -120,7 +120,7 @@ class ActivityMessage : ActivityBase() {
             messages,
             true,
             longClickListener = {
-                deleteMessage(realm, it.smsId, it.id)
+                Helper.deleteMessage(this, realm, it.smsId, it.id)
             }
         )
 
@@ -420,25 +420,13 @@ class ActivityMessage : ActivityBase() {
         ns.cancelNotificationByTag(user2)
     }
 
-    private fun deleteMessage(realm: Realm, smsId: Int?, messageId: String?) {
-        var deleted = true
-        if (smsId != null && smsId > 0) {
-            deleted = TelephonyUtil.deleteSMS(this, smsId)
-        }
-        if (messageId != null && deleted) {
-            // single sync op on UI thread should be OK
-            realm.executeTransaction { rt ->
-                DbHelper.getMessageObject(rt, messageId)?.deleteFromRealm()
-            }
-        }
-    }
 
     private fun deleteAll() {
         val messagesL = realm.copyFromRealm(messages)
         val clearAllTask = Thread {
             val realm = RealmUtil.getCustomRealmInstance(this)
             messagesL.forEach {
-                deleteMessage(realm, it.smsId, it.id)
+                Helper.deleteMessage(this, realm, it.smsId, it.id)
             }
             realm.close()
         }

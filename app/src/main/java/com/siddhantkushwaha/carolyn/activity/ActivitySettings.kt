@@ -16,7 +16,6 @@ import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 import com.siddhantkushwaha.carolyn.entity.Message
 import com.siddhantkushwaha.carolyn.ml.MessageClassifier
-import com.siddhantkushwaha.carolyn.tasks.IndexTask
 import kotlinx.android.synthetic.main.activity_settings.*
 
 
@@ -159,32 +158,33 @@ class ActivitySettings : ActivityBase() {
             val allSpamMessages =
                 realmL.where(Message::class.java).equalTo("type", Enums.MessageType.spam).findAll()
 
-            var deleted = true
+            var deleteCount = 0
 
             for (m in allOtpMessages) {
-                val smsId = m.smsId
-                if (smsId != null) {
-                    deleted = TelephonyUtil.deleteSMS(this, smsId)
-                    if (!deleted) break
-                }
+                if (Helper.deleteMessage(this, realmL, m.smsId, m.id))
+                    deleteCount++
             }
 
             for (m in allSpamMessages) {
-                val smsId = m.smsId
-                if (smsId != null) {
-                    deleted = TelephonyUtil.deleteSMS(this, smsId)
-                    if (!deleted) break
+                if (Helper.deleteMessage(this, realmL, m.smsId, m.id))
+                    deleteCount++
+            }
+
+            when (deleteCount) {
+                allOtpMessages.size + allSpamMessages.size -> {
+                    Helper.showStatus(root, "Deleted all messages successfully.")
+                }
+
+                0 -> {
+                    Helper.showStatus(root, "Not able to delete any message.")
+                }
+
+                else -> {
+                    Helper.showStatus(root, "Some messages might not have been deleted.")
                 }
             }
 
-            if (!deleted) {
-                Helper.showStatus(root, "Failed to delete all spam and OTPs.")
-            }
-
             realmL.close()
-
-            // re index
-            IndexTask(this).start()
         }
 
         clearAllMessages.start()

@@ -1,6 +1,7 @@
 package com.siddhantkushwaha.carolyn.common
 
 import android.app.role.RoleManager
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.provider.Telephony
@@ -9,6 +10,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.siddhantkushwaha.carolyn.activity.ActivityBase
 import com.siddhantkushwaha.carolyn.common.util.CommonUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
+import io.realm.Realm
 import java.util.*
 
 
@@ -63,5 +65,24 @@ object Helper {
     public fun fetchOtpFromText(text: String): String? {
         return "[0-9]+".toRegex().findAll(text)
             .filter { it.value.length in 4..6 }.firstOrNull()?.value
+    }
+
+    public fun deleteMessage(
+        context: Context,
+        realm: Realm,
+        smsId: Int?,
+        messageId: String?
+    ): Boolean {
+        var deleted = true
+        if (smsId != null && smsId > 0) {
+            deleted = TelephonyUtil.deleteSMS(context, smsId)
+        }
+        if (messageId != null && deleted) {
+            // single sync op on UI thread should be OK
+            realm.executeTransaction { rt ->
+                DbHelper.getMessageObject(rt, messageId)?.deleteFromRealm()
+            }
+        }
+        return deleted
     }
 }
