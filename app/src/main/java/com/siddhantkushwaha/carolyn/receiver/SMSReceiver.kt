@@ -72,12 +72,13 @@ class SMSReceiver : BroadcastReceiver() {
 
             messagesMap.forEach { (_, details) ->
 
+                var smsId = -1
                 if (TelephonyUtil.isDefaultSmsApp(context)) {
                     // we need to save messages manually when our app is default
-                    TelephonyUtil.saveSms(context, details)
+                    smsId = TelephonyUtil.saveSms(context, details)
                 }
 
-                processMessage(context, details)
+                processMessage(context, smsId, details)
             }
 
             // ********* Can't use IndexTask here because it only runs one instance at a time
@@ -91,6 +92,7 @@ class SMSReceiver : BroadcastReceiver() {
 
     private fun processMessage(
         context: Context,
+        smsId: Int,
         message: TelephonyUtil.SMSMessage
     ) {
         val thread = Thread {
@@ -174,6 +176,7 @@ class SMSReceiver : BroadcastReceiver() {
                                 notificationId,
                                 user2,
                                 user2DisplayName,
+                                smsId,
                                 otp
                             )
                         }
@@ -187,6 +190,7 @@ class SMSReceiver : BroadcastReceiver() {
                         user2,
                         user2DisplayName,
                         message.body,
+                        smsId,
                         photoUri,
                         messageClass
                     )

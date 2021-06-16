@@ -109,6 +109,7 @@ class NotificationSender(val context: Context) {
         user2: String,
         subject: String,
         body: String,
+        smsId: Int,
         iconUri: String?,
         type: String?
     ) {
@@ -153,6 +154,7 @@ class NotificationSender(val context: Context) {
         notificationId: Int,
         user2: String,
         senderName: String,
+        smsId: Int,
         otpText: String
     ) {
         val notificationLayout = RemoteViews(context.packageName, R.layout.notification_layout_otp)
@@ -161,10 +163,26 @@ class NotificationSender(val context: Context) {
 
         val contentPendingIntent = getActivityMessageIntent(notificationId, user2, "otp")
 
+        val copyOtpIntent = NotificationActionReceiver.getIntent(
+            context,
+            NotificationActionReceiver.NotificationActionType.CopyMessage,
+            smsId,
+            user2
+        )
+        val copyOtpPendingIntent = PendingIntent.getBroadcast(
+            context.applicationContext,
+            notificationId,
+            copyOtpIntent,
+            PendingIntent.FLAG_ONE_SHOT
+        )
+        val copyOtpAction = NotificationCompat.Action
+            .Builder(R.drawable.icon_copy, "Copy", copyOtpPendingIntent).build()
+
         val notification = NotificationCompat.Builder(context, "otp")
             .setContentIntent(contentPendingIntent)
             .setSmallIcon(R.drawable.icon_carolyn_basic)
             .setCustomContentView(notificationLayout)
+            //.addAction(copyOtpAction)
             .build()
 
         notificationManager.notify(
