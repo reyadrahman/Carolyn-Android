@@ -4,5 +4,5 @@
 
     <string name="action_message_status_sent">carolyn.action.message.status.sent</string>
     <string name="action_message_status_delivered">carolyn.action.message.status.delivered</string>
-    <string name="action_notification_command">carolyn.action.message.status.delivered</string>
+    <string name="action_notification_command">carolyn.action.notification.command</string>
 </resources>

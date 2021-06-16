@@ -104,29 +104,32 @@ class NotificationSender(val context: Context) {
             .getPendingIntent(notificationId, PendingIntent.FLAG_ONE_SHOT)
     }
 
-    private fun getCopyMessageAction(
+    private fun getCopyOrCutMessageAction(
         notificationId: Int,
         user2: String,
-        smsId: Int
+        smsId: Int,
+        cut: Boolean = false
     ): NotificationCompat.Action {
-        val copyMessageIntent = NotificationActionReceiver.getIntent(
+        val intent = NotificationActionReceiver.getIntent(
             context,
-            NotificationActionReceiver.NotificationActionType.CopyMessage,
+            if (cut) NotificationActionReceiver.NotificationActionType.CutMessage else NotificationActionReceiver.NotificationActionType.CopyMessage,
+            notificationId,
             smsId,
             user2,
             context.getString(R.string.action_notification_command)
         )
-        val copyMessagePendingIntent = PendingIntent.getBroadcast(
+        val pendingIntent = PendingIntent.getBroadcast(
             context.applicationContext,
             notificationId,
-            copyMessageIntent,
+            intent,
             PendingIntent.FLAG_ONE_SHOT
         )
-        val label = "Copy"
         return NotificationCompat.Action.Builder(
-            R.drawable.icon_notification_copy,
-            label,
-            copyMessagePendingIntent
+            if (cut) R.drawable.icon_notification_cut
+            else R.drawable.icon_notification_copy,
+            if (cut) "Cut"
+            else "Copy",
+            pendingIntent
         ).build()
     }
 
@@ -190,27 +193,37 @@ class NotificationSender(val context: Context) {
         val style = NotificationCompat.DecoratedCustomViewStyle()
 
         val contentPendingIntent = getOpenChatPendingIntent(notificationId, user2, "otp")
-        val copyMessageAction = getCopyMessageAction(notificationId, user2, smsId)
+        val copyMessageAction = getCopyOrCutMessageAction(notificationId, user2, smsId)
 
-        val notification = NotificationCompat.Builder(context, "otp")
+        val notificationBuilder = NotificationCompat.Builder(context, "otp")
             .setContentIntent(contentPendingIntent)
             .setSmallIcon(R.drawable.icon_carolyn_basic)
             .setCustomContentView(notificationLayout)
             .setStyle(style)
             .addAction(copyMessageAction)
-            .setAutoCancel(true)
-            .build()
+
+        if (smsId > 0) {
+            val cutMessageAction =
+                getCopyOrCutMessageAction(notificationId, user2, smsId, cut = true)
+            notificationBuilder.addAction(cutMessageAction)
+        }
 
         notificationManager.notify(
             user2,
             notificationId,
-            notification
+            notificationBuilder.build()
         )
     }
 
     public fun cancelNotificationByTag(tag: String) {
         notificationManager.activeNotifications.forEach { sbn ->
-            notificationManager.cancel(tag, sbn.id)
+            if (sbn.tag == tag) {
+                notificationManager.cancel(tag, sbn.id)
+            }
         }
+    }
+
+    public fun cancelNotificationByTagAndId(tag: String, notificationId: Int) {
+        notificationManager.cancel(tag, notificationId)
     }
 }
