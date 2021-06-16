@@ -1,9 +1,9 @@
 package com.siddhantkushwaha.carolyn.notification
 
-import android.app.RemoteInput
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 
 class NotificationActionReceiver : BroadcastReceiver() {
 
@@ -20,9 +20,11 @@ class NotificationActionReceiver : BroadcastReceiver() {
             context: Context,
             actionType: NotificationActionType,
             smsId: Int,
-            user2: String
+            user2: String,
+            action: String
         ): Intent {
             val intent = Intent(context, NotificationActionReceiver::class.java)
+            intent.action = action
             intent.putExtra(KEY_ACTION_TYPE, actionType)
             intent.putExtra(KEY_SMS_ID, smsId)
             intent.putExtra(KEY_USER2, user2)
@@ -31,13 +33,13 @@ class NotificationActionReceiver : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-
-        val remoteInput = RemoteInput.getResultsFromIntent(intent)
-        if (remoteInput != null) {
-            val actionType = intent.getSerializableExtra(KEY_ACTION_TYPE) as NotificationActionType
-            when (actionType) {
-                
+        val actionType = intent.getSerializableExtra(KEY_ACTION_TYPE) as NotificationActionType
+        Log.d(javaClass.toString(), "Notification action received : $actionType")
+        when (actionType) {
+            NotificationActionType.CopyMessage -> {
+                Log.d(javaClass.toString(), "Copy action received.")
             }
         }
     }
+
 }

@@ -74,8 +74,22 @@
             android:permission="android.permission.BROADCAST_WAP_PUSH">
             <intent-filter android:priority="999">
                 <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
-
                 <data android:mimeType="application/vnd.wap.mms-message" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".receiver.SMSStatusReceiver"
+            android:exported="false">
+            <intent-filter android:priority="999">
+                <action android:name="@string/action_message_status_sent" />
+                <action android:name="@string/action_message_status_delivered" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".notification.NotificationActionReceiver"
+            android:exported="false">
+            <intent-filter android:priority="999">
+                <action android:name="@string/action_notification_command" />
             </intent-filter>
         </receiver>
         <!-- *******************  Services  ******************* -->

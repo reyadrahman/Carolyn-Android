@@ -324,8 +324,6 @@ class ActivityMessage : ActivityBase() {
 
     private fun sendMessage(subId: Int, user1: String, messageTimestamp: Long, message: String) {
 
-        SMSStatusReceiver.registerReceiver(this)
-
         // Send messages
         val messageId = DbHelper.getMessageId(messageTimestamp, message)
 
@@ -339,22 +337,26 @@ class ActivityMessage : ActivityBase() {
 
         val scAddress = if (user1 == "UNKNOWN") null else user1
         val sentIntents = ArrayList(List<PendingIntent>(numParts) { index ->
-            val intent = Intent(getString(R.string.action_message_status_sent))
-            intent.putExtra("messageId", messageId)
-            intent.putExtra("partIndex", index)
-            intent.putExtra("numParts", numParts)
-            intent.putExtra("subId", subId)
-
+            val intent = SMSStatusReceiver.getIntent(
+                this,
+                messageId,
+                index,
+                numParts,
+                subId,
+                getString(R.string.action_message_status_sent)
+            )
             val reqCode = Random.nextInt()
             PendingIntent.getBroadcast(this, reqCode, intent, 0)
         })
         val delIntents = ArrayList(List<PendingIntent>(numParts) { index ->
-            val intent = Intent(getString(R.string.action_message_status_delivered))
-            intent.putExtra("messageId", messageId)
-            intent.putExtra("partIndex", index)
-            intent.putExtra("numParts", numParts)
-            intent.putExtra("subId", subId)
-
+            val intent = SMSStatusReceiver.getIntent(
+                this,
+                messageId,
+                index,
+                numParts,
+                subId,
+                getString(R.string.action_message_status_delivered)
+            )
             val reqCode = Random.nextInt()
             PendingIntent.getBroadcast(this, reqCode, intent, 0)
         })

@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.util.Log
 import com.siddhantkushwaha.carolyn.R
 import com.siddhantkushwaha.carolyn.common.DbHelper
@@ -13,29 +12,27 @@ import com.siddhantkushwaha.carolyn.common.util.RealmUtil
 import com.siddhantkushwaha.carolyn.common.util.TelephonyUtil
 
 
-class SMSStatusReceiver private constructor() : BroadcastReceiver() {
+class SMSStatusReceiver : BroadcastReceiver() {
 
     companion object {
 
         private val tag = "SMSStatusReceiver"
-        private var receiverRegistered = false
 
-        public fun registerReceiver(context: Context) {
-            if (receiverRegistered) {
-                Log.d(tag, "SMSStatusReceiver is registered already, skipping.")
-            } else {
-                Log.d(tag, "Registering SMSStatusReceiver.")
-                val smsStatusReceiver = SMSStatusReceiver()
-                context.registerReceiver(
-                    smsStatusReceiver,
-                    IntentFilter(context.getString(R.string.action_message_status_sent))
-                )
-                context.registerReceiver(
-                    smsStatusReceiver,
-                    IntentFilter(context.getString(R.string.action_message_status_delivered))
-                )
-                receiverRegistered = true
-            }
+        public fun getIntent(
+            context: Context,
+            messageId: String,
+            index: Int,
+            numParts: Int,
+            subId: Int,
+            action: String
+        ): Intent {
+            val intent = Intent(context, SMSStatusReceiver::class.java)
+            intent.action = action
+            intent.putExtra("messageId", messageId)
+            intent.putExtra("partIndex", index)
+            intent.putExtra("numParts", numParts)
+            intent.putExtra("subId", subId)
+            return intent
         }
     }
 

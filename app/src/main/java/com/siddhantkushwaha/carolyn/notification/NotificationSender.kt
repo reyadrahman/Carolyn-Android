@@ -90,7 +90,7 @@ class NotificationSender(val context: Context) {
         return channel
     }
 
-    private fun getActivityMessageIntent(
+    private fun getOpenChatPendingIntent(
         notificationId: Int,
         user2: String,
         type: String?
@@ -104,6 +104,32 @@ class NotificationSender(val context: Context) {
             .getPendingIntent(notificationId, PendingIntent.FLAG_ONE_SHOT)
     }
 
+    private fun getCopyMessageAction(
+        notificationId: Int,
+        user2: String,
+        smsId: Int
+    ): NotificationCompat.Action {
+        val copyMessageIntent = NotificationActionReceiver.getIntent(
+            context,
+            NotificationActionReceiver.NotificationActionType.CopyMessage,
+            smsId,
+            user2,
+            context.getString(R.string.action_notification_command)
+        )
+        val copyMessagePendingIntent = PendingIntent.getBroadcast(
+            context.applicationContext,
+            notificationId,
+            copyMessageIntent,
+            PendingIntent.FLAG_ONE_SHOT
+        )
+        val label = "Copy"
+        return NotificationCompat.Action.Builder(
+            R.drawable.icon_notification_copy,
+            label,
+            copyMessagePendingIntent
+        ).build()
+    }
+
     public fun sendNotification(
         notificationId: Int,
         user2: String,
@@ -114,7 +140,7 @@ class NotificationSender(val context: Context) {
         type: String?
     ) {
 
-        val contentPendingIntent = getActivityMessageIntent(notificationId, user2, type)
+        val contentPendingIntent = getOpenChatPendingIntent(notificationId, user2, type)
 
         val channelId = type ?: "personal"
 
@@ -159,30 +185,20 @@ class NotificationSender(val context: Context) {
     ) {
         val notificationLayout = RemoteViews(context.packageName, R.layout.notification_layout_otp)
         notificationLayout.setTextViewText(R.id.text_view_otp, otpText)
-        notificationLayout.setTextViewText(R.id.text_view_sender, "OTP from $senderName")
+        notificationLayout.setTextViewText(R.id.text_view_sender, senderName)
 
-        val contentPendingIntent = getActivityMessageIntent(notificationId, user2, "otp")
+        val style = NotificationCompat.DecoratedCustomViewStyle()
 
-        val copyOtpIntent = NotificationActionReceiver.getIntent(
-            context,
-            NotificationActionReceiver.NotificationActionType.CopyMessage,
-            smsId,
-            user2
-        )
-        val copyOtpPendingIntent = PendingIntent.getBroadcast(
-            context.applicationContext,
-            notificationId,
-            copyOtpIntent,
-            PendingIntent.FLAG_ONE_SHOT
-        )
-        val copyOtpAction = NotificationCompat.Action
-            .Builder(R.drawable.icon_copy, "Copy", copyOtpPendingIntent).build()
+        val contentPendingIntent = getOpenChatPendingIntent(notificationId, user2, "otp")
+        val copyMessageAction = getCopyMessageAction(notificationId, user2, smsId)
 
         val notification = NotificationCompat.Builder(context, "otp")
             .setContentIntent(contentPendingIntent)
             .setSmallIcon(R.drawable.icon_carolyn_basic)
             .setCustomContentView(notificationLayout)
-            //.addAction(copyOtpAction)
+            .setStyle(style)
+            .addAction(copyMessageAction)
+            .setAutoCancel(true)
             .build()
 
         notificationManager.notify(
