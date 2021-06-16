@@ -1,5 +1,7 @@
 package com.siddhantkushwaha.carolyn.common.util
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.provider.Settings
@@ -131,5 +133,11 @@ object CommonUtil {
                 permission
             ) != PackageManager.PERMISSION_GRANTED
         }.toTypedArray()
+    }
+
+    public fun copyToClipboard(context: Context, label: String, content: String) {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText(label, content)
+        clipboard.setPrimaryClip(clip)
     }
 }

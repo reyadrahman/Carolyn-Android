@@ -108,7 +108,8 @@ class NotificationSender(val context: Context) {
         notificationId: Int,
         user2: String,
         smsId: Int,
-        cut: Boolean = false
+        content: String,
+        cut: Boolean = false,
     ): NotificationCompat.Action {
         val intent = NotificationActionReceiver.getIntent(
             context,
@@ -116,6 +117,7 @@ class NotificationSender(val context: Context) {
             notificationId,
             smsId,
             user2,
+            content,
             context.getString(R.string.action_notification_command)
         )
         val pendingIntent = PendingIntent.getBroadcast(
@@ -193,7 +195,7 @@ class NotificationSender(val context: Context) {
         val style = NotificationCompat.DecoratedCustomViewStyle()
 
         val contentPendingIntent = getOpenChatPendingIntent(notificationId, user2, "otp")
-        val copyMessageAction = getCopyOrCutMessageAction(notificationId, user2, smsId)
+        val copyMessageAction = getCopyOrCutMessageAction(notificationId, user2, smsId, otpText)
 
         val notificationBuilder = NotificationCompat.Builder(context, "otp")
             .setContentIntent(contentPendingIntent)
@@ -204,7 +206,7 @@ class NotificationSender(val context: Context) {
 
         if (smsId > 0) {
             val cutMessageAction =
-                getCopyOrCutMessageAction(notificationId, user2, smsId, cut = true)
+                getCopyOrCutMessageAction(notificationId, user2, smsId, otpText, cut = true)
             notificationBuilder.addAction(cutMessageAction)
         }
 
